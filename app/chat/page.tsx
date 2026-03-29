@@ -85,8 +85,8 @@ export default function ChatPage() {
       <nav className="px-10 py-8 flex justify-between items-center bg-transparent max-w-[1200px] mx-auto w-full">
         <div className="font-extrabold text-xl text-[#4a5c53]">Final Service</div>
         <div className="flex gap-10 font-medium text-sm text-gray-500">
-          <Link href="/">Cure</Link>
-          <Link href="#">My Situation</Link>
+          <Link href="/select">Cure</Link>
+          <Link href="/my-situation">My Situation</Link>
           <Link href="#" className="text-black border-b-2 border-black pb-1">Chat</Link>
         </div>
         <div className="flex gap-6 items-center">

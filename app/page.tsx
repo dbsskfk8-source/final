@@ -16,8 +16,8 @@ export default async function HomePage() {
       <header className="fixed top-0 w-full z-50 px-10 py-6 flex justify-between items-center backdrop-blur-sm bg-white/30">
         <div className="font-extrabold text-xl tracking-tight text-[#4a5c53]">Final Service</div>
         <nav className="sm:flex hidden gap-12 font-medium text-sm text-gray-500">
-          <Link href="/cure" className="hover:text-black">Cure</Link>
-          <Link href="#" className="hover:text-black">My Situation</Link>
+          <Link href="/select" className="hover:text-black">Cure</Link>
+          <Link href="/my-situation" className="hover:text-black">My Situation</Link>
           <Link href="/chat" className="hover:text-black">Chat</Link>
         </nav>
         <div className="flex items-center gap-6">

@@ -126,8 +126,8 @@ export default function CurePage() {
       <nav className="px-6 md:px-10 py-6 flex justify-between items-center bg-transparent">
         <Link href="/" className="font-extrabold text-xl text-[#4a5c53]">Final Service</Link>
         <div className="hidden md:flex gap-10 text-sm font-medium text-gray-400">
-          <Link href="/cure" className="text-black border-b-2 border-black pb-1">Cure</Link>
-          <Link href="#" className="hover:text-black">My Situation</Link>
+          <Link href="/select" className="text-black border-b-2 border-black pb-1">Cure</Link>
+          <Link href="/my-situation" className="hover:text-black">My Situation</Link>
           <Link href="/chat" className="hover:text-black">Chat</Link>
         </div>
         <div className="flex gap-4 items-center">
