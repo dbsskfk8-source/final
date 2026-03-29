@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   Bell,
   Settings,
@@ -47,6 +48,7 @@ const QUESTIONS = [
 ]
 
 export default function QuestionnairePage() {
+  const router = useRouter()
   const [answers, setAnswers] = useState<Record<number, number>>({})
 
   const handleAnswer = (questionIndex: number, value: number) => {
@@ -110,8 +112,8 @@ export default function QuestionnairePage() {
       localStorage.setItem('final_csei_results', JSON.stringify([resultData, ...normalizedExisting]))
     }
     
-    // TODO: Supabase DB Insert logic will be added here
-    // router.push('/my-situation')
+    // 완료 후 마이페이지로 자동 이동
+    router.push('/my-situation')
   }
 
   const handleSaveProgress = () => {
@@ -174,13 +176,13 @@ export default function QuestionnairePage() {
         {/* Top Navbar */}
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-[#eaeced] px-6 lg:px-10 py-5 flex flex-col sm:flex-row gap-4 sm:gap-0 sm:items-center justify-between">
           <div className="flex items-center gap-6">
-            {/* Mobile Title (hidden on desktop to mimic sidebar) */}
             <h1 className="lg:hidden font-extrabold text-[#4a5c53] text-lg">Final Service</h1>
             
-            <nav className="hidden md:flex gap-6 text-sm font-bold text-gray-500">
-               <span className="text-[#566e63] border-b-2 border-[#566e63] pb-1 cursor-default">CSEI-s Survey</span>
-               <span className="hover:text-black cursor-pointer transition-colors pb-1">Patient Records</span>
-               <span className="hover:text-black cursor-pointer transition-colors pb-1">History</span>
+            <nav className="flex gap-4 md:gap-6 text-sm font-bold text-gray-500 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 whitespace-nowrap">
+               <span className="text-[#566e63] border-b-2 border-[#566e63] pb-1 cursor-default shrink-0">CSEI-s Survey</span>
+               <Link href="/select" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">Cure</Link>
+               <Link href="/my-situation" className="hover:text-[#566e63] cursor-pointer transition-colors shrink-0 pt-0.5">My Situation</Link>
+               <Link href="/chat" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">Chat</Link>
             </nav>
           </div>
           
