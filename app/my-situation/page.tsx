@@ -40,13 +40,13 @@ interface HistoryLog {
 
 // --- Mock Data (Fallback) ---
 const DEFAULT_RADAR: RadarItem[] = [
-  { subject: '기쁨(喜)', A: 84, fullMark: 100 },
-  { subject: '분노(怒)', A: 75, fullMark: 100 },
-  { subject: '근심(憂)', A: 41, fullMark: 100 },
-  { subject: '생각(思)', A: 62, fullMark: 100 },
-  { subject: '슬픔(悲)', A: 70, fullMark: 100 },
-  { subject: '공포(恐)', A: 65, fullMark: 100 },
-  { subject: '놀람(驚)', A: 80, fullMark: 100 },
+  { subject: '희 (喜)', A: 84, fullMark: 100 },
+  { subject: '노 (怒)', A: 75, fullMark: 100 },
+  { subject: '사 (思)', A: 62, fullMark: 100 },
+  { subject: '우 (憂)', A: 41, fullMark: 100 },
+  { subject: '비 (悲)', A: 70, fullMark: 100 },
+  { subject: '공 (恐)', A: 65, fullMark: 100 },
+  { subject: '경 (驚)', A: 80, fullMark: 100 },
 ]
 
 export default function MySituationPage() {
@@ -108,12 +108,12 @@ export default function MySituationPage() {
         
         if (dbCsei) {
           dbCsei.forEach(item => {
-            const topEmotion = [...item.scores].sort((a,b) => b.A - a.A)[0]
+            const topEmotion = [...item.scores].sort((a: any, b: any) => b.A - a.A)[0]
             combined.push({
               id: `csei-${item.id}`,
               date: new Date(item.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase(),
-              type: '칠정(七情) 심리 진단',
-              summary: `당시 주된 감정은 '${topEmotion.subject}' 상태였으며, 평균지수는 ${Math.round(item.scores.reduce((acc: any, cur: any) => acc + cur.A, 0) / 7)}% 였습니다.`,
+              type: '칠정(七情) 진단 기록',
+              summary: `[가장 높은 지표: ${topEmotion.subject} (${topEmotion.A}%)] 전반적 분석 결과입니다.`,
               tags: ['진단', '7정'],
               sentiment: 'neutral',
               isAssessment: true
@@ -140,13 +140,17 @@ export default function MySituationPage() {
       } else {
         // Guest mode (simplified for demo)
         setIsGuest(true)
-        const localCsei = JSON.parse(localStorage.getItem('final_csei_results') || '[]')
-        const resultsArray = Array.isArray(localCsei) ? localCsei : (localCsei.scores ? [localCsei] : [])
-        if (resultsArray.length > 0) {
-          setAllCsei(resultsArray)
-          setRadar(resultsArray[0].scores)
+        if (typeof window !== 'undefined') {
+          const localCseiStr = localStorage.getItem('final_csei_results')
+          const localCsei = localCseiStr ? JSON.parse(localCseiStr) : []
+          const resultsArray = Array.isArray(localCsei) ? localCsei : (localCsei.scores ? [localCsei] : [])
+          if (resultsArray.length > 0) {
+            setAllCsei(resultsArray)
+            setRadar(resultsArray[0].scores)
+          }
+          const localCureStr = localStorage.getItem('final_cure_history')
+          setHistory(localCureStr ? JSON.parse(localCureStr) : [])
         }
-        setHistory(JSON.parse(localStorage.getItem('final_cure_history') || '[]'))
       }
     }
     loadData()
@@ -424,15 +428,13 @@ export default function MySituationPage() {
                       contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', fontSize: '12px' }}
                     />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '20px' }} />
-                    <Line type="monotone" dataKey="기쁨(喜)" stroke="#8884d8" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="분노(怒)" stroke="#ff8042" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="그 외" stroke="#82ca9d" strokeWidth={2} strokeDasharray="5 5" />
-                    {/* 7개 모두 표기 */}
-                    <Line type="monotone" dataKey="근심(憂)" stroke="#82ca9d" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="생각(思)" stroke="#ffbb28" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="슬픔(悲)" stroke="#0088fe" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="공포(恐)" stroke="#bdc3c7" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="놀람(驚)" stroke="#9b59b6" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="희 (喜)" stroke="#8884d8" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="노 (怒)" stroke="#ff8042" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="사 (思)" stroke="#ffbb28" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="우 (憂)" stroke="#82ca9d" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="비 (悲)" stroke="#0088fe" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="공 (恐)" stroke="#bdc3c7" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="경 (驚)" stroke="#9b59b6" strokeWidth={3} dot={{ r: 4 }} />
                   </LineChart>
                 )}
               </ResponsiveContainer>
@@ -442,15 +444,15 @@ export default function MySituationPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
               <div className="bg-[#f0ece5] rounded-3xl py-4 px-6 text-center border border-white/50 shadow-sm">
                 <div className="text-2xl font-extrabold text-[#4a5c53]">{radar[0]?.A || 0}%</div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">기쁨 (喜)</div>
+                <div className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">{radar[0]?.subject || '기쁨'}</div>
               </div>
               <div className="bg-[#f0ece5] rounded-3xl py-4 px-6 text-center border border-white/50 shadow-sm">
                 <div className="text-2xl font-extrabold text-[#4a5c53]">{radar[1]?.A || 0}%</div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">분노 (怒)</div>
+                <div className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">{radar[1]?.subject || '분노'}</div>
               </div>
               <div className="bg-[#f0ece5] rounded-3xl py-4 px-6 text-center border border-white/50 shadow-sm">
                 <div className="text-2xl font-extrabold text-[#4a5c53]">{radar[2]?.A || 0}%</div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">근심 (憂)</div>
+                <div className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">{radar[2]?.subject || '생각'}</div>
               </div>
               <div className="bg-[#e8efe9] rounded-3xl py-4 px-6 text-center flex flex-col items-center justify-center border border-[#566e63]/10 shadow-sm cursor-pointer hover:bg-[#d0dfd3] transition-all active:scale-95 group">
                 <Sparkles size={16} className="text-[#566e63] mb-1 group-hover:rotate-12 transition-transform" />
