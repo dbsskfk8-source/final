@@ -10,8 +10,10 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
 } from 'recharts'
-import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle } from 'lucide-react'
+import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle, LogOut } from 'lucide-react'
 import { useEffect } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import { useRouter } from 'next/navigation'
 
 interface RadarItem {
   subject: string
@@ -45,7 +47,7 @@ const DEFAULT_HISTORY: HistoryLog[] = [
     date: 'OCT 24, 2024',
     type: 'Session: Understanding Workplace Triggers',
     summary:
-      '최근 직장에서 느낀 감정을 분석했습니다. 로컬 스토리지에 데이터가 없을 경우 표시되는 예시 데이터입니다.',
+      '최근 직장에서 느낀 감정을 분석했습니다. 데이터가 없을 경우 표시되는 예시 데이터입니다.',
     tags: ['MT', 'AN'],
     sentiment: 'positive',
   },
@@ -54,30 +56,103 @@ const DEFAULT_HISTORY: HistoryLog[] = [
 export default function MySituationPage() {
   const [radar, setRadar] = useState<RadarItem[]>(DEFAULT_RADAR)
   const [history, setHistory] = useState<HistoryLog[]>(DEFAULT_HISTORY)
+  const [isGuest, setIsGuest] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedResults = localStorage.getItem('final_csei_results')
-      if (savedResults) {
-        try {
-          const parsed = JSON.parse(savedResults)
-          setRadar(parsed.scores)
-        } catch (e) {
-          console.error('Failed to parse radar data', e)
+    async function loadData() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (user) {
+        setIsGuest(false)
+        console.log('User logged in, trying to sync local data...')
+        
+        // 1. 로컬 데이터 DB 동기화
+        const localCsei = localStorage.getItem('final_csei_results')
+        const localCure = localStorage.getItem('final_cure_history')
+        
+        if (localCsei || localCure) {
+          try {
+            await fetch('/api/user/sync', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                csei_results: localCsei ? JSON.parse(localCsei) : [],
+                cure_history: localCure ? JSON.parse(localCure) : []
+              })
+            })
+            // 동기화 완료 후 로컬 삭제
+            localStorage.removeItem('final_csei_results')
+            localStorage.removeItem('final_cure_history')
+            console.log('Sync complete!')
+          } catch (e) {
+            console.error('Sync failed', e)
+          }
         }
-      }
-      
-      const savedHistory = localStorage.getItem('final_cure_history')
-      if (savedHistory) {
-        try {
-          const parsed = JSON.parse(savedHistory)
-          // 28 CSEI-s 문항 설문 데이터가 아닌 Cure 치료 기록만 필터링하거나 병합
-          setHistory([...parsed, ...DEFAULT_HISTORY])
-        } catch (e) {
-          console.error('Failed to parse history data', e)
+
+        // 2. DB에서 내 데이터 가져오기
+        const { data: dbCsei } = await supabase
+          .from('csei_results')
+          .select('scores')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+
+        if (dbCsei && dbCsei.length > 0) {
+          setRadar(dbCsei[0].scores)
+        }
+
+        const { data: dbCure } = await supabase
+          .from('cure_history')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+
+        if (dbCure && dbCure.length > 0) {
+          const formattedHistory = dbCure.map(c => ({
+            id: c.id,
+            date: new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase(),
+            type: c.type || 'Session Record',
+            summary: c.summary || c.situation || '',
+            tags: c.tags || [],
+            sentiment: (c.sentiment || 'neutral') as 'positive' | 'neutral' | 'negative'
+          }))
+          setHistory(formattedHistory)
+        }
+
+      } else {
+        // [비회원(Guest) 모드] - LocalStorage에서 읽기
+        setIsGuest(true)
+        if (typeof window !== 'undefined') {
+          const savedResults = localStorage.getItem('final_csei_results')
+          if (savedResults) {
+            try {
+              const parsed = JSON.parse(savedResults)
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                setRadar(parsed[0].scores) // 제일 최근 데이터
+              } else if (parsed.scores) {
+                setRadar(parsed.scores) // v4 하위호환
+              }
+            } catch (e) {
+              console.error('Failed to parse radar data', e)
+            }
+          }
+          
+          const savedHistory = localStorage.getItem('final_cure_history')
+          if (savedHistory) {
+            try {
+              const parsed = JSON.parse(savedHistory)
+              setHistory(parsed.length > 0 ? parsed : DEFAULT_HISTORY)
+            } catch (e) {
+              console.error('Failed to parse history data', e)
+            }
+          }
         }
       }
     }
+
+    loadData()
   }, [])
 
   return (
@@ -91,31 +166,49 @@ export default function MySituationPage() {
           <Link href="/chat" className="hover:text-black hover:border-b-2 hover:border-black transition-all pb-1">Chat</Link>
         </div>
         <div className="flex items-center gap-6">
-          <Link href="/login" className="hidden md:block text-sm font-medium text-gray-600">Login</Link>
-          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all">Signup</Link>
+          {isGuest ? (
+            <>
+              <Link href="/login" className="hidden md:block text-sm font-medium text-gray-600">Login</Link>
+              <Link href="/login" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all">Signup</Link>
+            </>
+          ) : (
+            <button 
+              onClick={async () => {
+                const supabase = createClient()
+                await supabase.auth.signOut()
+                router.push('/login')
+              }}
+              className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-red-500 transition-colors"
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
+          )}
         </div>
       </nav>
 
       <main className="max-w-[1200px] mx-auto px-6 pb-24 pt-12">
         
-        {/* Guest Mode Alert Banner */}
-        <div className="bg-[#fcecdb] border border-[#f5d5b8] rounded-[28px] p-6 mb-14 flex flex-col md:flex-row items-center justify-between gap-6 fade-in shadow-sm shadow-amber-900/5 transition-all hover:shadow-md">
-           <div className="flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-amber-600 shadow-sm border border-amber-100 shrink-0">
-                 <AlertCircle size={28} />
-              </div>
-              <div className="text-center md:text-left">
-                 <h3 className="text-[15px] font-extrabold text-[#222]">현재 '게스트 모드'로 이용 중입니다.</h3>
-                 <p className="text-xs text-[#a67c52] font-medium mt-1 leading-relaxed">
-                    지금 보시는 데이터는 브라우저에 임시 저장되어 있습니다. <br className="hidden sm:block" />
-                    기록을 안전하게 영구 보관하고 분석 리포트를 지속적으로 받으려면 로그인을 진행해 주세요.
-                 </p>
-              </div>
-           </div>
-           <Link href="/login" className="bg-white border border-[#f5d5b8] text-amber-700 px-8 py-3 rounded-full text-xs font-bold hover:bg-amber-50 transition-all shadow-sm active:scale-95">
-              로그인하고 기록 보관하기
-           </Link>
-        </div>
+        {/* Guest Mode Alert Banner (Only show if guest) */}
+        {isGuest && (
+          <div className="bg-[#fcecdb] border border-[#f5d5b8] rounded-[28px] p-6 mb-14 flex flex-col md:flex-row items-center justify-between gap-6 fade-in shadow-sm shadow-amber-900/5 transition-all hover:shadow-md">
+             <div className="flex items-center gap-5">
+                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-amber-600 shadow-sm border border-amber-100 shrink-0">
+                   <AlertCircle size={28} />
+                </div>
+                <div className="text-center md:text-left">
+                   <h3 className="text-[15px] font-extrabold text-[#222]">현재 '게스트 모드'로 이용 중입니다.</h3>
+                   <p className="text-xs text-[#a67c52] font-medium mt-1 leading-relaxed">
+                      지금 보시는 데이터는 브라우저에 임시 저장되어 있습니다. <br className="hidden sm:block" />
+                      기록을 안전하게 영구 보관하고 분석 리포트를 지속적으로 받으려면 로그인을 진행해 주세요.
+                   </p>
+                </div>
+             </div>
+             <Link href="/login" className="bg-white border border-[#f5d5b8] text-amber-700 px-8 py-3 rounded-full text-xs font-bold hover:bg-amber-50 transition-all shadow-sm active:scale-95">
+                로그인하고 기록 보관하기
+             </Link>
+          </div>
+        )}
 
         {/* Header Title */}
         <div className="mb-14 fade-in">

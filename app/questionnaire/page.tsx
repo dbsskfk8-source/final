@@ -98,13 +98,16 @@ export default function QuestionnairePage() {
     const summary = scores.map(s => `${s.name}: ${s.percentage}%`).join('\n')
     alert(`설문 분석이 완료되었습니다!\n\n[분석 결과]\n${summary}\n\n결과 데이터가 브라우저에 임시 저장되었습니다. 마이페이지에서 확인하실 수 있습니다.`)
     
-    // 로컬 스토리지에 결과 저장 (게스트 모드용)
+    // 로컬 스토리지에 결과 누적 저장 (게스트 모드용)
     if (typeof window !== 'undefined') {
       const resultData = {
         timestamp: new Date().toISOString(),
         scores: scores.map(s => ({ subject: s.name, A: s.percentage, fullMark: 100 }))
       }
-      localStorage.setItem('final_csei_results', JSON.stringify(resultData))
+      const existingResults = JSON.parse(localStorage.getItem('final_csei_results') || '[]')
+      // 기존이 객체였다면 (게스트 모드 V4 흔적) 배열로 감싸주고, 아니면 바로 추가
+      const normalizedExisting = Array.isArray(existingResults) ? existingResults : (existingResults.scores ? [existingResults] : [])
+      localStorage.setItem('final_csei_results', JSON.stringify([resultData, ...normalizedExisting]))
     }
     
     // TODO: Supabase DB Insert logic will be added here
