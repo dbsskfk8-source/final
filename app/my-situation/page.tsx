@@ -10,50 +10,76 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
 } from 'recharts'
-import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight } from 'lucide-react'
+import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle } from 'lucide-react'
+import { useEffect } from 'react'
 
-// --- Mock Data ---
-const radarData = [
-  { subject: 'MINDFULNESS', A: 84, fullMark: 100 },
-  { subject: 'STRESS MGMT', A: 75, fullMark: 100 },
-  { subject: 'SLEEP', A: 41, fullMark: 100 },
-  { subject: 'SOCIAL', A: 62, fullMark: 100 },
-  { subject: 'MOOD', A: 70, fullMark: 100 },
-  { subject: 'ENERGY', A: 65, fullMark: 100 },
-  { subject: 'CLARITY', A: 80, fullMark: 100 },
+interface RadarItem {
+  subject: string
+  A: number
+  fullMark: number
+}
+
+interface HistoryLog {
+  id: number
+  date: string
+  type: string
+  summary: string
+  tags: string[]
+  sentiment: 'positive' | 'neutral' | 'negative'
+}
+
+// --- Mock Data (Fallback) ---
+const DEFAULT_RADAR: RadarItem[] = [
+  { subject: '기쁨(喜)', A: 84, fullMark: 100 },
+  { subject: '분노(怒)', A: 75, fullMark: 100 },
+  { subject: '근심(憂)', A: 41, fullMark: 100 },
+  { subject: '생각(思)', A: 62, fullMark: 100 },
+  { subject: '슬픔(悲)', A: 70, fullMark: 100 },
+  { subject: '공포(恐)', A: 65, fullMark: 100 },
+  { subject: '놀람(驚)', A: 80, fullMark: 100 },
 ]
 
-const historyLogs = [
+const DEFAULT_HISTORY: HistoryLog[] = [
   {
     id: 1,
     date: 'OCT 24, 2024',
     type: 'Session: Understanding Workplace Triggers',
     summary:
-      'Today we explored the feeling of inadequacy that arises during team meetings. Identified three core beliefs that are no longer serving me...',
+      '최근 직장에서 느낀 감정을 분석했습니다. 로컬 스토리지에 데이터가 없을 경우 표시되는 예시 데이터입니다.',
     tags: ['MT', 'AN'],
     sentiment: 'positive',
-  },
-  {
-    id: 2,
-    date: 'OCT 21, 2024',
-    type: 'Journal Entry: The Quiet Hours',
-    summary:
-      'Woke up at 3 AM again. Feeling of restlessness. Tried the box breathing exercise. It helped slightly, but my mind kept racing toward next month’s travel plans.',
-    tags: ['JN'],
-    sentiment: 'neutral',
-  },
-  {
-    id: 3,
-    date: 'OCT 18, 2024',
-    type: 'Crisis Note: High Anxiety Day',
-    summary:
-      'Significant spike in cortisol after the call. Used the emergency grounding techniques. It took about 45 minutes to return to baseline. Noted for next session.',
-    tags: ['MT', 'ER'],
-    sentiment: 'negative',
   },
 ]
 
 export default function MySituationPage() {
+  const [radar, setRadar] = useState<RadarItem[]>(DEFAULT_RADAR)
+  const [history, setHistory] = useState<HistoryLog[]>(DEFAULT_HISTORY)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedResults = localStorage.getItem('final_csei_results')
+      if (savedResults) {
+        try {
+          const parsed = JSON.parse(savedResults)
+          setRadar(parsed.scores)
+        } catch (e) {
+          console.error('Failed to parse radar data', e)
+        }
+      }
+      
+      const savedHistory = localStorage.getItem('final_cure_history')
+      if (savedHistory) {
+        try {
+          const parsed = JSON.parse(savedHistory)
+          // 28 CSEI-s 문항 설문 데이터가 아닌 Cure 치료 기록만 필터링하거나 병합
+          setHistory([...parsed, ...DEFAULT_HISTORY])
+        } catch (e) {
+          console.error('Failed to parse history data', e)
+        }
+      }
+    }
+  }, [])
+
   return (
     <div className="min-h-screen bg-[#fffdfa] text-[#333] font-sans selection:bg-[#566e63]/20">
       {/* Navbar */}
@@ -71,6 +97,26 @@ export default function MySituationPage() {
       </nav>
 
       <main className="max-w-[1200px] mx-auto px-6 pb-24 pt-12">
+        
+        {/* Guest Mode Alert Banner */}
+        <div className="bg-[#fcecdb] border border-[#f5d5b8] rounded-[28px] p-6 mb-14 flex flex-col md:flex-row items-center justify-between gap-6 fade-in shadow-sm shadow-amber-900/5 transition-all hover:shadow-md">
+           <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-amber-600 shadow-sm border border-amber-100 shrink-0">
+                 <AlertCircle size={28} />
+              </div>
+              <div className="text-center md:text-left">
+                 <h3 className="text-[15px] font-extrabold text-[#222]">현재 '게스트 모드'로 이용 중입니다.</h3>
+                 <p className="text-xs text-[#a67c52] font-medium mt-1 leading-relaxed">
+                    지금 보시는 데이터는 브라우저에 임시 저장되어 있습니다. <br className="hidden sm:block" />
+                    기록을 안전하게 영구 보관하고 분석 리포트를 지속적으로 받으려면 로그인을 진행해 주세요.
+                 </p>
+              </div>
+           </div>
+           <Link href="/login" className="bg-white border border-[#f5d5b8] text-amber-700 px-8 py-3 rounded-full text-xs font-bold hover:bg-amber-50 transition-all shadow-sm active:scale-95">
+              로그인하고 기록 보관하기
+           </Link>
+        </div>
+
         {/* Header Title */}
         <div className="mb-14 fade-in">
           <span className="bg-[#e8efe9] text-[#566e63] text-[10px] font-bold px-4 py-1.5 rounded-full tracking-widest uppercase inline-block mb-4">
@@ -95,7 +141,7 @@ export default function MySituationPage() {
             
             <div className="w-full h-[350px] md:h-[450px]">
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radar}>
                   <PolarGrid stroke="#e5e7eb" strokeDasharray="3 3" />
                   <PolarAngleAxis 
                     dataKey="subject" 
@@ -122,20 +168,20 @@ export default function MySituationPage() {
             {/* Stat Badges at bottom of chart card */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
               <div className="bg-[#f0ece5] rounded-full py-4 px-6 text-center border border-white">
-                <div className="text-2xl font-extrabold text-[#4a5c53]">84%</div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">MINDFULNESS</div>
+                <div className="text-2xl font-extrabold text-[#4a5c53]">{radar[0].A}%</div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">기쁨 (喜)</div>
               </div>
               <div className="bg-[#f0ece5] rounded-full py-4 px-6 text-center border border-white">
-                <div className="text-2xl font-extrabold text-[#4a5c53]">62%</div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">SOCIAL CONNECTION</div>
+                <div className="text-2xl font-extrabold text-[#4a5c53]">{radar[1].A}%</div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">분노 (怒)</div>
               </div>
               <div className="bg-[#f0ece5] rounded-full py-4 px-6 text-center border border-white">
-                <div className="text-2xl font-extrabold text-[#4a5c53]">41%</div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">SLEEP QUALITY</div>
+                <div className="text-2xl font-extrabold text-[#4a5c53]">{radar[2].A}%</div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">근심 (憂)</div>
               </div>
               <div className="bg-[#e8efe9] rounded-full py-4 px-6 text-center flex flex-col items-center justify-center border border-white cursor-pointer hover:bg-[#d0dfd3] transition-colors">
                 <Sparkles size={16} className="text-[#566e63] mb-1" />
-                <div className="text-[10px] font-bold text-[#566e63] uppercase tracking-widest">NEW INSIGHT</div>
+                <div className="text-[10px] font-bold text-[#566e63] uppercase tracking-widest">분석 리포트</div>
               </div>
             </div>
           </div>
@@ -197,7 +243,7 @@ export default function MySituationPage() {
 
           {/* History Cards Grid */}
           <div className="grid md:grid-cols-3 gap-6 mb-10">
-            {historyLogs.map((log) => (
+            {history.map((log: HistoryLog) => (
               <div key={log.id} className="bg-white rounded-[30px] p-8 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer group flex flex-col h-full">
                 <div className="flex justify-between items-center mb-6">
                   <span className="bg-[#f5f5f5] text-[10px] font-bold px-3 py-1.5 rounded-full tracking-widest text-gray-500">
@@ -215,7 +261,7 @@ export default function MySituationPage() {
                 </p>
                 <div className="flex justify-between items-center mt-auto">
                   <div className="flex gap-1.5 text-[8px] font-bold">
-                    {log.tags.map((tag, idx) => (
+                    {log.tags.map((tag: string, idx: number) => (
                       <span key={idx} className={`w-6 h-6 rounded-full flex items-center justify-center ${idx===0 ? 'bg-[#cae5df] text-[#4a5c53]' : 'bg-[#badce3] text-[#4a5c53]'}`}>
                         {tag}
                       </span>

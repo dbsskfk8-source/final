@@ -108,6 +108,34 @@ export default function CurePage() {
     }
   }
 
+  // 저장 및 완료
+  const handleSave = () => {
+    if (selectedIndex === null) {
+      alert('저장할 재구성 관점을 먼저 선택해 주세요.')
+      return
+    }
+
+    const newLog = {
+      id: Date.now(),
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase(),
+      type: `Cure: ${reframes[selectedIndex].title}`,
+      situation,
+      thought,
+      summary: reframes[selectedIndex].text,
+      thinkingTrap,
+      sentiment: 'positive',
+      tags: ['CBT']
+    }
+
+    if (typeof window !== 'undefined') {
+      const existingHistory = JSON.parse(localStorage.getItem('final_cure_history') || '[]')
+      localStorage.setItem('final_cure_history', JSON.stringify([newLog, ...existingHistory]))
+    }
+
+    alert('치료 기록이 브라우저에 임시 저장되었습니다. 마이페이지에서 확인하실 수 있습니다.')
+    // router.push('/my-situation')
+  }
+
   // 다시 시작
   const handleReset = () => {
     setSituation('')
@@ -330,14 +358,25 @@ export default function CurePage() {
               </div>
             </div>
 
-            {/* 다시 시작 */}
-            <div className="flex justify-center">
+            {/* 액션 버튼 */}
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 font-medium transition-all"
+                className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 font-medium transition-all order-2 sm:order-1"
               >
                 <RotateCcw size={15} />
                 처음부터 다시 시작하기
+              </button>
+              
+              <button
+                onClick={handleSave}
+                disabled={selectedIndex === null}
+                className={`order-1 sm:order-2 flex items-center gap-3 bg-[#566e63] text-white px-10 py-4 rounded-full text-base font-bold shadow-lg shadow-[#566e63]/30 hover:-translate-y-0.5 hover:bg-[#4a5c53] transition-all disabled:opacity-50
+                   ${selectedIndex === null ? 'grayscale cursor-not-allowed' : ''}
+                `}
+              >
+                저장하고 완료하기
+                <CheckCircle2 size={18} />
               </button>
             </div>
           </div>

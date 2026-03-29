@@ -146,9 +146,9 @@ export default function SelectPage() {
             <p className="text-sm md:text-base text-gray-500 font-medium leading-relaxed mb-10 max-w-md">
               모든 여정은 특별합니다. 2분 만에 끝나는 "상황 진단"을 통해 현재 나의 감정적 필요에 가장 알맞은 치료적 접근 방식을 추천받아 보세요.
             </p>
-            <button className="bg-[#333] hover:bg-black text-white px-8 py-4 rounded-full font-bold flex items-center gap-3 transition-colors shadow-xl shadow-black/10">
+            <Link href="/questionnaire" className="bg-[#333] hover:bg-black text-white px-8 py-4 rounded-full font-bold inline-flex items-center w-fit gap-3 transition-colors shadow-xl shadow-black/10">
               진단 시작하기 <FileQuestion size={18} />
-            </button>
+            </Link>
           </div>
           
           <div className="md:w-[45%] relative z-10 flex justify-center w-full mt-10 md:mt-0">
