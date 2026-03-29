@@ -14,7 +14,7 @@ function SubmitButton({ isLogin }: { isLogin: boolean }) {
       className={`w-full py-3.5 px-4 rounded-full text-white font-medium text-lg mt-6 shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50
         ${isLogin ? 'bg-[#566e63]' : 'bg-[#1e293b]'}`}
     >
-      {pending ? '처리 중...' : (isLogin ? 'Login' : 'Sign In')}
+      {pending ? '처리 중...' : (isLogin ? '로그인' : '회원가입')}
     </button>
   )
 }
@@ -39,24 +39,24 @@ export default function AuthForm() {
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
-          Continue with Google
+          Google로 계속하기
         </button>
         <div className="flex gap-3">
           <button type="button" className="flex-1 py-3 px-4 bg-[#03C75A] text-white rounded-full flex items-center justify-center gap-2 text-sm font-bold hover:bg-[#02b351] transition-colors">
-            <span className="font-extrabold pb-[2px]">N</span> Naver
+            <span className="font-extrabold pb-[2px]">N</span> 네이버
           </button>
           <button type="button" className="flex-1 py-3 px-4 bg-[#FEE500] text-[#191919] rounded-full flex items-center justify-center gap-2 text-sm font-bold hover:bg-[#f4dc00] transition-colors">
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 3c-5.5 0-10 3.5-10 7.8 0 2.8 1.8 5.2 4.5 6.4-.3 1-.9 2.9-.9 3 0 .2.2.3.4.2 1.4-1 3.5-2.6 4-3 .6.2 1.3.3 2 .3 5.5 0 10-3.5 10-7.8S17.5 3 12 3z"/>
             </svg>
-            Kakao
+            카카오톡
           </button>
         </div>
       </div>
 
       <div className="w-full relative flex items-center justify-center mb-6">
         <div className="border-t border-gray-200 w-full absolute"></div>
-        <span className="bg-[#faf8f5] px-4 text-xs text-gray-400 relative z-10">or use email</span>
+        <span className="bg-[#faf8f5] px-4 text-xs text-gray-400 relative z-10">또는 이메일로 로그인</span>
       </div>
 
       {/* Auth Form (Email+Password) */}
@@ -73,7 +73,7 @@ export default function AuthForm() {
         )}
         
         <div className="flex flex-col gap-2">
-          <label className="text-sm text-gray-600 font-medium">Email Address</label>
+          <label className="text-sm text-gray-600 font-medium">이메일 주소</label>
           <input 
             name="email"
             type="email" 
@@ -85,9 +85,9 @@ export default function AuthForm() {
 
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <label className="text-sm text-gray-600 font-medium">Password</label>
+            <label className="text-sm text-gray-600 font-medium">비밀번호</label>
             {isLogin && (
-              <a href="#" className="text-xs text-gray-500 font-medium">Forgot?</a>
+              <a href="#" className="text-xs text-gray-500 font-medium">비밀번호 찾기</a>
             )}
           </div>
           <div className="relative">
@@ -113,12 +113,12 @@ export default function AuthForm() {
       </form>
 
       <div className="mt-8 text-sm text-gray-600 font-medium">
-        {isLogin ? "Don't have an account? " : "Already have an account? "}
+        {isLogin ? "계정이 없으신가요? " : "이미 계정이 있으신가요? "}
         <button 
           onClick={() => setIsLogin(!isLogin)} 
           className="text-[#566e63] font-bold hover:underline"
         >
-          {isLogin ? "Create Sanctuary" : "Sign In"}
+          {isLogin ? "새로운 안식처 만들기" : "지금 로그인하기"}
         </button>
       </div>
     </div>

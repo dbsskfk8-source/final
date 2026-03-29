@@ -154,9 +154,9 @@ export default function QuestionnairePage() {
       <aside className="hidden lg:flex flex-col w-[260px] bg-[#f9faf9] border-r border-[#eaeced] fixed h-full z-20 overflow-y-auto">
         <div className="p-8">
           <Link href="/" className="font-extrabold text-[#4a5c53] text-lg block hover:opacity-80 transition-opacity">
-            Final Service
+            파이널 서비스
           </Link>
-          <div className="text-[10px] uppercase font-bold text-[#828f88] tracking-widest mt-1">Clinical Inventory</div>
+          <div className="text-[10px] uppercase font-bold text-[#828f88] tracking-widest mt-1">임상 진단 도구</div>
         </div>
         
         <nav className="flex-1 mt-4">
@@ -164,25 +164,25 @@ export default function QuestionnairePage() {
             <li>
               <Link href="#" className="flex items-center gap-3 px-8 py-4 bg-white border-l-[3px] border-[#566e63] text-[#222] font-bold shadow-sm">
                 <ClipboardList size={20} className="text-[#566e63]" />
-                Assessment
+                설문 진행 (진단)
               </Link>
             </li>
             <li>
               <Link href="#" className="flex items-center gap-3 px-8 py-4 text-gray-500 hover:text-[#222] hover:bg-[#f0f2f0] transition-colors font-medium border-l-[3px] border-transparent">
                 <Contact size={20} />
-                Patient Info
+                내 정보
               </Link>
             </li>
             <li>
               <Link href="#" className="flex items-center gap-3 px-8 py-4 text-gray-500 hover:text-[#222] hover:bg-[#f0f2f0] transition-colors font-medium border-l-[3px] border-transparent">
                 <BookOpen size={20} />
-                Guidelines
+                진단 안내
               </Link>
             </li>
             <li>
               <Link href="/my-situation" className="flex items-center gap-3 px-8 py-4 text-gray-500 hover:text-[#222] hover:bg-[#f0f2f0] transition-colors font-medium border-l-[3px] border-transparent">
                 <BarChart2 size={20} />
-                Results
+                결과 리포트
               </Link>
             </li>
           </ul>
@@ -195,13 +195,13 @@ export default function QuestionnairePage() {
         {/* Top Navbar */}
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-[#eaeced] px-6 lg:px-10 py-5 flex flex-col sm:flex-row gap-4 sm:gap-0 sm:items-center justify-between">
           <div className="flex items-center gap-6">
-            <h1 className="lg:hidden font-extrabold text-[#4a5c53] text-lg">Final Service</h1>
+            <h1 className="lg:hidden font-extrabold text-[#4a5c53] text-lg">파이널 서비스</h1>
             
             <nav className="flex gap-4 md:gap-6 text-sm font-bold text-gray-500 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 whitespace-nowrap">
-               <span className="text-[#566e63] border-b-2 border-[#566e63] pb-1 cursor-default shrink-0">CSEI-s Survey</span>
-               <Link href="/select" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">Cure</Link>
-               <Link href="/my-situation" className="hover:text-[#566e63] cursor-pointer transition-colors shrink-0 pt-0.5">My Situation</Link>
-               <Link href="/chat" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">Chat</Link>
+               <span className="text-[#566e63] border-b-2 border-[#566e63] pb-1 cursor-default shrink-0">칠정 진단</span>
+               <Link href="/select" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">인지재구성(Cure)</Link>
+               <Link href="/my-situation" className="hover:text-[#566e63] cursor-pointer transition-colors shrink-0 pt-0.5">내 상태 분석</Link>
+               <Link href="/chat" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">심리상담 챗봇</Link>
             </nav>
           </div>
           
@@ -224,15 +224,15 @@ export default function QuestionnairePage() {
           {/* Patient / Session Info Cards */}
           <div className="flex flex-col md:flex-row gap-6 mb-12 bg-white rounded-xl p-6 shadow-sm border border-[#eef0ef]">
              <div className="flex-1 md:border-r border-gray-100 px-4 mb-4 md:mb-0">
-               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">REGISTRATION NO.</div>
+               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">진단 번호</div>
                <div className="text-xl font-bold text-[#222]">2026-Guest</div>
              </div>
              <div className="flex-1 md:border-r border-gray-100 px-4 mb-4 md:mb-0">
-               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">PATIENT NAME</div>
+               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">사용자 정보</div>
                <div className="text-xl font-bold text-[#222]">나의 현황</div>
              </div>
              <div className="flex-1 px-4">
-               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">ASSESSMENT DATE</div>
+               <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">진단 일자</div>
                <div className="flex items-center gap-2 text-[#4a5c53]">
                  <Calendar size={18} />
                  <span className="font-bold text-[#222]">{today}</span>
@@ -253,7 +253,7 @@ export default function QuestionnairePage() {
           {/* Scale Legend Header */}
           <div className="sticky top-[80px] z-10 bg-[#f5f6f4]/95 backdrop-blur py-5 flex items-end justify-between border-b 2 border-[#eaeced] mb-6">
             <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-4 hidden md:block">
-              EMOTIONAL STATEMENT
+              감정 상태 지표
             </div>
             {/* The 5 labels */}
             <div className="flex justify-between md:w-[350px] w-full text-center px-2">
@@ -293,7 +293,7 @@ export default function QuestionnairePage() {
                     ${currentValue ? 'border-[#a3b8ad] bg-[#fafcfa]' : 'border-transparent'}`}
                 >
                   <div className="flex-1">
-                    <div className="text-[10px] font-bold text-gray-400 tracking-wider mb-2">Question {qNumber}</div>
+                    <div className="text-[10px] font-bold text-gray-400 tracking-wider mb-2">문항 {qNumber}</div>
                     <p className="font-bold text-[#222] text-base leading-relaxed break-keep">
                       {q}
                     </p>
@@ -343,7 +343,7 @@ export default function QuestionnairePage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-[#a3b8ad]" />
               </div>
               <p className="text-sm font-bold text-[#64716a]">
-                Remaining {totalCount - answeredCount} Assessment Statements
+                남은 응답 문항: {totalCount - answeredCount}개
               </p>
             </div>
           )}
@@ -368,7 +368,7 @@ export default function QuestionnairePage() {
              onClick={handleSaveProgress}
              className="flex-1 sm:flex-none bg-[#f5f6f4] hover:bg-white text-[#4a5c53] font-bold px-6 py-3.5 rounded-xl border border-[#d0d3d5] transition-colors text-sm"
            >
-             Save Progress
+             임시 저장
            </button>
            <button 
              onClick={handleComplete}
@@ -379,7 +379,7 @@ export default function QuestionnairePage() {
                  : 'bg-[#b6c4bc] text-white/70 cursor-not-allowed border-transparent'
                }`}
            >
-             Complete Assessment
+             진단 완료하기
            </button>
          </div>
       </div>

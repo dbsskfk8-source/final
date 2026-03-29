@@ -176,34 +176,34 @@ export default function MySituationPage() {
   return (
     <div className="min-h-screen bg-[#fffdfa] text-[#333] font-sans selection:bg-[#566e63]/20">
       <nav className="border-b border-gray-100 px-6 md:px-10 py-6 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <Link href="/" className="font-extrabold text-2xl text-[#4a5c53] tracking-tighter">Final Service</Link>
-        <div className="hidden md:flex gap-12 text-[10px] font-extrabold uppercase tracking-[0.2em] text-gray-400">
-           <Link href="/select" className="hover:text-[#566e63] transition-colors">Cure</Link>
-           <Link href="/my-situation" className="text-[#566e63] border-b-2 border-[#566e63] pb-1">My Situation</Link>
-           <Link href="/chat" className="hover:text-[#566e63] transition-colors">Chat</Link>
+        <Link href="/" className="font-extrabold text-2xl text-[#4a5c53] tracking-tighter">파이널 서비스</Link>
+        <div className="hidden md:flex gap-12 text-[10px] font-extrabold tracking-[0.2em] text-gray-400">
+           <Link href="/select" className="hover:text-[#566e63] transition-colors">인지재구성(Cure)</Link>
+           <Link href="/my-situation" className="text-[#566e63] border-b-2 border-[#566e63] pb-1">내 상태 분석</Link>
+           <Link href="/chat" className="hover:text-[#566e63] transition-colors">심리상담 챗봇</Link>
         </div>
         {!isGuest ? (
           <button onClick={logout} className="flex items-center gap-2 group">
              <div className="w-10 h-10 rounded-full bg-[#f0f2f0] flex items-center justify-center text-[#566e63] group-hover:bg-[#566e63] group-hover:text-white transition-all overflow-hidden shadow-inner">
                <LogOut size={16} />
              </div>
-             <span className="text-[10px] font-bold text-gray-400 group-hover:text-[#566e63] hidden sm:inline">LOGOUT</span>
+             <span className="text-[10px] font-bold text-gray-400 group-hover:text-[#566e63] hidden sm:inline">로그아웃</span>
           </button>
         ) : (
-          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2.5 rounded-full text-[10px] font-bold tracking-widest hover:bg-[#43574d] hover:-translate-y-0.5 transition-all shadow-lg active:scale-95">LOGIN / SIGNUP</Link>
+          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2.5 rounded-full text-[10px] font-bold tracking-widest hover:bg-[#43574d] hover:-translate-y-0.5 transition-all shadow-lg active:scale-95">로그인 / 회원가입</Link>
         )}
       </nav>
 
       <main className="max-w-[1200px] mx-auto px-6 py-12 md:py-20">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 fade-in">
           <div>
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-4">Hello, Friend.</h1>
-            <p className="text-gray-400 font-medium text-lg md:text-xl">Your mind is a sanctuary. Here is the blueprint.</p>
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-4">안녕하세요.</h1>
+            <p className="text-gray-400 font-medium text-lg md:text-xl">당신의 마음은 하나의 안식처입니다. 여기 그 청사진이 있습니다.</p>
           </div>
           {isGuest && (
             <div className="bg-[#fff9e6] border border-[#f5e1a4] p-5 rounded-[30px] flex items-center gap-4 shadow-sm animate-pulse">
                <AlertCircle className="text-[#b48d1a]" size={24} />
-               <p className="text-[#856404] text-xs font-bold leading-tight">GUEST MODE: 로그인하면 데이터를 기기에 상관없이 동기화할 수 있습니다.</p>
+               <p className="text-[#856404] text-xs font-bold leading-tight">게스트 모드: 로그인하면 데이터를 기기에 상관없이 동기화할 수 있습니다.</p>
             </div>
           )}
         </div>
@@ -212,7 +212,7 @@ export default function MySituationPage() {
           <div className="bg-[#fcfaf7] rounded-[40px] p-8 md:p-12 shadow-sm border border-gray-100/50 relative">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
               <div>
-                <h2 className="text-xl font-bold text-[#4a5c53]">The Heptagon Profile</h2>
+                <h2 className="text-xl font-bold text-[#4a5c53]">칠정(七情) 프로파일</h2>
                 <p className="text-xs text-gray-400 mt-1 font-medium italic">당신의 마음을 구성하는 7가지 요소</p>
               </div>
               <div className="flex items-center gap-3">
@@ -282,11 +282,11 @@ export default function MySituationPage() {
             <div className="bg-[#d2eaf7] rounded-[40px] p-8 md:p-10 flex-1 relative overflow-hidden group border border-[#b8d6e9]">
                <div className="absolute top-0 right-0 w-32 h-32 bg-white/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
                <Sparkles size={24} className="text-[#3b6b8b] mb-6" />
-               <h3 className="text-xl font-bold text-[#222] mb-4 relative z-10 tracking-tight">Therapist's Observation</h3>
+               <h3 className="text-xl font-bold text-[#222] mb-4 relative z-10 tracking-tight">전문가의 소견</h3>
                <p className="text-[#3b6b8b] font-medium leading-relaxed italic relative z-10 text-[15px]">"지난주에 비해 회복력 지수가 12% 상승했습니다. 업무 중 경계 세우기에 집중했던 성과가 나타나고 있네요. 저녁 루틴을 꾸준히 유지해 보세요."</p>
             </div>
             <div className="bg-[#f0ece5] rounded-[30px] p-8 border border-white/50 shadow-sm">
-               <h3 className="text-sm font-bold text-[#222] mb-6">Upcoming Goal</h3>
+               <h3 className="text-sm font-bold text-[#222] mb-6">다음 목표</h3>
                <div className="flex items-center gap-4">
                   <div className="bg-white p-3 rounded-2xl text-[#566e63] shadow-sm border border-gray-100"><Moon size={20} /></div>
                   <div className="flex-1">
@@ -304,7 +304,7 @@ export default function MySituationPage() {
         <div className="mb-20 fade-in slide-in-bottom delay-200">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
             <div>
-              <h2 className="text-3xl font-extrabold mb-2 tracking-tight">History & Records</h2>
+              <h2 className="text-3xl font-extrabold mb-2 tracking-tight">히스토리 및 기록</h2>
               <p className="text-gray-400 font-medium text-sm">과거의 인지 재구성 및 심리 진단 기록입니다.</p>
             </div>
             <div className="flex gap-3">
@@ -345,14 +345,14 @@ export default function MySituationPage() {
 
       <footer className="border-t border-gray-100 px-6 md:px-10 py-16 flex flex-col md:flex-row justify-between items-center gap-8 mt-20 bg-white">
         <div>
-          <div className="font-extrabold text-lg mb-1 text-[#4a5c53] tracking-tighter">Final Service</div>
-          <p className="text-[10px] text-gray-400 font-medium">© 2024 Final Service. The Living Sanctuary.</p>
+          <div className="font-extrabold text-lg mb-1 text-[#4a5c53] tracking-tighter">파이널 서비스</div>
+          <p className="text-[10px] text-gray-400 font-medium">© 2024 파이널 서비스. 마음의 안식처.</p>
         </div>
         <div className="flex gap-12 text-[10px] font-extrabold text-gray-400 uppercase tracking-[0.2em]">
-          <Link href="#" className="hover:text-[#566e63] transition-colors">About</Link>
-          <Link href="#" className="hover:text-[#566e63] transition-colors">Privacy</Link>
-          <Link href="#" className="hover:text-[#566e63] transition-colors">Contact</Link>
-          <Link href="#" className="hover:text-[#566e63] transition-colors">Terms</Link>
+          <Link href="#" className="hover:text-[#566e63] transition-colors">소개</Link>
+          <Link href="#" className="hover:text-[#566e63] transition-colors">개인정보처리방침</Link>
+          <Link href="#" className="hover:text-[#566e63] transition-colors">문의하기</Link>
+          <Link href="#" className="hover:text-[#566e63] transition-colors">이용약관</Link>
         </div>
       </footer>
 

@@ -83,11 +83,11 @@ export default function ChatPage() {
     <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans">
       {/* Navbar */}
       <nav className="px-10 py-8 flex justify-between items-center bg-transparent max-w-[1200px] mx-auto w-full">
-        <div className="font-extrabold text-xl text-[#4a5c53]">Final Service</div>
+        <div className="font-extrabold text-xl text-[#4a5c53]">파이널 서비스</div>
         <div className="flex gap-10 font-medium text-sm text-gray-500">
-          <Link href="/select">Cure</Link>
-          <Link href="/my-situation">My Situation</Link>
-          <Link href="#" className="text-black border-b-2 border-black pb-1">Chat</Link>
+          <Link href="/select">치유 여정(Cure)</Link>
+          <Link href="/my-situation">내 상태 분석</Link>
+          <Link href="#" className="text-black border-b-2 border-black pb-1">상담 챗봇</Link>
         </div>
         <div className="flex gap-6 items-center">
           <button
@@ -96,17 +96,17 @@ export default function ChatPage() {
             className="flex items-center gap-2 text-xs font-bold text-gray-400 hover:text-[#566e63] border border-gray-100 px-4 py-2 rounded-full transition-all disabled:opacity-50"
           >
             <Database size={14} className={isIndexing ? 'animate-spin' : ''} />
-            {isIndexing ? 'Indexing...' : '샘플 데이터 인덱싱'}
+            {isIndexing ? '데이터 분석 중...' : '맞춤형 데이터 분석'}
           </button>
-          <Link href="/login" className="text-sm font-medium text-gray-400">Login</Link>
-          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-[#566e63]/20">Signup</Link>
+          <Link href="/login" className="text-sm font-medium text-gray-400">로그인</Link>
+          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-[#566e63]/20">회원가입</Link>
         </div>
       </nav>
 
       <main className="flex-1 flex flex-col max-w-[800px] mx-auto w-full px-6 pb-20 mt-12">
         <header className="mb-20 flex justify-between items-start">
           <div>
-            <span className="text-[10px] font-bold text-[#566e63] tracking-[0.2em] mb-3 block">SAFE SPACE</span>
+            <span className="text-[10px] font-bold text-[#566e63] tracking-[0.2em] mb-3 block">안전한 상담 공간</span>
             <h1 className="text-5xl font-extrabold leading-tight text-[#222]">
               나를 돌아보는 고요한 시간<span className="italic font-serif text-[#566e63] ml-1">.</span>
             </h1>
@@ -188,21 +188,21 @@ export default function ChatPage() {
           </div>
 
           <div className="mt-6 text-center">
-            <p className="text-[10px] uppercase font-bold text-gray-300 tracking-[0.2em] mb-2 uppercase">End-to-end encrypted & private</p>
+            <p className="text-[10px] font-bold text-gray-300 tracking-[0.2em] mb-2 uppercase">종단 간 암호화 및 개인정보 보호</p>
             <div className="text-[11px] text-[#566e63]/20 font-bold italic tracking-wider">원에 맞춰 호흡을 조절해보세요</div>
           </div>
         </div>
       </main>
 
       <footer className="px-10 py-12 flex flex-col items-center gap-12 border-t border-gray-50 mt-20">
-        <div className="font-extrabold text-lg text-[#4a5c53]">Final Service</div>
+        <div className="font-extrabold text-lg text-[#4a5c53]">파이널 서비스</div>
         <div className="flex gap-16 text-xs font-bold text-gray-300 uppercase tracking-widest">
-          <Link href="#">About</Link>
-          <Link href="#">Privacy</Link>
-          <Link href="#">Contact</Link>
-          <Link href="#">Terms</Link>
+          <Link href="#" className="hover:text-black transition-colors">소개</Link>
+          <Link href="#" className="hover:text-black transition-colors">개인정보처리방침</Link>
+          <Link href="#" className="hover:text-black transition-colors">문의하기</Link>
+          <Link href="#" className="hover:text-black transition-colors">이용약관</Link>
         </div>
-        <div className="text-[10px] text-gray-300 font-bold">© 2024 Final Service. The Living Sanctuary.</div>
+        <div className="text-[10px] text-gray-300 font-bold">© 2024 파이널 서비스. 마음의 안식처.</div>
       </footer>
     </div>
   )

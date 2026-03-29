@@ -9,15 +9,15 @@ export default function SelectPage() {
       
       {/* Navbar */}
       <nav className="px-6 md:px-10 py-6 flex justify-between items-center bg-transparent max-w-[1400px] mx-auto w-full">
-        <Link href="/" className="font-extrabold text-xl tracking-tight text-[#4a5c53]">Final Service</Link>
+        <Link href="/" className="font-extrabold text-xl tracking-tight text-[#4a5c53]">파이널 서비스</Link>
         <div className="hidden md:flex gap-12 font-medium text-sm text-gray-500">
-          <Link href="/select" className="text-black border-b-2 border-black pb-1">Cure</Link>
-          <Link href="/my-situation" className="hover:text-black hover:border-b-2 hover:border-black transition-all pb-1">My Situation</Link>
-          <Link href="/chat" className="hover:text-black hover:border-b-2 hover:border-black transition-all pb-1">Chat</Link>
+          <Link href="/select" className="text-black border-b-2 border-black pb-1">치유 여정(Cure)</Link>
+          <Link href="/my-situation" className="hover:text-black hover:border-b-2 hover:border-black transition-all pb-1">내 상태 분석</Link>
+          <Link href="/chat" className="hover:text-black hover:border-b-2 hover:border-black transition-all pb-1">상담 챗봇</Link>
         </div>
         <div className="flex items-center gap-6">
-          <Link href="/login" className="hidden md:block text-sm font-medium text-gray-600">Login</Link>
-          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all">Signup</Link>
+          <Link href="/login" className="hidden md:block text-sm font-medium text-gray-600">로그인</Link>
+          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all">회원가입</Link>
         </div>
       </nav>
 
@@ -26,7 +26,7 @@ export default function SelectPage() {
         {/* Header Title Section */}
         <div className="text-center mb-16 fade-in">
           <span className="text-[10px] font-bold text-gray-400 tracking-[0.2em] uppercase mb-4 block">
-            THE PATH TO CLARITY
+            명확한 내일을 향한 길
           </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight text-[#222]">
             나에게 맞는 치유 방법을 <br className="hidden md:block" />
@@ -106,7 +106,7 @@ export default function SelectPage() {
               <div className="mb-6 text-[#4a5c53]">
                 <Scale size={28} />
               </div>
-              <h2 className="text-2xl font-extrabold mb-3 text-[#222]">DBT (변증법적 행동)</h2>
+              <h2 className="text-2xl font-extrabold mb-3 text-[#222]">DBT (변증법적 행동치료)</h2>
               <p className="text-gray-500 text-sm font-medium leading-relaxed mb-6">
                 감정 조절, 고통 감내, 그리고 대인 관계 효율성 기술을 집중적으로 훈련하여 정서적 균형을 찾습니다.
               </p>
@@ -117,7 +117,7 @@ export default function SelectPage() {
                 <div className="w-6 h-6 rounded-full bg-[#d7eadf]" />
                 <div className="w-6 h-6 rounded-full bg-[#fcecdb]" />
               </div>
-              <span className="text-[10px] font-bold text-gray-400 tracking-wider">EXPERT GUIDED</span>
+              <span className="text-[10px] font-bold text-gray-400 tracking-wider">전문가 가이드 제공</span>
             </div>
           </div>
 
@@ -127,13 +127,13 @@ export default function SelectPage() {
               <div className="mb-6 text-[#3b6b8b]">
                 <PersonStanding size={28} />
               </div>
-              <h2 className="text-2xl font-extrabold mb-3 text-[#222]">Somatic (신체 중심)</h2>
+              <h2 className="text-2xl font-extrabold mb-3 text-[#222]">신체 중심 치료 (Somatic)</h2>
               <p className="text-gray-500 text-sm font-medium leading-relaxed mb-8">
                 신체 감각을 추적하여 갇힌 물리적 긴장을 풀고 신경계에 저장된 트라우마를 부드럽게 치유합니다.
               </p>
             </div>
             <div className="text-sm font-medium italic text-gray-400">
-              "몸은 기억한다."
+              "몸은 모든 것을 기억합니다."
             </div>
           </div>
 
@@ -144,10 +144,10 @@ export default function SelectPage() {
           <div className="md:w-[55%] relative z-10">
             <h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight">어디서부터 시작해야 할지 모르겠나요?</h2>
             <p className="text-sm md:text-base text-gray-500 font-medium leading-relaxed mb-10 max-w-md">
-              모든 여정은 특별합니다. 2분 만에 끝나는 "상황 진단"을 통해 현재 나의 감정적 필요에 가장 알맞은 치료적 접근 방식을 추천받아 보세요.
+              모든 여정은 특별합니다. 2분 만에 끝나는 "상태 진단"을 통해 현재 나의 감정적 필요에 가장 알맞은 치료적 접근 방식을 추천받아 보세요.
             </p>
             <Link href="/questionnaire" className="bg-[#333] hover:bg-black text-white px-8 py-4 rounded-full font-bold inline-flex items-center w-fit gap-3 transition-colors shadow-xl shadow-black/10">
-              진단 시작하기 <FileQuestion size={18} />
+              오늘의 마음 진단하기 <FileQuestion size={18} />
             </Link>
           </div>
           
@@ -172,14 +172,14 @@ export default function SelectPage() {
       {/* Footer */}
       <footer className="border-t border-gray-100 px-6 md:px-10 py-12 flex flex-col md:flex-row justify-between items-center gap-6 mt-10">
         <div>
-          <div className="font-extrabold text-sm mb-1 text-[#4a5c53]">Final Service</div>
-          <div className="text-[10px] text-gray-400">© 2024 Final Service. The Living Sanctuary.</div>
+          <div className="font-extrabold text-sm mb-1 text-[#4a5c53]">파이널 서비스</div>
+          <div className="text-[10px] text-gray-400">© 2024 파이널 서비스. 마음의 안식처.</div>
         </div>
         <div className="flex gap-10 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-          <Link href="#" className="hover:text-black transition-colors">About</Link>
-          <Link href="#" className="hover:text-black transition-colors">Privacy</Link>
-          <Link href="#" className="hover:text-black transition-colors">Contact</Link>
-          <Link href="#" className="hover:text-black transition-colors">Terms</Link>
+          <Link href="#" className="hover:text-black transition-colors">소개</Link>
+          <Link href="#" className="hover:text-black transition-colors">개인정보처리방침</Link>
+          <Link href="#" className="hover:text-black transition-colors">문의하기</Link>
+          <Link href="#" className="hover:text-black transition-colors">이용약관</Link>
         </div>
         {/* Social / Email icons */}
         <div className="flex items-center gap-3">

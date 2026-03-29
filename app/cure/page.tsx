@@ -117,8 +117,8 @@ export default function CurePage() {
 
     const newLog = {
       id: Date.now(),
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase(),
-      type: `Cure: ${reframes[selectedIndex].title}`,
+      date: new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: 'numeric' }),
+      type: `인지 재구성: ${reframes[selectedIndex].title}`,
       situation,
       thought,
       summary: reframes[selectedIndex].text,
@@ -152,15 +152,15 @@ export default function CurePage() {
 
       {/* Nav */}
       <nav className="px-6 md:px-10 py-6 flex justify-between items-center bg-transparent">
-        <Link href="/" className="font-extrabold text-xl text-[#4a5c53]">Final Service</Link>
+        <Link href="/" className="font-extrabold text-xl text-[#4a5c53]">파이널 서비스</Link>
         <div className="hidden md:flex gap-10 text-sm font-medium text-gray-400">
-          <Link href="/select" className="text-black border-b-2 border-black pb-1">Cure</Link>
-          <Link href="/my-situation" className="hover:text-black">My Situation</Link>
-          <Link href="/chat" className="hover:text-black">Chat</Link>
+          <Link href="/select" className="text-black border-b-2 border-black pb-1">치유 여정(Cure)</Link>
+          <Link href="/my-situation" className="hover:text-black">내 상태 분석</Link>
+          <Link href="/chat" className="hover:text-black">상담 챗봇</Link>
         </div>
         <div className="flex gap-4 items-center">
-          <Link href="/login" className="text-sm font-medium text-gray-400 hidden md:block">Login</Link>
-          <Link href="/login" className="bg-[#566e63] text-white px-5 py-2 rounded-full text-sm font-bold">Signup</Link>
+          <Link href="/login" className="text-sm font-medium text-gray-400 hidden md:block">로그인</Link>
+          <Link href="/login" className="bg-[#566e63] text-white px-5 py-2 rounded-full text-sm font-bold">회원가입</Link>
         </div>
       </nav>
 
@@ -386,14 +386,14 @@ export default function CurePage() {
       {/* Footer */}
       <footer className="border-t border-gray-100 mt-20 px-6 md:px-10 py-12 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-gray-400 font-medium">
         <div>
-          <div className="font-extrabold text-sm text-[#4a5c53] mb-1">Final Service</div>
-          <div>© 2024 Final Service. The Living Sanctuary.</div>
+          <div className="font-extrabold text-sm text-[#4a5c53] mb-1">파이널 서비스</div>
+          <div>© 2024 파이널 서비스. 마음의 안식처.</div>
         </div>
         <div className="flex gap-10 uppercase tracking-widest font-bold">
-          <Link href="#">About</Link>
-          <Link href="#">Privacy</Link>
-          <Link href="#">Contact</Link>
-          <Link href="#">Terms</Link>
+          <Link href="#" className="hover:text-black transition-colors">소개</Link>
+          <Link href="#" className="hover:text-black transition-colors">개인정보처리방침</Link>
+          <Link href="#" className="hover:text-black transition-colors">문의하기</Link>
+          <Link href="#" className="hover:text-black transition-colors">이용약관</Link>
         </div>
       </footer>
     </div>
