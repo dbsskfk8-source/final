@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/utils/supabase/client'
 import {
   Bell,
   Settings,
@@ -59,14 +60,13 @@ export default function QuestionnairePage() {
   const totalCount = QUESTIONS.length
   const isComplete = answeredCount === totalCount
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (!isComplete) {
       alert(`아직 응답하지 않은 문항이 있습니다. (${answeredCount}/${totalCount})`)
       return
     }
 
     // CSEI-s 7가지 감정(칠정) 매핑 및 점수 계산
-    // 1-7번 문항이 각 지표의 첫번째 항목인 인터리브 구조 (0~6 % 7)
     const dimensions = [
       { name: '희 (喜)', label: 'Joy' },
       { name: '노 (怒)', label: 'Anger' },
@@ -79,13 +79,10 @@ export default function QuestionnairePage() {
 
     const scores = dimensions.map((dim, dimIdx) => {
       let sum = 0
-      // 각 영역당 4개 문항 합산 (0, 7, 14, 21 / 1, 8, 15, 22 ...)
       for (let i = 0; i < 4; i++) {
         const qIdx = dimIdx + (i * 7)
         sum += (answers[qIdx] || 0)
       }
-      // 최소 4점 ~ 최대 20점 -> 백분율 환산
-      // (점수 - 최소점수) / (최대점수 - 최소점수) * 100
       const percentage = Math.round(((sum - 4) / (20 - 4)) * 100)
       return { 
         ...dim, 
@@ -95,21 +92,43 @@ export default function QuestionnairePage() {
     })
 
     console.log('--- 7지표 분석 결과 ---', scores)
-    
-    // 결과 요약 메시지
     const summary = scores.map(s => `${s.name}: ${s.percentage}%`).join('\n')
-    alert(`설문 분석이 완료되었습니다!\n\n[분석 결과]\n${summary}\n\n결과 데이터가 브라우저에 임시 저장되었습니다. 마이페이지에서 확인하실 수 있습니다.`)
-    
-    // 로컬 스토리지에 결과 누적 저장 (게스트 모드용)
-    if (typeof window !== 'undefined') {
-      const resultData = {
-        timestamp: new Date().toISOString(),
-        scores: scores.map(s => ({ subject: s.name, A: s.percentage, fullMark: 100 }))
+
+    // DB 저장 시도
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    let saveToLocal = true
+
+    if (user) {
+      const { error } = await supabase.from('csei_results').insert([{
+        user_id: user.id,
+        scores: scores.map(s => ({ subject: s.name, A: s.percentage, fullMark: 100 })),
+        created_at: new Date().toISOString()
+      }])
+      
+      if (error) {
+        console.error('DB Insert Error:', error)
+        alert('서버 저장에 실패했습니다. 결과가 기기에 임시 저장됩니다.')
+      } else {
+        saveToLocal = false
+        alert(`설문 분석이 완료되었습니다!\n\n[분석 결과]\n${summary}\n\n결과 시트가 계정에 안전하게 저장되었습니다.`)
       }
-      const existingResults = JSON.parse(localStorage.getItem('final_csei_results') || '[]')
-      // 기존이 객체였다면 (게스트 모드 V4 흔적) 배열로 감싸주고, 아니면 바로 추가
-      const normalizedExisting = Array.isArray(existingResults) ? existingResults : (existingResults.scores ? [existingResults] : [])
-      localStorage.setItem('final_csei_results', JSON.stringify([resultData, ...normalizedExisting]))
+    }
+
+    if (saveToLocal) {
+      if (!user) {
+        alert(`설문 분석이 완료되었습니다!\n\n[분석 결과]\n${summary}\n\n결과가 기기에 임시 저장되었습니다.\n로그인하면 데이터를 영구보존하고 기기 간 연동할 수 있습니다.`)
+      }
+      if (typeof window !== 'undefined') {
+        const resultData = {
+          timestamp: new Date().toISOString(),
+          scores: scores.map(s => ({ subject: s.name, A: s.percentage, fullMark: 100 }))
+        }
+        const existingResults = JSON.parse(localStorage.getItem('final_csei_results') || '[]')
+        const normalizedExisting = Array.isArray(existingResults) ? existingResults : (existingResults.scores ? [existingResults] : [])
+        localStorage.setItem('final_csei_results', JSON.stringify([resultData, ...normalizedExisting]))
+      }
     }
     
     // 완료 후 마이페이지로 자동 이동

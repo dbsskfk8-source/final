@@ -68,7 +68,7 @@ export default function MySituationPage() {
         const localCure = localStorage.getItem('final_cure_history')
         if (localCsei || localCure) {
           try {
-            await fetch('/api/user/sync', {
+            const res = await fetch('/api/user/sync', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -76,9 +76,13 @@ export default function MySituationPage() {
                 cure_history: localCure ? JSON.parse(localCure) : []
               })
             })
-            localStorage.removeItem('final_csei_results')
-            localStorage.removeItem('final_cure_history')
-          } catch (e) { console.error(e) }
+            if (res.ok) {
+              localStorage.removeItem('final_csei_results')
+              localStorage.removeItem('final_cure_history')
+            } else {
+              console.error('Sync failed with status:', res.status)
+            }
+          } catch (e) { console.error('Sync exception:', e) }
         }
 
         const { data: dbCsei } = await supabase

@@ -20,7 +20,10 @@ export async function POST(req: Request) {
         created_at: r.timestamp || new Date().toISOString()
       }))
       const { error } = await supabase.from('csei_results').insert(cseiInserts)
-      if (error) console.error('csei_results sync error:', error)
+      if (error) {
+        console.error('csei_results sync error:', error)
+        throw new Error(`Sync failed for CSEI: ${error.message}`)
+      }
     }
 
     // 2. Cure(인지재구성) 기록 일괄 Insert
@@ -35,12 +38,14 @@ export async function POST(req: Request) {
           thinking_trap: c.thinkingTrap,
           sentiment: c.sentiment,
           tags: c.tags,
-          // c.id가 Date.now()로 생성되었으므로 이를 timestamp로 변환
           created_at: c.id ? new Date(c.id).toISOString() : new Date().toISOString()
         }
       })
       const { error } = await supabase.from('cure_history').insert(cureInserts)
-      if (error) console.error('cure_history sync error:', error)
+      if (error) {
+        console.error('cure_history sync error:', error)
+        throw new Error(`Sync failed for Cure History: ${error.message}`)
+      }
     }
 
     return NextResponse.json({ success: true })
