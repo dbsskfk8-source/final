@@ -15,7 +15,8 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend
+  Legend,
+  ReferenceArea
 } from 'recharts'
 import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle, LogOut, TrendingUp, LayoutGrid, Calendar, User, Bell, Settings } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
@@ -93,7 +94,12 @@ export default function MySituationPage() {
 
         if (dbCsei && dbCsei.length > 0) {
           setAllCsei(dbCsei)
-          setRadar(dbCsei[0].scores)
+          const latestScores = dbCsei[0].scores.map((s: any) => ({
+            ...s,
+            min: 40,
+            max: 60
+          }))
+          setRadar(latestScores)
         }
 
         const { data: dbCure } = await supabase
@@ -139,7 +145,12 @@ export default function MySituationPage() {
           const resultsArray = Array.isArray(localCsei) ? localCsei : (localCsei.scores ? [localCsei] : [])
           if (resultsArray.length > 0) {
             setAllCsei(resultsArray)
-            setRadar(resultsArray[0].scores)
+            const latestScores = resultsArray[0].scores.map((s: any) => ({
+              ...s,
+              min: 40,
+              max: 60
+            }))
+            setRadar(latestScores)
           }
           const localCureStr = localStorage.getItem('final_cure_history')
           setHistory(localCureStr ? JSON.parse(localCureStr) : [])
@@ -156,8 +167,17 @@ export default function MySituationPage() {
 
   const handleSelectHistory = (index: number) => {
     setSelectedIndex(index)
-    if (allCsei[index]) setRadar(allCsei[index].scores)
+    if (allCsei[index]) {
+      const selectedScores = allCsei[index].scores.map((s: any) => ({
+        ...s,
+        min: 40,
+        max: 60
+      }))
+      setRadar(selectedScores)
+    }
   }
+
+  // 초기 로드 시 가이드 데이터 설정 로직 제거 (위의 useEffect와 통합됨)
 
   const trendData = [...allCsei].reverse().map(item => {
     const d = new Date(item.created_at || item.timestamp)
@@ -238,11 +258,51 @@ export default function MySituationPage() {
                     <PolarGrid stroke="#e5e7eb" strokeDasharray="3 3" />
                     <PolarAngleAxis dataKey="subject" tick={{ fill: '#4a5c53', fontSize: 10, fontWeight: 'bold' }} />
                     <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
-                    <Radar name="Student" dataKey="A" stroke="#a3b8ad" strokeWidth={2} fill="#a3b8ad" fillOpacity={0.6} />
+                    
+                    {/* 가이드 영역 (정상 범위: 40~60) */}
+                    <Radar
+                      name="정상 범위"
+                      dataKey="max"
+                      stroke="none"
+                      fill="#566e63"
+                      fillOpacity={0.08}
+                      isAnimationActive={false}
+                    />
+                    
+                    <Radar name="나의 상태" dataKey="A" stroke="#4a5c53" strokeWidth={2.5} fill="#566e63" fillOpacity={0.4} />
+                    
+                    <Tooltip 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          if (!data.subject) return null;
+                          return (
+                            <div className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl border border-gray-100 animate-in zoom-in-95 duration-200">
+                              <p className="text-[10px] font-bold text-gray-400 mb-1 tracking-widest uppercase">{data.subject}</p>
+                              <div className="flex items-baseline gap-2 mb-2">
+                                <span className="text-2xl font-extrabold text-[#4a5c53]">{data.A}</span>
+                                <span className="text-[10px] font-bold text-[#566e63]">T-score</span>
+                              </div>
+                              <div className="pt-2 border-t border-gray-50 flex flex-col gap-1">
+                                <p className="text-[11px] font-bold text-gray-500">원점수: <span className="text-[#222]">{data.rawScore}점</span></p>
+                                <p className="text-[11px] font-bold text-gray-500">상태: <span className={data.group === 'risk' ? 'text-red-500' : data.group === 'caution' ? 'text-amber-500' : 'text-green-600'}>{data.groupLabel}</span></p>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
                   </RadarChart>
                 ) : (
                   <LineChart data={trendData} margin={{ top: 20, right: 30, left: 10, bottom: 60 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f1f1" />
+                    
+                    {/* 구간별 배경 색상 (ReferenceArea) */}
+                    <ReferenceArea y1={40} y2={60} fill="#566e63" fillOpacity={0.05} label={{ position: 'right', value: '정상', fill: '#566e63', fontSize: 10, offset: 10 }} />
+                    <ReferenceArea y1={60} y2={70} fill="#f59e0b" fillOpacity={0.03} />
+                    <ReferenceArea y1={30} y2={40} fill="#f59e0b" fillOpacity={0.03} />
+                    
                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#999', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#999' }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', fontSize: '12px' }} />
