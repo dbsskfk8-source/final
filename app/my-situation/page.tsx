@@ -265,26 +265,75 @@ export default function MySituationPage() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
-              {[0, 1, 2].map(idx => (
-                <div key={idx} className="bg-[#f0ece5] rounded-3xl py-4 px-6 text-center border border-white/50 shadow-sm">
-                  <div className="text-2xl font-extrabold text-[#4a5c53]">{radar[idx]?.A || 0}%</div>
-                  <div className="text-[10px] font-bold text-gray-400 tracking-widest mt-1">{radar[idx]?.subject || '-'}</div>
-                </div>
-              ))}
+              {radar.map((item: any, idx) => {
+                const group = item.group || 'normal'
+                const groupLabel = item.groupLabel || '정상군'
+                const bgColor = group === 'risk' ? 'bg-red-50' : group === 'caution' ? 'bg-yellow-50' : 'bg-[#f0ece5]'
+                const textColor = group === 'risk' ? 'text-red-600' : group === 'caution' ? 'text-amber-600' : 'text-[#4a5c53]'
+                const borderColor = group === 'risk' ? 'border-red-100' : group === 'caution' ? 'border-yellow-100' : 'border-white/50'
+
+                // 하단 4개만 표시 (공간상)
+                if (idx > 3) return null
+
+                return (
+                  <div key={idx} className={`${bgColor} rounded-3xl py-4 px-6 text-center border ${borderColor} shadow-sm transition-all hover:scale-105`}>
+                    <div className={`text-2xl font-extrabold ${textColor}`}>{item.A}</div>
+                    <div className="text-[10px] font-bold text-gray-400 tracking-widest mt-1 uppercase">{item.subject}</div>
+                    <div className={`text-[9px] font-bold mt-1.5 px-2 py-0.5 rounded-full inline-block ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                       {groupLabel}
+                    </div>
+                  </div>
+                )
+              })}
               <div className="bg-[#e8efe9] rounded-3xl py-4 px-6 text-center flex flex-col items-center justify-center border border-[#566e63]/10 shadow-sm cursor-pointer hover:bg-[#d0dfd3] transition-all active:scale-95 group">
                 <Sparkles size={16} className="text-[#566e63] mb-1 group-hover:rotate-12 transition-transform" />
-                <div className="text-[10px] font-bold text-[#566e63] uppercase tracking-widest">분석 리포트</div>
+                <div className="text-[10px] font-bold text-[#566e63] uppercase tracking-widest text-center">전체 진단<br/>분석</div>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-6">
-            <div className="bg-[#d2eaf7] rounded-[40px] p-8 md:p-10 flex-1 relative overflow-hidden group border border-[#b8d6e9]">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-white/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-               <Sparkles size={24} className="text-[#3b6b8b] mb-6" />
-               <h3 className="text-xl font-bold text-[#222] mb-4 relative z-10 tracking-tight">전문가의 소견</h3>
-               <p className="text-[#3b6b8b] font-medium leading-relaxed italic relative z-10 text-[15px]">"지난주에 비해 회복력 지수가 12% 상승했습니다. 업무 중 경계 세우기에 집중했던 성과가 나타나고 있네요. 저녁 루틴을 꾸준히 유지해 보세요."</p>
-            </div>
+            {/* 전문가의 소견: 실제 데이터 기반 자동 분석 */}
+            {allCsei.length > 0 && (
+              <div className="bg-[#d2eaf7] rounded-[40px] p-8 md:p-10 flex-1 relative overflow-hidden group border border-[#b8d6e9]">
+                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+                 <Sparkles size={24} className="text-[#3b6b8b] mb-6" />
+                 <h3 className="text-xl font-bold text-[#222] mb-4 relative z-10 tracking-tight">지표 분석 결과</h3>
+                 
+                 <div className="relative z-10 space-y-4">
+                    {(() => {
+                      const current = allCsei[selectedIndex] || allCsei[0]
+                      const scores = current.scores as any[]
+                      const riskItems = scores.filter(s => s.group === 'risk')
+                      const cautionItems = scores.filter(s => s.group === 'caution')
+                      
+                      if (riskItems.length > 0) {
+                        return (
+                          <p className="text-[#c13030] bg-white/40 p-4 rounded-2xl font-bold leading-relaxed text-[14px] border border-red-100/50">
+                            "현재 <strong>{riskItems.map((f: any) => f.subject).join(', ')}</strong> 지표가 위험 수치에 해당합니다. 칠정(七情)의 균형을 위해 인지재구성 훈련을 통한 정서 조절이 권장됩니다."
+                          </p>
+                        )
+                      } else if (cautionItems.length > 0) {
+                        return (
+                          <p className="text-[#8c7457] bg-white/40 p-4 rounded-2xl font-bold leading-relaxed text-[14px] border border-yellow-100/50">
+                            "<strong>{cautionItems.map((f: any) => f.subject).join(', ')}</strong> 지표가 주의 단계입니다. 평소보다 예민해진 상태일 수 있으니, 챗봇 상담이나 명상을 통해 휴식을 취해보세요."
+                          </p>
+                        )
+                      } else {
+                        return (
+                          <p className="text-[#3b6b8b] bg-white/40 p-4 rounded-2xl font-bold leading-relaxed text-[14px] border border-[#b8d6e9]/50">
+                            "모든 감정 지표가 정상 범위 내에서 안정적으로 유지되고 있습니다. 현재의 심리적 항상성을 유지하기 위한 루틴을 지속해 보세요."
+                          </p>
+                        )
+                      }
+                    })()}
+                    
+                    <p className="text-[11px] text-[#3b6b8b]/70 font-medium italic">
+                      * 이 분석은 표준화된 T-점수(평균 50, 표준편차 10)를 기준으로 산출되었습니다.
+                    </p>
+                 </div>
+              </div>
+            )}
             <div className="bg-[#f0ece5] rounded-[30px] p-8 border border-white/50 shadow-sm">
                <h3 className="text-sm font-bold text-[#222] mb-6">다음 목표</h3>
                <div className="flex items-center gap-4">

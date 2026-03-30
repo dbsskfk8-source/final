@@ -48,9 +48,13 @@ const QUESTIONS = [
   "나는 작은 소리에도 잘 놀란다.",
 ]
 
+import { analyzeResults, Gender, AgeGroup } from '@/utils/diagnostics'
+
 export default function QuestionnairePage() {
   const router = useRouter()
   const [answers, setAnswers] = useState<Record<number, number>>({})
+  const [gender, setGender] = useState<Gender | ''>('')
+  const [ageGroup, setAgeGroup] = useState<AgeGroup | ''>('')
 
   const handleAnswer = (questionIndex: number, value: number) => {
     setAnswers(prev => ({ ...prev, [questionIndex]: value }))
@@ -61,38 +65,47 @@ export default function QuestionnairePage() {
   const isComplete = answeredCount === totalCount
 
   const handleComplete = async () => {
+    if (!gender || !ageGroup) {
+      alert('성별과 연령대를 먼저 선택해 주세요.')
+      // 스크롤을 위로 이동
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+
     if (!isComplete) {
       alert(`아직 응답하지 않은 문항이 있습니다. (${answeredCount}/${totalCount})`)
       return
     }
 
-    // CSEI-s 7가지 감정(칠정) 매핑 및 점수 계산
-    const dimensions = [
-      { name: '희 (喜)', label: 'Joy' },
-      { name: '노 (怒)', label: 'Anger' },
-      { name: '사 (思)', label: 'Thought' },
-      { name: '우 (憂)', label: 'Anxiety/Worry' },
-      { name: '비 (悲)', label: 'Sadness' },
-      { name: '공 (恐)', label: 'Fear' },
-      { name: '경 (驚)', label: 'Surprise' }
-    ]
+    // 정밀 진단 엔진 호출 (T-score 기반)
+    const { factors, overall } = analyzeResults(answers, gender as Gender, ageGroup as AgeGroup)
 
-    const scores = dimensions.map((dim, dimIdx) => {
-      let sum = 0
-      for (let i = 0; i < 4; i++) {
-        const qIdx = dimIdx + (i * 7)
-        sum += (answers[qIdx] || 0)
-      }
-      const percentage = Math.round(((sum - 4) / (20 - 4)) * 100)
-      return { 
-        ...dim, 
-        sum, 
-        percentage: Math.max(0, Math.min(100, percentage)) // 0~100 사이 보정
-      }
-    })
+    console.log('--- 정밀 진단 결과 ---', { factors, overall })
+    
+    // 분석 요약 메시지 생성
+    const riskFactors = factors.filter(f => f.group === 'risk')
+    const cautionFactors = factors.filter(f => f.group === 'caution')
+    
+    let summary = `[종합 판정: ${overall.groupLabel} (T-점수: ${overall.tScore})]\n\n`
+    if (riskFactors.length > 0) {
+      summary += `⚠️ 위험 항목: ${riskFactors.map(f => f.name).join(', ')}\n`
+    }
+    if (cautionFactors.length > 0) {
+      summary += `⚡ 주의 항목: ${cautionFactors.map(f => f.name).join(', ')}\n`
+    }
+    if (riskFactors.length === 0 && cautionFactors.length === 0) {
+      summary += `✅ 모든 지표가 정상 범위 내에 있습니다.`
+    }
 
-    console.log('--- 7지표 분석 결과 ---', scores)
-    const summary = scores.map(s => `${s.name}: ${s.percentage}%`).join('\n')
+    // DB 저장 데이터 규격화
+    const dbScores = factors.map(f => ({
+      subject: f.name,
+      A: f.tScore, // 차트에는 T-점수를 표시 (또는 기존 방식 유지 가능)
+      fullMark: 100,
+      group: f.group,
+      groupLabel: f.groupLabel,
+      rawScore: f.rawScore
+    }))
 
     // DB 저장 시도
     const supabase = createClient()
@@ -103,7 +116,11 @@ export default function QuestionnairePage() {
     if (user) {
       const { error } = await supabase.from('csei_results').insert([{
         user_id: user.id,
-        scores: scores.map(s => ({ subject: s.name, A: s.percentage, fullMark: 100 })),
+        gender,
+        age_group: ageGroup,
+        scores: dbScores,
+        overall_t_score: overall.tScore,
+        overall_group: overall.group,
         created_at: new Date().toISOString()
       }])
       
@@ -112,18 +129,22 @@ export default function QuestionnairePage() {
         alert('서버 저장에 실패했습니다. 결과가 기기에 임시 저장됩니다.')
       } else {
         saveToLocal = false
-        alert(`설문 분석이 완료되었습니다!\n\n[분석 결과]\n${summary}\n\n결과 시트가 계정에 안전하게 저장되었습니다.`)
+        alert(`설문 분석이 완료되었습니다!\n\n${summary}\n\n결과 리포트가 계정에 안전하게 저장되었습니다.`)
       }
     }
 
     if (saveToLocal) {
       if (!user) {
-        alert(`설문 분석이 완료되었습니다!\n\n[분석 결과]\n${summary}\n\n결과가 기기에 임시 저장되었습니다.\n로그인하면 데이터를 영구보존하고 기기 간 연동할 수 있습니다.`)
+        alert(`설문 분석이 완료되었습니다!\n\n${summary}\n\n결과가 기기에 임시 저장되었습니다.\n로그인하면 데이터를 영구보존하고 기기 간 연동할 수 있습니다.`)
       }
       if (typeof window !== 'undefined') {
         const resultData = {
           timestamp: new Date().toISOString(),
-          scores: scores.map(s => ({ subject: s.name, A: s.percentage, fullMark: 100 }))
+          gender,
+          ageGroup,
+          scores: dbScores,
+          overallTScore: overall.tScore,
+          overallGroup: overall.group
         }
         const existingResults = JSON.parse(localStorage.getItem('final_csei_results') || '[]')
         const normalizedExisting = Array.isArray(existingResults) ? existingResults : (existingResults.scores ? [existingResults] : [])
@@ -136,7 +157,7 @@ export default function QuestionnairePage() {
   }
 
   const handleSaveProgress = () => {
-    console.log('임시 저장 데이터:', answers)
+    console.log('임시 저장 데이터:', { answers, gender, ageGroup })
     alert('현재 응답한 내용이 브라우저에 임시 저장되었습니다.')
   }
 
@@ -222,7 +243,7 @@ export default function QuestionnairePage() {
         <main className="px-6 lg:px-10 py-10 max-w-[1000px] w-full mx-auto animate-in fade-in duration-500">
           
           {/* Patient / Session Info Cards */}
-          <div className="flex flex-col md:flex-row gap-6 mb-12 bg-white rounded-xl p-6 shadow-sm border border-[#eef0ef]">
+          <div className="flex flex-col md:flex-row gap-6 mb-8 bg-white rounded-xl p-6 shadow-sm border border-[#eef0ef]">
              <div className="flex-1 md:border-r border-gray-100 px-4 mb-4 md:mb-0">
                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">진단 번호</div>
                <div className="text-xl font-bold text-[#222]">2026-Guest</div>
@@ -238,6 +259,38 @@ export default function QuestionnairePage() {
                  <span className="font-bold text-[#222]">{today}</span>
                </div>
              </div>
+          </div>
+
+          {/* Gender and Age Selection (New) */}
+          <div className="bg-[#f0f4f1] rounded-2xl p-6 mb-12 border border-[#dce6df] flex flex-col md:flex-row gap-8">
+            <div className="flex-1">
+              <label className="text-xs font-bold text-[#566e63] uppercase tracking-widest mb-3 block">성별 선택</label>
+              <div className="flex gap-3">
+                {([['male', '남성'], ['female', '여성']] as const).map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => setGender(val)}
+                    className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${gender === val ? 'bg-[#566e63] text-white shadow-md' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex-1">
+              <label className="text-xs font-bold text-[#566e63] uppercase tracking-widest mb-3 block">연령대 선택</label>
+              <div className="grid grid-cols-4 gap-2">
+                {(['20s', '30s', '40s', '50s_plus'] as const).map((val) => (
+                  <button
+                    key={val}
+                    onClick={() => setAgeGroup(val)}
+                    className={`py-3 rounded-xl font-bold text-xs transition-all ${ageGroup === val ? 'bg-[#566e63] text-white shadow-md' : 'bg-white text-gray-400 hover:bg-gray-50'}`}
+                  >
+                    {val === '50s_plus' ? '50대 이상' : val.replace('s', '대')}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Survey Header */}
