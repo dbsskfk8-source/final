@@ -188,7 +188,7 @@ export default function CurePage() {
         </div>
       </nav>
 
-      <main className="max-w-3xl mx-auto px-4 md:px-6 py-16 md:py-24">
+      <main className={`mx-auto px-4 md:px-6 py-16 md:py-24 transition-all duration-500 ${stage === 'result' ? 'max-w-5xl' : 'max-w-3xl'}`}>
 
         {/* Header */}
         <div className="text-center mb-16">
@@ -321,15 +321,15 @@ export default function CurePage() {
             <h2 className="text-center text-2xl md:text-3xl font-extrabold mb-8">나아갈 방향을 선택해보세요</h2>
             <p className="text-center text-gray-400 text-sm mb-10">마음에 드는 관점을 선택한 후, 원하는 방향으로 다듬을 수 있어요.</p>
 
-            {/* Reframe Cards */}
-            <div className="grid md:grid-cols-3 gap-5 mb-10">
+            {/* Reframe Cards - PC: 세로 리스트, 모바일: 카드 스택 */}
+            <div className="flex flex-col gap-4 mb-10">
               {reframes.map((card, i) => (
                 <div
                   key={i}
                   onClick={() => setSelectedIndex(i)}
                   style={{ animationDelay: `${i * 120}ms` }}
                   className={`
-                    relative cursor-pointer rounded-3xl p-7 border-2 transition-all duration-300 animate-in fade-in slide-in-from-bottom-3
+                    relative cursor-pointer rounded-3xl border-2 transition-all duration-300 animate-in fade-in slide-in-from-bottom-3
                     ${selectedIndex === i
                       ? 'border-[#566e63] bg-[#e8efe9] shadow-lg shadow-[#566e63]/10'
                       : 'border-transparent bg-white hover:border-[#566e63]/30 hover:shadow-md'
@@ -337,28 +337,37 @@ export default function CurePage() {
                     ${refiningIndex === i ? 'opacity-60' : ''}
                   `}
                 >
-                  {selectedIndex === i && (
-                    <div className="absolute top-4 right-4 text-[#566e63]">
-                      <CheckCircle2 size={20} />
+                  {/* PC: 가로 레이아웃 / 모바일: 세로 레이아웃 */}
+                  <div className="flex flex-col md:flex-row md:items-start gap-0 md:gap-6 p-6 md:p-8">
+                    {/* 왼쪽: 아이콘 + 제목 + 선택 상태 */}
+                    <div className="flex md:flex-col items-center md:items-center gap-4 md:gap-3 mb-4 md:mb-0 md:w-36 md:shrink-0">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${selectedIndex === i ? 'bg-[#566e63] text-white' : 'bg-gray-100 text-gray-500'}`}>
+                        {ICON_MAP[card.icon] || <Sparkles size={22} />}
+                      </div>
+                      <div className="md:text-center">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{card.title}</p>
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <span className={`w-2 h-2 rounded-full shrink-0 ${selectedIndex === i ? 'bg-[#566e63]' : 'bg-gray-200'}`} />
+                          <span className="text-[11px] font-bold text-gray-400">
+                            {selectedIndex === i ? '✓ 선택됨' : '선택하기'}
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  )}
 
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-5 ${selectedIndex === i ? 'bg-[#566e63] text-white' : 'bg-gray-100 text-gray-500'}`}>
-                    {ICON_MAP[card.icon] || <Sparkles size={22} />}
-                  </div>
+                    {/* 오른쪽: 텍스트 본문 (높이 제한 없음) */}
+                    <div className="flex-1 md:border-l md:border-gray-100 md:pl-6">
+                      <p className="text-[15px] leading-loose text-gray-700 italic break-keep">
+                        "{refiningIndex === i ? '다듬는 중...' : card.text}"
+                      </p>
+                    </div>
 
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{card.title}</p>
-                  <div className="max-h-36 overflow-y-auto">
-                    <p className="text-sm leading-relaxed text-gray-700 italic">
-                      "{refiningIndex === i ? '다듬는 중...' : card.text}"
-                    </p>
-                  </div>
-
-                  <div className="mt-6 flex items-center gap-1.5">
-                    <span className={`w-2 h-2 rounded-full ${selectedIndex === i ? 'bg-[#566e63]' : 'bg-gray-200'}`} />
-                    <span className="text-[11px] font-bold text-gray-400">
-                      {selectedIndex === i ? '선택됨' : '관점 선택하기'}
-                    </span>
+                    {/* 선택 체크 아이콘 (우상단) */}
+                    {selectedIndex === i && (
+                      <div className="absolute top-4 right-4 text-[#566e63]">
+                        <CheckCircle2 size={20} />
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
