@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, RotateCcw, Sparkles, Heart, Zap, Target, CheckCircle2, Brain, AlertCircle, ChevronDown, ChevronUp, BookOpen } from 'lucide-react'
+import { ArrowRight, RotateCcw, Sparkles, Heart, Zap, Target, CheckCircle2, Brain, AlertCircle } from 'lucide-react'
 
 // --- Types ---
 type Stage = 'input' | 'loading' | 'result'
@@ -166,7 +166,6 @@ export default function CurePage() {
     setReframes([])
     setSimilarCases([])
     setSelectedIndex(null)
-    setExpandedCase(null)
     setError('')
     setStage('input')
   }
@@ -396,50 +395,6 @@ export default function CurePage() {
                 ))}
               </div>
             </div>
-
-            {/* 유사 사례 섹션 */}
-            {similarCases.length > 0 && (
-              <div className="mb-10 animate-in fade-in duration-700 delay-200">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-xl bg-[#e8efe9] flex items-center justify-center text-[#566e63]">
-                    <BookOpen size={16} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-base text-[#222]">비슷한 상황의 재구성 사례</h3>
-                    <p className="text-xs text-gray-400">실제 데이터에서 유사한 상황을 찾았습니다. 참고용으로만 활용해 주세요.</p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3">
-                  {similarCases.slice(0, 3).map((c) => (
-                    <div key={c.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                      <button
-                        onClick={() => setExpandedCase(expandedCase === c.id ? null : c.id)}
-                        className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-[#f8f7f4] transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-[10px] font-bold text-[#566e63] bg-[#e8efe9] px-2 py-0.5 rounded-full">사례 {c.id}</span>
-                          {c.traps && (
-                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{c.traps.split(',')[0].trim()}</span>
-                          )}
-                          <span className="text-sm text-gray-500 truncate max-w-[200px] md:max-w-xs">
-                            {c.situationThought.slice(0, 50)}...
-                          </span>
-                        </div>
-                        {expandedCase === c.id ? <ChevronUp size={16} className="text-gray-400 shrink-0" /> : <ChevronDown size={16} className="text-gray-400 shrink-0" />}
-                      </button>
-                      {expandedCase === c.id && (
-                        <div className="px-6 pb-5 border-t border-gray-50 animate-in fade-in duration-300">
-                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-4 mb-1">상황 / 생각</p>
-                          <p className="text-sm text-gray-600 leading-relaxed mb-4">{c.situationThought}</p>
-                          <p className="text-xs font-bold text-[#566e63] uppercase tracking-wide mb-1">재구성 문장</p>
-                          <p className="text-sm text-gray-700 leading-relaxed italic">"{c.reframe}"</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* 액션 버튼 */}
             <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
