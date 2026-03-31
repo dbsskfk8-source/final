@@ -111,18 +111,6 @@ export default function ChatPage() {
               나를 돌아보는 고요한 시간<span className="italic font-serif text-[#566e63] ml-1">.</span>
             </h1>
           </div>
-          <div className="bg-white shadow-xl shadow-black/5 rounded-full px-6 py-3 flex items-center gap-3 border border-gray-50">
-            <div className="w-10 h-10 rounded-full bg-[#f3f3f3] overflow-hidden">
-              <img src="https://i.pravatar.cc/100?img=47" alt="Guide" className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <div className="text-sm font-bold">공감 가이드</div>
-              <div className="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#566e63]"></span>
-                <i>경청하는 중</i>
-              </div>
-            </div>
-          </div>
         </header>
 
         <div className="flex-1 flex flex-col gap-12 mb-10">
