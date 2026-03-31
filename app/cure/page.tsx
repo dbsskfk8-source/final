@@ -218,7 +218,7 @@ export default function CurePage() {
                   placeholder="예: 오늘 프로젝트 발표에서 상사에게 피드백을 받았어요..."
                   rows={5}
                   disabled={stage === 'loading'}
-                  className="w-full bg-[#f8f7f4] rounded-2xl p-4 text-sm resize-none outline-none focus:ring-2 focus:ring-[#566e63]/20 placeholder:text-gray-300 disabled:opacity-60 leading-relaxed"
+                  className="w-full bg-[#f8f7f4] rounded-2xl p-4 text-[15px] text-gray-800 resize-none outline-none focus:ring-2 focus:ring-[#566e63]/20 placeholder:text-gray-400 disabled:opacity-60 leading-relaxed"
                 />
               </div>
 
@@ -237,7 +237,7 @@ export default function CurePage() {
                   placeholder="예: 나는 이 일에 소질이 없는 것 같아. 앞으로도 계속 실패할 거야..."
                   rows={5}
                   disabled={stage === 'loading'}
-                  className="w-full bg-[#f8f7f4] rounded-2xl p-4 text-sm resize-none outline-none focus:ring-2 focus:ring-[#566e63]/20 placeholder:text-gray-300 disabled:opacity-60 leading-relaxed"
+                  className="w-full bg-[#f8f7f4] rounded-2xl p-4 text-[15px] text-gray-800 resize-none outline-none focus:ring-2 focus:ring-[#566e63]/20 placeholder:text-gray-400 disabled:opacity-60 leading-relaxed"
                 />
               </div>
             </div>
