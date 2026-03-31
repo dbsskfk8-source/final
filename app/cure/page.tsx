@@ -29,9 +29,9 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 }
 
 const REFINE_BUTTONS: { mode: RefineMode; label: string; icon: React.ReactNode }[] = [
-  { mode: 'empathy', label: '💙 더 공감되게', icon: <Heart size={16} /> },
-  { mode: 'actionability', label: '⚡ 더 실행력 있게', icon: <Zap size={16} /> },
-  { mode: 'specificity', label: '🔍 더 구체적으로', icon: <Target size={16} /> },
+  { mode: 'empathy', label: '?�� ??공감?�게', icon: <Heart size={16} /> },
+  { mode: 'actionability', label: '?????�행???�게', icon: <Zap size={16} /> },
+  { mode: 'specificity', label: '?�� ??구체?�으�?, icon: <Target size={16} /> },
 ]
 
 export default function CurePage() {
@@ -47,10 +47,10 @@ export default function CurePage() {
   const [expandedCase, setExpandedCase] = useState<number | null>(null)
   const [loadingStep, setLoadingStep] = useState<'classify' | 'reframe'>('classify')
 
-  // 분석 시작: classify → reframe 순차 호출
+  // 분석 ?�작: classify ??reframe ?�차 ?�출
   const handleAnalyze = async () => {
     if (!situation.trim() || !thought.trim()) {
-      setError('현재 상황과 내 생각을 모두 입력해주세요.')
+      setError('?�재 ?�황�????�각??모두 ?�력?�주?�요.')
       return
     }
     setError('')
@@ -58,7 +58,7 @@ export default function CurePage() {
     setLoadingStep('classify')
 
     try {
-      // Step 1: 사고함정 분류 (classify API)
+      // Step 1: ?�고?�정 분류 (classify API)
       const classifyRes = await fetch('/api/classify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -68,7 +68,7 @@ export default function CurePage() {
       const detectedTrap = classifyData.thinking_trap || ''
       setThinkingTrap(detectedTrap)
 
-      // Step 2: 재구성 생성 (reframe API) - 유사 사례 포함
+      // Step 2: ?�구???�성 (reframe API) - ?�사 ?��? ?�함
       setLoadingStep('reframe')
       const reframeRes = await fetch('/api/reframe', {
         method: 'POST',
@@ -78,7 +78,7 @@ export default function CurePage() {
       const reframeData = await reframeRes.json()
 
       if (!reframeData.success) {
-        setError(reframeData.error || '분석 중 오류가 발생했습니다.')
+        setError(reframeData.error || '분석 �??�류가 발생?�습?�다.')
         setStage('input')
         return
       }
@@ -88,15 +88,15 @@ export default function CurePage() {
       setSelectedIndex(null)
       setStage('result')
     } catch {
-      setError('서버와 통신 중 오류가 발생했습니다.')
+      setError('?�버?� ?�신 �??�류가 발생?�습?�다.')
       setStage('input')
     }
   }
 
-  // 다듬기 (control.js 방식)
+  // ?�듬�?(control.js 방식)
   const handleRefine = async (mode: RefineMode) => {
     if (selectedIndex === null) {
-      setError('먼저 마음에 드는 관점을 선택해주세요.')
+      setError('먼�? 마음???�는 관?�을 ?�택?�주?�요.')
       return
     }
     setError('')
@@ -122,26 +122,26 @@ export default function CurePage() {
           )
         )
       } else {
-        setError(data.error || '다듬기 중 오류가 발생했습니다.')
+        setError(data.error || '?�듬�?�??�류가 발생?�습?�다.')
       }
     } catch {
-      setError('다듬기 중 오류가 발생했습니다.')
+      setError('?�듬�?�??�류가 발생?�습?�다.')
     } finally {
       setRefiningIndex(null)
     }
   }
 
-  // 저장 및 완료
+  // ?�??�??�료
   const handleSave = () => {
     if (selectedIndex === null) {
-      alert('저장할 재구성 관점을 먼저 선택해 주세요.')
+      alert('?�?�할 ?�구??관?�을 먼�? ?�택??주세??')
       return
     }
 
     const newLog = {
       id: Date.now(),
       date: new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: 'numeric' }),
-      type: `인지 재구성: ${reframes[selectedIndex].title}`,
+      type: `?��? ?�구?? ${reframes[selectedIndex].title}`,
       situation,
       thought,
       summary: reframes[selectedIndex].text,
@@ -155,10 +155,10 @@ export default function CurePage() {
       localStorage.setItem('final_cure_history', JSON.stringify([newLog, ...existingHistory]))
     }
 
-    alert('치료 기록이 브라우저에 임시 저장되었습니다. 마이페이지에서 확인하실 수 있습니다.')
+    alert('치료 기록??브라?��????�시 ?�?�되?�습?�다. 마이?�이지?�서 ?�인?�실 ???�습?�다.')
   }
 
-  // 다시 시작
+  // ?�시 ?�작
   const handleReset = () => {
     setSituation('')
     setThought('')
@@ -175,15 +175,15 @@ export default function CurePage() {
 
       {/* Nav */}
       <nav className="px-6 md:px-10 py-6 flex justify-between items-center bg-transparent">
-        <Link href="/" className="font-extrabold text-xl text-[#4a5c53]">파이널 서비스</Link>
-        <div className="hidden md:flex gap-10 text-sm font-medium text-gray-400">
-          <Link href="/select" className="text-black border-b-2 border-black pb-1">치유 여정(Cure)</Link>
-          <Link href="/my-situation" className="hover:text-black">내 상태 분석</Link>
-          <Link href="/chat" className="hover:text-black">상담 챗봇</Link>
+        <Link href="/" className="font-extrabold text-xl text-[#4a5c53]">?�이???�비??/Link>
+        <div className="hidden md:flex gap-10 text-sm font-medium text-gray-600">
+          <Link href="/select" className="text-black border-b-2 border-black pb-1">치유 ?�정(Cure)</Link>
+          <Link href="/my-situation" className="hover:text-black">???�태 분석</Link>
+          <Link href="/chat" className="hover:text-black">?�담 챗봇</Link>
         </div>
         <div className="flex gap-4 items-center">
-          <Link href="/login" className="text-sm font-medium text-gray-400 hidden md:block">로그인</Link>
-          <Link href="/login" className="bg-[#566e63] text-white px-5 py-2 rounded-full text-sm font-bold">회원가입</Link>
+          <Link href="/login" className="text-sm font-medium text-gray-600 hidden md:block">로그??/Link>
+          <Link href="/login" className="bg-[#566e63] text-white px-5 py-2 rounded-full text-sm font-bold">?�원가??/Link>
         </div>
       </nav>
 
@@ -191,10 +191,10 @@ export default function CurePage() {
 
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">인지 재구성</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">?��? ?�구??/h1>
           <p className="text-gray-500 text-base md:text-lg leading-relaxed">
-            지금 마음속에 있는 생각을 새로운 시각으로 바라봐요.<br className="hidden md:block"/>
-            현재 상황과 마음속 생각을 적어주세요.
+            지�?마음?�에 ?�는 ?�각???�로???�각?�로 바라봐요.<br className="hidden md:block"/>
+            ?�재 ?�황�?마음???�각???�어주세??
           </p>
         </div>
 
@@ -203,41 +203,41 @@ export default function CurePage() {
           <div className="animate-in fade-in duration-500">
             {/* Input cards */}
             <div className="grid md:grid-cols-2 gap-6 mb-10">
-              {/* 현재 상황 */}
+              {/* ?�재 ?�황 */}
               <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                 <div className="flex items-center gap-3 mb-4 text-[#566e63]">
                   <div className="w-8 h-8 rounded-lg bg-[#e8efe9] flex items-center justify-center">
                     <Target size={16} />
                   </div>
-                  <h2 className="font-bold text-base">현재 상황</h2>
+                  <h2 className="font-bold text-base">?�재 ?�황</h2>
                 </div>
-                <p className="text-xs text-gray-600 mb-4">사건이나 상황을 최대한 객관적으로 적어주세요.</p>
+                <p className="text-xs text-gray-600 mb-4">?�건?�나 ?�황??최�???객�??�으�??�어주세??</p>
                 <textarea
                   value={situation}
                   onChange={e => setSituation(e.target.value)}
-                  placeholder="예: 오늘 프로젝트 발표에서 상사에게 피드백을 받았어요..."
+                  placeholder="?? ?�늘 ?�로?�트 발표?�서 ?�사?�게 ?�드백을 받았?�요..."
                   rows={5}
                   disabled={stage === 'loading'}
-                  className="w-full bg-[#f8f7f4] rounded-2xl p-4 text-[15px] text-gray-800 resize-none outline-none focus:ring-2 focus:ring-[#566e63]/20 placeholder:text-gray-400 disabled:opacity-60 leading-relaxed"
+                  className="w-full bg-[#f8f7f4] rounded-2xl p-4 text-[15px] text-gray-800 resize-none outline-none focus:ring-2 focus:ring-[#566e63]/20 placeholder:text-gray-600 disabled:opacity-60 leading-relaxed"
                 />
               </div>
 
-              {/* 내 생각 */}
+              {/* ???�각 */}
               <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
                 <div className="flex items-center gap-3 mb-4 text-[#566e63]">
                   <div className="w-8 h-8 rounded-lg bg-[#e8efe9] flex items-center justify-center">
                     <Brain size={16} />
                   </div>
-                  <h2 className="font-bold text-base">내 생각</h2>
+                  <h2 className="font-bold text-base">???�각</h2>
                 </div>
-                <p className="text-xs text-gray-600 mb-4">그 상황에서 마음속에 바로 떠오른 생각을 솔직하게 적어주세요.</p>
+                <p className="text-xs text-gray-600 mb-4">�??�황?�서 마음?�에 바로 ?�오�??�각???�직?�게 ?�어주세??</p>
                 <textarea
                   value={thought}
                   onChange={e => setThought(e.target.value)}
-                  placeholder="예: 나는 이 일에 소질이 없는 것 같아. 앞으로도 계속 실패할 거야..."
+                  placeholder="?? ?�는 ???�에 ?�질???�는 �?같아. ?�으로도 계속 ?�패??거야..."
                   rows={5}
                   disabled={stage === 'loading'}
-                  className="w-full bg-[#f8f7f4] rounded-2xl p-4 text-[15px] text-gray-800 resize-none outline-none focus:ring-2 focus:ring-[#566e63]/20 placeholder:text-gray-400 disabled:opacity-60 leading-relaxed"
+                  className="w-full bg-[#f8f7f4] rounded-2xl p-4 text-[15px] text-gray-800 resize-none outline-none focus:ring-2 focus:ring-[#566e63]/20 placeholder:text-gray-600 disabled:opacity-60 leading-relaxed"
                 />
               </div>
             </div>
@@ -261,12 +261,12 @@ export default function CurePage() {
                   <>
                     <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
                     <span className="animate-pulse">
-                      {loadingStep === 'classify' ? '🔍 사고 패턴 분석 중...' : '✨ 재구성 생성 중...'}
+                      {loadingStep === 'classify' ? '?�� ?�고 ?�턴 분석 �?..' : '???�구???�성 �?..'}
                     </span>
                   </>
                 ) : (
                   <>
-                    분석 시작하기
+                    분석 ?�작?�기
                     <ArrowRight size={18} />
                   </>
                 )}
@@ -283,9 +283,9 @@ export default function CurePage() {
                 </div>
                 <div className="text-center">
                   <p className="text-sm font-bold text-[#566e63] mb-1">
-                    {loadingStep === 'classify' ? '1/2 · 생각의 패턴을 분석하고 있습니다' : '2/2 · 맞춤 재구성 문장을 생성하고 있습니다'}
+                    {loadingStep === 'classify' ? '1/2 · ?�각???�턴??분석?�고 ?�습?�다' : '2/2 · 맞춤 ?�구??문장???�성?�고 ?�습?�다'}
                   </p>
-                  <p className="text-xs text-gray-400">CSV 사례 데이터와 AI를 활용하고 있어요</p>
+                  <p className="text-xs text-gray-600">CSV ?��? ?�이?��? AI�??�용?�고 ?�어??/p>
                 </div>
               </div>
             )}
@@ -296,15 +296,15 @@ export default function CurePage() {
         {stage === 'result' && (
           <div className="animate-in fade-in duration-700 slide-in-from-bottom-4">
 
-            {/* 생각의 함정 배지 */}
+            {/* ?�각???�정 배�? */}
             {thinkingTrap && (
               <div className="flex justify-center mb-12 animate-in fade-in duration-500 delay-100">
                 <div className="inline-flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4">
                   <Brain size={18} className="text-amber-500 shrink-0" />
                   <div>
-                    <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-0.5">GPT 분석 · 사고의 함정</p>
+                    <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-0.5">GPT 분석 · ?�고???�정</p>
                     <p className="text-sm font-bold text-amber-900">
-                      당신의 생각 속에 <span className="text-amber-600">'{thinkingTrap}'</span> 패턴이 있을 수 있어요.
+                      ?�신???�각 ?�에 <span className="text-amber-600">'{thinkingTrap}'</span> ?�턴???�을 ???�어??
                     </p>
                   </div>
                 </div>
@@ -314,13 +314,12 @@ export default function CurePage() {
             {/* Section Label */}
             <div className="flex justify-center mb-8">
               <span className="bg-[#e8efe9] text-[#566e63] text-[11px] font-bold px-4 py-1.5 rounded-full tracking-widest uppercase">
-                재구성 관점
-              </span>
+                ?�구??관??              </span>
             </div>
-            <h2 className="text-center text-2xl md:text-3xl font-extrabold mb-8">나아갈 방향을 선택해보세요</h2>
-            <p className="text-center text-gray-400 text-sm mb-10">마음에 드는 관점을 선택한 후, 원하는 방향으로 다듬을 수 있어요.</p>
+            <h2 className="text-center text-2xl md:text-3xl font-extrabold mb-8">?�아�?방향???�택?�보?�요</h2>
+            <p className="text-center text-gray-600 text-sm mb-10">마음???�는 관?�을 ?�택???? ?�하??방향?�로 ?�듬?????�어??</p>
 
-            {/* Reframe Cards - PC: 세로 리스트, 모바일: 카드 스택 */}
+            {/* Reframe Cards - PC: ?�로 리스?? 모바?? 카드 ?�택 */}
             <div className="flex flex-col gap-4 mb-10">
               {reframes.map((card, i) => (
                 <div
@@ -336,32 +335,32 @@ export default function CurePage() {
                     ${refiningIndex === i ? 'opacity-60' : ''}
                   `}
                 >
-                  {/* PC: 가로 레이아웃 / 모바일: 세로 레이아웃 */}
+                  {/* PC: 가�??�이?�웃 / 모바?? ?�로 ?�이?�웃 */}
                   <div className="flex flex-col md:flex-row md:items-start gap-0 md:gap-6 p-6 md:p-8">
-                    {/* 왼쪽: 아이콘 + 제목 + 선택 상태 */}
+                    {/* ?�쪽: ?�이�?+ ?�목 + ?�택 ?�태 */}
                     <div className="flex md:flex-col items-center md:items-center gap-4 md:gap-3 mb-4 md:mb-0 md:w-36 md:shrink-0">
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${selectedIndex === i ? 'bg-[#566e63] text-white' : 'bg-gray-100 text-gray-500'}`}>
                         {ICON_MAP[card.icon] || <Sparkles size={22} />}
                       </div>
                       <div className="md:text-center">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{card.title}</p>
+                        <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">{card.title}</p>
                         <div className="flex items-center gap-1.5 mt-1.5">
                           <span className={`w-2 h-2 rounded-full shrink-0 ${selectedIndex === i ? 'bg-[#566e63]' : 'bg-gray-200'}`} />
-                          <span className="text-[11px] font-bold text-gray-400">
-                            {selectedIndex === i ? '✓ 선택됨' : '선택하기'}
+                          <span className="text-[11px] font-bold text-gray-600">
+                            {selectedIndex === i ? '???�택?? : '?�택?�기'}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* 오른쪽: 텍스트 본문 (높이 제한 없음) */}
+                    {/* ?�른�? ?�스??본문 (?�이 ?�한 ?�음) */}
                     <div className="flex-1 md:border-l md:border-gray-100 md:pl-6">
                       <p className="text-[15px] leading-loose text-gray-700 italic break-keep">
-                        "{refiningIndex === i ? '다듬는 중...' : card.text}"
+                        "{refiningIndex === i ? '?�듬??�?..' : card.text}"
                       </p>
                     </div>
 
-                    {/* 선택 체크 아이콘 (우상단) */}
+                    {/* ?�택 체크 ?�이�?(?�상?? */}
                     {selectedIndex === i && (
                       <div className="absolute top-4 right-4 text-[#566e63]">
                         <CheckCircle2 size={20} />
@@ -372,10 +371,10 @@ export default function CurePage() {
               ))}
             </div>
 
-            {/* 다듬기 패널 */}
+            {/* ?�듬�??�널 */}
             <div className={`bg-white rounded-3xl p-8 border border-gray-100 shadow-sm mb-10 transition-all duration-300 ${selectedIndex !== null ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-              <h3 className="text-center font-bold text-base mb-2">이 관점을 다듬어볼까요?</h3>
-              <p className="text-center text-xs text-gray-400 mb-6">현재 감정 상태에 맞게 톤을 조절해 보세요.</p>
+              <h3 className="text-center font-bold text-base mb-2">??관?�을 ?�듬?�볼까요?</h3>
+              <p className="text-center text-xs text-gray-600 mb-6">?�재 감정 ?�태??맞게 ?�을 조절??보세??</p>
               {error && (
                 <div className="flex items-center justify-center gap-2 text-red-500 text-sm mb-4">
                   <AlertCircle size={14} />
@@ -390,20 +389,20 @@ export default function CurePage() {
                     disabled={refiningIndex !== null}
                     className="bg-[#f8f7f4] hover:bg-[#e8efe9] hover:text-[#566e63] text-gray-600 font-bold text-sm px-7 py-3 rounded-full border border-transparent hover:border-[#566e63]/20 transition-all disabled:opacity-50"
                   >
-                    {refiningIndex !== null ? '처리 중...' : label}
+                    {refiningIndex !== null ? '처리 �?..' : label}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* 액션 버튼 */}
+            {/* ?�션 버튼 */}
             <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-600 font-medium transition-all order-2 sm:order-1"
+                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-600 font-medium transition-all order-2 sm:order-1"
               >
                 <RotateCcw size={15} />
-                처음부터 다시 시작하기
+                처음부???�시 ?�작?�기
               </button>
               
               <button
@@ -413,7 +412,7 @@ export default function CurePage() {
                    ${selectedIndex === null ? 'grayscale cursor-not-allowed' : ''}
                 `}
               >
-                저장하고 완료하기
+                ?�?�하�??�료?�기
                 <CheckCircle2 size={18} />
               </button>
             </div>
@@ -422,16 +421,16 @@ export default function CurePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 mt-20 px-6 md:px-10 py-12 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-gray-400 font-medium">
+      <footer className="border-t border-gray-100 mt-20 px-6 md:px-10 py-12 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-gray-600 font-medium">
         <div>
-          <div className="font-extrabold text-sm text-[#4a5c53] mb-1">파이널 서비스</div>
-          <div>© 2024 파이널 서비스. 마음의 안식처.</div>
+          <div className="font-extrabold text-sm text-[#4a5c53] mb-1">?�이???�비??/div>
+          <div>© 2024 ?�이???�비?? 마음???�식�?</div>
         </div>
         <div className="flex gap-10 uppercase tracking-widest font-bold">
-          <Link href="#" className="hover:text-black transition-colors">소개</Link>
-          <Link href="#" className="hover:text-black transition-colors">개인정보처리방침</Link>
-          <Link href="#" className="hover:text-black transition-colors">문의하기</Link>
-          <Link href="#" className="hover:text-black transition-colors">이용약관</Link>
+          <Link href="#" className="hover:text-black transition-colors">?�개</Link>
+          <Link href="#" className="hover:text-black transition-colors">개인?�보처리방침</Link>
+          <Link href="#" className="hover:text-black transition-colors">문의?�기</Link>
+          <Link href="#" className="hover:text-black transition-colors">?�용?��?</Link>
         </div>
       </footer>
     </div>
