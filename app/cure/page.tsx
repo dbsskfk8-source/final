@@ -2,16 +2,23 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, RotateCcw, Sparkles, Heart, Zap, Target, CheckCircle2, Brain, AlertCircle } from 'lucide-react'
+import { ArrowRight, RotateCcw, Sparkles, Heart, Zap, Target, CheckCircle2, Brain, AlertCircle, ChevronDown, ChevronUp, BookOpen } from 'lucide-react'
 
 // --- Types ---
 type Stage = 'input' | 'loading' | 'result'
-type RefineMode = 'empathy' | 'action' | 'specific'
+type RefineMode = 'empathy' | 'actionability' | 'specificity'
 
 interface ReframeCard {
   icon: string
   title: string
   text: string
+}
+
+interface SimilarCase {
+  id: number
+  situationThought: string
+  reframe: string
+  traps: string
 }
 
 // --- Icon map ---
@@ -23,8 +30,8 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 
 const REFINE_BUTTONS: { mode: RefineMode; label: string; icon: React.ReactNode }[] = [
   { mode: 'empathy', label: '💙 더 공감되게', icon: <Heart size={16} /> },
-  { mode: 'action', label: '⚡ 더 실행력 있게', icon: <Zap size={16} /> },
-  { mode: 'specific', label: '🔍 더 구체적으로', icon: <Target size={16} /> },
+  { mode: 'actionability', label: '⚡ 더 실행력 있게', icon: <Zap size={16} /> },
+  { mode: 'specificity', label: '🔍 더 구체적으로', icon: <Target size={16} /> },
 ]
 
 export default function CurePage() {
@@ -33,11 +40,14 @@ export default function CurePage() {
   const [thought, setThought] = useState('')
   const [thinkingTrap, setThinkingTrap] = useState('')
   const [reframes, setReframes] = useState<ReframeCard[]>([])
+  const [similarCases, setSimilarCases] = useState<SimilarCase[]>([])
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [refiningIndex, setRefiningIndex] = useState<number | null>(null)
   const [error, setError] = useState('')
+  const [expandedCase, setExpandedCase] = useState<number | null>(null)
+  const [loadingStep, setLoadingStep] = useState<'classify' | 'reframe'>('classify')
 
-  // 분석 시작
+  // 분석 시작: classify → reframe 순차 호출
   const handleAnalyze = async () => {
     if (!situation.trim() || !thought.trim()) {
       setError('현재 상황과 내 생각을 모두 입력해주세요.')
@@ -45,23 +55,36 @@ export default function CurePage() {
     }
     setError('')
     setStage('loading')
+    setLoadingStep('classify')
 
     try {
-      const res = await fetch('/api/reframe', {
+      // Step 1: 사고함정 분류 (classify API)
+      const classifyRes = await fetch('/api/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ thought, situation }),
+      })
+      const classifyData = await classifyRes.json()
+      const detectedTrap = classifyData.thinking_trap || ''
+      setThinkingTrap(detectedTrap)
+
+      // Step 2: 재구성 생성 (reframe API) - 유사 사례 포함
+      setLoadingStep('reframe')
+      const reframeRes = await fetch('/api/reframe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ situation, thought }),
       })
-      const data = await res.json()
+      const reframeData = await reframeRes.json()
 
-      if (!data.success) {
-        setError(data.error || '분석 중 오류가 발생했습니다.')
+      if (!reframeData.success) {
+        setError(reframeData.error || '분석 중 오류가 발생했습니다.')
         setStage('input')
         return
       }
 
-      setThinkingTrap(data.thinkingTrap)
-      setReframes(data.reframes)
+      setReframes(reframeData.reframes)
+      setSimilarCases(reframeData.similarCases || [])
       setSelectedIndex(null)
       setStage('result')
     } catch {
@@ -70,7 +93,7 @@ export default function CurePage() {
     }
   }
 
-  // 다듬기
+  // 다듬기 (control.js 방식)
   const handleRefine = async (mode: RefineMode) => {
     if (selectedIndex === null) {
       setError('먼저 마음에 드는 관점을 선택해주세요.')
@@ -133,7 +156,6 @@ export default function CurePage() {
     }
 
     alert('치료 기록이 브라우저에 임시 저장되었습니다. 마이페이지에서 확인하실 수 있습니다.')
-    // router.push('/my-situation')
   }
 
   // 다시 시작
@@ -142,7 +164,9 @@ export default function CurePage() {
     setThought('')
     setThinkingTrap('')
     setReframes([])
+    setSimilarCases([])
     setSelectedIndex(null)
+    setExpandedCase(null)
     setError('')
     setStage('input')
   }
@@ -237,7 +261,9 @@ export default function CurePage() {
                 {stage === 'loading' ? (
                   <>
                     <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                    <span className="animate-pulse">AI가 분석 중이에요...</span>
+                    <span className="animate-pulse">
+                      {loadingStep === 'classify' ? '🔍 사고 패턴 분석 중...' : '✨ 재구성 생성 중...'}
+                    </span>
                   </>
                 ) : (
                   <>
@@ -250,11 +276,17 @@ export default function CurePage() {
 
             {/* Loading Pulse Bg */}
             {stage === 'loading' && (
-              <div className="mt-16 flex justify-center">
+              <div className="mt-16 flex flex-col items-center gap-6">
                 <div className="relative flex items-center justify-center">
                   <div className="w-32 h-32 rounded-full bg-[#566e63]/10 animate-ping absolute" />
                   <div className="w-20 h-20 rounded-full bg-[#566e63]/20 animate-pulse absolute" />
                   <div className="w-10 h-10 rounded-full bg-[#566e63]/40" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-bold text-[#566e63] mb-1">
+                    {loadingStep === 'classify' ? '1/2 · 생각의 패턴을 분석하고 있습니다' : '2/2 · 맞춤 재구성 문장을 생성하고 있습니다'}
+                  </p>
+                  <p className="text-xs text-gray-400">CSV 사례 데이터와 AI를 활용하고 있어요</p>
                 </div>
               </div>
             )}
@@ -271,7 +303,7 @@ export default function CurePage() {
                 <div className="inline-flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4">
                   <Brain size={18} className="text-amber-500 shrink-0" />
                   <div>
-                    <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-0.5">분석된 생각의 함정</p>
+                    <p className="text-[10px] font-bold text-amber-500 uppercase tracking-wider mb-0.5">GPT 분석 · 사고의 함정</p>
                     <p className="text-sm font-bold text-amber-900">
                       당신의 생각 속에 <span className="text-amber-600">'{thinkingTrap}'</span> 패턴이 있을 수 있어요.
                     </p>
@@ -305,25 +337,23 @@ export default function CurePage() {
                     ${refiningIndex === i ? 'opacity-60' : ''}
                   `}
                 >
-                  {/* 선택 체크 */}
                   {selectedIndex === i && (
                     <div className="absolute top-4 right-4 text-[#566e63]">
                       <CheckCircle2 size={20} />
                     </div>
                   )}
 
-                  {/* 아이콘 */}
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-5 ${selectedIndex === i ? 'bg-[#566e63] text-white' : 'bg-gray-100 text-gray-500'}`}>
                     {ICON_MAP[card.icon] || <Sparkles size={22} />}
                   </div>
 
-                  {/* 카드 내용 */}
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">{card.title}</p>
-                  <p className="text-sm leading-relaxed text-gray-700 italic">
-                    "{refiningIndex === i ? '다듬는 중...' : card.text}"
-                  </p>
+                  <div className="max-h-36 overflow-y-auto">
+                    <p className="text-sm leading-relaxed text-gray-700 italic">
+                      "{refiningIndex === i ? '다듬는 중...' : card.text}"
+                    </p>
+                  </div>
 
-                  {/* 선택 or 활성화 표시 */}
                   <div className="mt-6 flex items-center gap-1.5">
                     <span className={`w-2 h-2 rounded-full ${selectedIndex === i ? 'bg-[#566e63]' : 'bg-gray-200'}`} />
                     <span className="text-[11px] font-bold text-gray-400">
@@ -357,6 +387,50 @@ export default function CurePage() {
                 ))}
               </div>
             </div>
+
+            {/* 유사 사례 섹션 */}
+            {similarCases.length > 0 && (
+              <div className="mb-10 animate-in fade-in duration-700 delay-200">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-8 h-8 rounded-xl bg-[#e8efe9] flex items-center justify-center text-[#566e63]">
+                    <BookOpen size={16} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base text-[#222]">비슷한 상황의 재구성 사례</h3>
+                    <p className="text-xs text-gray-400">실제 데이터에서 유사한 상황을 찾았습니다. 참고용으로만 활용해 주세요.</p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-3">
+                  {similarCases.slice(0, 3).map((c) => (
+                    <div key={c.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                      <button
+                        onClick={() => setExpandedCase(expandedCase === c.id ? null : c.id)}
+                        className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-[#f8f7f4] transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-bold text-[#566e63] bg-[#e8efe9] px-2 py-0.5 rounded-full">사례 {c.id}</span>
+                          {c.traps && (
+                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">{c.traps.split(',')[0].trim()}</span>
+                          )}
+                          <span className="text-sm text-gray-500 truncate max-w-[200px] md:max-w-xs">
+                            {c.situationThought.slice(0, 50)}...
+                          </span>
+                        </div>
+                        {expandedCase === c.id ? <ChevronUp size={16} className="text-gray-400 shrink-0" /> : <ChevronDown size={16} className="text-gray-400 shrink-0" />}
+                      </button>
+                      {expandedCase === c.id && (
+                        <div className="px-6 pb-5 border-t border-gray-50 animate-in fade-in duration-300">
+                          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mt-4 mb-1">상황 / 생각</p>
+                          <p className="text-sm text-gray-600 leading-relaxed mb-4">{c.situationThought}</p>
+                          <p className="text-xs font-bold text-[#566e63] uppercase tracking-wide mb-1">재구성 문장</p>
+                          <p className="text-sm text-gray-700 leading-relaxed italic">"{c.reframe}"</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* 액션 버튼 */}
             <div className="flex flex-col sm:flex-row justify-center items-center gap-6">

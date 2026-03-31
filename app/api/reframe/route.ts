@@ -6,35 +6,6 @@ import { PromptTemplate } from '@langchain/core/prompts'
 import { StringOutputParser } from '@langchain/core/output_parsers'
 import { getPineconeClient, PINECONE_INDEX_NAME } from '@/utils/pinecone_client'
 
-// thinking_trap 한국어 변환 맵
-const TRAP_KO: Record<string, string> = {
-  'emotional reasoning': '감정적 추론',
-  'overgeneralizing': '과잉 일반화',
-  'catastrophizing': '파국화',
-  'black and white thinking': '흑백 논리',
-  'mind reading': '독심술 (마음 읽기)',
-  'fortune telling': '점쟁이 식 사고',
-  'personalizing': '개인화',
-  'labeling': '낙인찍기',
-  'disqualifying the positive': '긍정 무시하기',
-  'magnification': '과장',
-  'minimization': '축소',
-  'should statements': '당위적 사고',
-  'jumping to conclusions': '섣부른 결론',
-  'all or nothing thinking': '전부 아니면 전무',
-}
-
-function translateTrap(trap: string): string {
-  const lower = trap.toLowerCase().trim()
-  // 직접 매핑
-  if (TRAP_KO[lower]) return TRAP_KO[lower]
-  // 부분 매핑
-  for (const [en, ko] of Object.entries(TRAP_KO)) {
-    if (lower.includes(en)) return ko
-  }
-  return trap
-}
-
 export async function POST(req: Request) {
   try {
     const { situation, thought } = await req.json()
@@ -45,7 +16,7 @@ export async function POST(req: Request) {
 
     const userInput = `상황: ${situation}\n생각: ${thought}`
 
-    // 1. Pinecone 연결 (LangChain PineconeEmbeddings)
+    // 1. Pinecone 벡터 유사도 검색 (유사 사례 5개)
     const pc = getPineconeClient()
     const pineconeIndex = pc.Index(PINECONE_INDEX_NAME)
 
@@ -54,7 +25,6 @@ export async function POST(req: Request) {
       apiKey: process.env.PINECONE_API_KEY!,
     })
 
-    // 2. 유사도 검색으로 관련 사례 5개 조회
     const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
       pineconeIndex,
       namespace: 'main',
@@ -62,29 +32,19 @@ export async function POST(req: Request) {
 
     const results = await vectorStore.similaritySearch(userInput, 5)
 
-    // 검색결과에서 reframe, traps 추출
-    const contextItems = results.map(doc => ({
-      situation_thought: doc.pageContent,
+    // 2. 유사 사례 정리 (프론트엔드 표시용 + GPT 컨텍스트용)
+    const similarCases = results.map((doc, i) => ({
+      id: i + 1,
+      situationThought: doc.pageContent,
       reframe: doc.metadata.reframe || '',
       traps: doc.metadata.traps || '',
     }))
 
-    const contextText = contextItems
-      .map((item, i) => `사례 ${i + 1}:\n${item.situation_thought}\n재구성: ${item.reframe}\n생각의 함정: ${item.traps}`)
+    const contextText = similarCases
+      .map(item => `사례 ${item.id}:\n${item.situationThought}\n재구성: ${item.reframe}\n생각의 함정: ${item.traps}`)
       .join('\n\n')
 
-    // 가장 많이 등장한 trap 추출 (단순 빈도 기반)
-    const trapFreq: Record<string, number> = {}
-    for (const item of contextItems) {
-      const traps = item.traps.split(',').map((t: string) => t.trim().toLowerCase()).filter(Boolean)
-      for (const t of traps) {
-        trapFreq[t] = (trapFreq[t] || 0) + 1
-      }
-    }
-    const topTrap = Object.entries(trapFreq).sort((a, b) => b[1] - a[1])[0]?.[0] || ''
-    const thinkingTrap = translateTrap(topTrap)
-
-    // 3. LangChain + OpenAI로 3가지 reframe 생성
+    // 3. GPT로 3가지 reframe 생성
     const llm = new ChatOpenAI({
       apiKey: process.env.OPENAI_API_KEY,
       modelName: 'gpt-4o-mini',
@@ -94,6 +54,7 @@ export async function POST(req: Request) {
     const promptTemplate = PromptTemplate.fromTemplate(`
 당신은 인지행동치료(CBT) 전문 상담사입니다.
 사용자의 상황과 생각을 분석하고, 아래 참고 사례를 활용하여 3가지 서로 다른 관점으로 인지를 재구성해주세요.
+각 재구성은 충분히 구체적이고 공감적이며 실용적이어야 합니다.
 
 [참고 사례]
 {context}
@@ -108,17 +69,17 @@ export async function POST(req: Request) {
     {{
       "icon": "perspective",
       "title": "성장의 관점",
-      "text": "첫 번째 재구성 문장 (성장과 발전에 초점)"
+      "text": "첫 번째 재구성 문장 (성장과 발전에 초점, 2~3문장)"
     }},
     {{
       "icon": "balance", 
       "title": "균형의 관점",
-      "text": "두 번째 재구성 문장 (균형 잡힌 시각)"
+      "text": "두 번째 재구성 문장 (균형 잡힌 시각, 2~3문장)"
     }},
     {{
       "icon": "action",
       "title": "행동의 관점",
-      "text": "세 번째 재구성 문장 (실천과 행동에 초점)"
+      "text": "세 번째 재구성 문장 (실천과 행동에 초점, 2~3문장)"
     }}
   ]
 }}
@@ -137,7 +98,6 @@ export async function POST(req: Request) {
       const jsonMatch = rawResponse.match(/\{[\s\S]*\}/)
       parsed = JSON.parse(jsonMatch ? jsonMatch[0] : rawResponse)
     } catch {
-      // JSON 파싱 실패 시 폴백
       parsed = {
         reframes: [
           { icon: 'perspective', title: '성장의 관점', text: rawResponse.slice(0, 200) },
@@ -149,8 +109,13 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      thinkingTrap,
       reframes: parsed.reframes,
+      similarCases: similarCases.map(c => ({
+        id: c.id,
+        situationThought: c.situationThought,
+        reframe: c.reframe,
+        traps: c.traps,
+      })),
     })
   } catch (error: any) {
     console.error('Reframe API 오류:', error)
