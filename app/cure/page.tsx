@@ -211,7 +211,7 @@ export default function CurePage() {
                   </div>
                   <h2 className="font-bold text-base">현재 상황</h2>
                 </div>
-                <p className="text-xs text-gray-400 mb-4">사건이나 상황을 최대한 객관적으로 적어주세요.</p>
+                <p className="text-xs text-gray-600 mb-4">사건이나 상황을 최대한 객관적으로 적어주세요.</p>
                 <textarea
                   value={situation}
                   onChange={e => setSituation(e.target.value)}
@@ -230,7 +230,7 @@ export default function CurePage() {
                   </div>
                   <h2 className="font-bold text-base">내 생각</h2>
                 </div>
-                <p className="text-xs text-gray-400 mb-4">그 상황에서 마음속에 바로 떠오른 생각을 솔직하게 적어주세요.</p>
+                <p className="text-xs text-gray-600 mb-4">그 상황에서 마음속에 바로 떠오른 생각을 솔직하게 적어주세요.</p>
                 <textarea
                   value={thought}
                   onChange={e => setThought(e.target.value)}
