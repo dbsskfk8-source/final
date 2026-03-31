@@ -263,9 +263,11 @@ export default function MySituationPage() {
                     <Radar
                       name="정상 범위"
                       dataKey="max"
-                      stroke="none"
+                      stroke="#566e63"
+                      strokeWidth={1}
+                      strokeDasharray="4 4"
                       fill="#566e63"
-                      fillOpacity={0.08}
+                      fillOpacity={0.18}
                       isAnimationActive={false}
                     />
                     
@@ -299,9 +301,11 @@ export default function MySituationPage() {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f1f1" />
                     
                     {/* 구간별 배경 색상 (ReferenceArea) */}
-                    <ReferenceArea y1={40} y2={60} fill="#566e63" fillOpacity={0.05} label={{ position: 'right', value: '정상', fill: '#566e63', fontSize: 10, offset: 10 }} />
-                    <ReferenceArea y1={60} y2={70} fill="#f59e0b" fillOpacity={0.03} />
-                    <ReferenceArea y1={30} y2={40} fill="#f59e0b" fillOpacity={0.03} />
+                    <ReferenceArea y1={40} y2={60} fill="#22c55e" fillOpacity={0.10} label={{ position: 'insideRight', value: '정상', fill: '#16a34a', fontSize: 10, fontWeight: 'bold' }} />
+                    <ReferenceArea y1={60} y2={70} fill="#f59e0b" fillOpacity={0.10} label={{ position: 'insideRight', value: '주의', fill: '#d97706', fontSize: 10, fontWeight: 'bold' }} />
+                    <ReferenceArea y1={30} y2={40} fill="#f59e0b" fillOpacity={0.10} />
+                    <ReferenceArea y1={70} y2={100} fill="#ef4444" fillOpacity={0.07} label={{ position: 'insideRight', value: '위험', fill: '#dc2626', fontSize: 10, fontWeight: 'bold' }} />
+                    <ReferenceArea y1={0} y2={30} fill="#ef4444" fillOpacity={0.07} />
                     
                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#999', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#999' }} axisLine={false} tickLine={false} />
