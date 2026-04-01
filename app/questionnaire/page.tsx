@@ -18,34 +18,34 @@ import {
 
 // 28 CSEI-s Questions
 const QUESTIONS = [
-  "?�게 좋�? ?�이 ?�길 �?같다.",
-  "?�는 주�? ?�람?�에�??��? ???�다.",
-  "?�는 ?�각??많다.",
-  "?�는 ?�무 ?�도 ?�고 ?��? ?�욕???�다.",
-  "?�는 ?��????��? ?�다.",
-  "?�는 간이 ?��? �?같다.",
-  "?�는 깜짝깜짝 ?�?�다.",
-  "?�는 기분???�뜬??",
-  "?�는 ?�른 ?�람보다 ?��? ?�주 ?�다.",
-  "?�는 고�?거리가 많다.",
-  "??미래???�두??�?같다.",
-  "?�는 구슬???��? ?�다.",
-  "?�는 ?�게 ?�황?�다.",
-  "?�는 ???�?�다.",
-  "?�는 ?�기차다.",
-  "?�도 모르�?불끈 ?�을 ?�다.",
-  "?�는 걱정??많이 ?�다.",
-  "?�는 만사가 귀�?��.",
-  "?�는 ?�플 ?��? ?�다.",
-  "?�는 ??�� ?�람???�렵??",
-  "?�는 ?�?�서 ?�스?�치�??�다.",
-  "???��? 만족?�럽??",
-  "??주�??�는 ?��? ?�나�??�는 �?많다.",
-  "?�는 반복?�으�??�오르는 ?�각??지?�기가 ?�렵??",
-  "??미래???�망???�을 �?같다.",
-  "?�는 ?�롭??",
-  "?�는 ?�러 ?�람 ?�에 ?��? ?�야기하??것이 ?�렵??",
-  "?�는 ?��? ?�리?�도 ???�?�??",
+  "내게 좋은 일이 생길 것 같다.",
+  "나는 주변 사람들에게 화를 잘 낸다.",
+  "나는 생각이 많다.",
+  "나는 아무 일도 하고 싶은 의욕이 없다.",
+  "나는 서글플 때가 있다.",
+  "나는 간이 작은 것 같다.",
+  "나는 깜짝깜짝 놀랜다.",
+  "나는 기분이 들뜬다.",
+  "나는 다른 사람보다 화를 자주 낸다.",
+  "나는 고민거리가 많다.",
+  "내 미래는 어두울 것 같다.",
+  "나는 구슬플 때가 있다.",
+  "나는 쉽게 당황한다.",
+  "나는 잘 놀랜다.",
+  "나는 활기차다.",
+  "나도 모르게 불끈 성을 낸다.",
+  "나는 걱정을 많이 한다.",
+  "나는 만사가 귀찮다.",
+  "나는 슬플 때가 있다.",
+  "나는 낯선 사람이 두렵다.",
+  "나는 놀라서 소스라치곤 한다.",
+  "내 삶은 만족스럽다.",
+  "내 주변에는 나를 화나게 하는 게 많다.",
+  "나는 반복적으로 떠오르는 생각을 지우기가 어렵다.",
+  "내 미래는 희망이 없을 것 같다.",
+  "나는 외롭다.",
+  "나는 여러 사람 앞에 나가 이야기하는 것이 어렵다.",
+  "나는 작은 소리에도 잘 놀란다.",
 ]
 
 import { analyzeResults, Gender, AgeGroup } from '@/utils/diagnostics'
@@ -66,47 +66,48 @@ export default function QuestionnairePage() {
 
   const handleComplete = async () => {
     if (!gender || !ageGroup) {
-      alert('?�별�??�령?��?먼�? ?�택??주세??')
-      // ?�크롤을 ?�로 ?�동
+      alert('성별과 연령대를 먼저 선택해 주세요.')
+      // 스크롤을 위로 이동
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
 
     if (!isComplete) {
-      alert(`?�직 ?�답?��? ?��? 문항???�습?�다. (${answeredCount}/${totalCount})`)
+      alert(`아직 응답하지 않은 문항이 있습니다. (${answeredCount}/${totalCount})`)
       return
     }
 
-    // ?��? 진단 ?�진 ?�출 (T-score 기반)
+    // 정밀 진단 엔진 호출 (T-score 기반)
     const { factors, overall } = analyzeResults(answers, gender as Gender, ageGroup as AgeGroup)
 
-    console.log('--- ?��? 진단 결과 ---', { factors, overall })
+    console.log('--- 정밀 진단 결과 ---', { factors, overall })
     
-    // 분석 ?�약 메시지 ?�성
+    // 분석 요약 메시지 생성
     const riskFactors = factors.filter(f => f.group === 'risk')
     const cautionFactors = factors.filter(f => f.group === 'caution')
     
-    let summary = `[종합 ?�정: ${overall.groupLabel} (T-?�수: ${overall.tScore})]\n\n`
+    let summary = `[종합 판정: ${overall.groupLabel} (T-점수: ${overall.tScore})]\n\n`
     if (riskFactors.length > 0) {
-      summary += `?�️ ?�험 ??��: ${riskFactors.map(f => f.name).join(', ')}\n`
+      summary += `⚠️ 위험 항목: ${riskFactors.map(f => f.name).join(', ')}\n`
     }
     if (cautionFactors.length > 0) {
-      summary += `??주의 ??��: ${cautionFactors.map(f => f.name).join(', ')}\n`
+      summary += `⚡ 주의 항목: ${cautionFactors.map(f => f.name).join(', ')}\n`
     }
     if (riskFactors.length === 0 && cautionFactors.length === 0) {
-      summary += `??모든 지?��? ?�상 범위 ?�에 ?�습?�다.`
+      summary += `✅ 모든 지표가 정상 범위 내에 있습니다.`
     }
 
-    // DB ?�???�이??규격??    const dbScores = factors.map(f => ({
+    // DB 저장 데이터 규격화
+    const dbScores = factors.map(f => ({
       subject: f.name,
-      A: f.tScore, // 차트?�는 T-?�수�??�시 (?�는 기존 방식 ?��? 가??
+      A: f.tScore, // 차트에는 T-점수를 표시 (또는 기존 방식 유지 가능)
       fullMark: 100,
       group: f.group,
       groupLabel: f.groupLabel,
       rawScore: f.rawScore
     }))
 
-    // DB ?�???�도
+    // DB 저장 시도
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -125,16 +126,16 @@ export default function QuestionnairePage() {
       
       if (error) {
         console.error('DB Insert Error:', error)
-        alert('?�버 ?�?�에 ?�패?�습?�다. 결과가 기기???�시 ?�?�됩?�다.')
+        alert('서버 저장에 실패했습니다. 결과가 기기에 임시 저장됩니다.')
       } else {
         saveToLocal = false
-        alert(`?�문 분석???�료?�었?�니??\n\n${summary}\n\n결과 리포?��? 계정???�전?�게 ?�?�되?�습?�다.`)
+        alert(`설문 분석이 완료되었습니다!\n\n${summary}\n\n결과 리포트가 계정에 안전하게 저장되었습니다.`)
       }
     }
 
     if (saveToLocal) {
       if (!user) {
-        alert(`?�문 분석???�료?�었?�니??\n\n${summary}\n\n결과가 기기???�시 ?�?�되?�습?�다.\n로그?�하�??�이?��? ?�구보존?�고 기기 �??�동?????�습?�다.`)
+        alert(`설문 분석이 완료되었습니다!\n\n${summary}\n\n결과가 기기에 임시 저장되었습니다.\n로그인하면 데이터를 영구보존하고 기기 간 연동할 수 있습니다.`)
       }
       if (typeof window !== 'undefined') {
         const resultData = {
@@ -151,16 +152,17 @@ export default function QuestionnairePage() {
       }
     }
     
-    // ?�료 ??마이?�이지�??�동 ?�동
+    // 완료 후 마이페이지로 자동 이동
     router.push('/my-situation')
   }
 
   const handleSaveProgress = () => {
-    console.log('?�시 ?�???�이??', { answers, gender, ageGroup })
-    alert('?�재 ?�답???�용??브라?��????�시 ?�?�되?�습?�다.')
+    console.log('임시 저장 데이터:', { answers, gender, ageGroup })
+    alert('현재 응답한 내용이 브라우저에 임시 저장되었습니다.')
   }
 
-  // ?�늘 ?�짜 ?�맷??  const today = new Date().toLocaleDateString('ko-KR', {
+  // 오늘 날짜 포맷팅
+  const today = new Date().toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
@@ -173,8 +175,9 @@ export default function QuestionnairePage() {
       <aside className="hidden lg:flex flex-col w-[260px] bg-[#f9faf9] border-r border-[#eaeced] fixed h-full z-20 overflow-y-auto">
         <div className="p-8">
           <Link href="/" className="font-extrabold text-[#4a5c53] text-lg block hover:opacity-80 transition-opacity">
-            ?�이???�비??          </Link>
-          <div className="text-[10px] uppercase font-bold text-[#828f88] tracking-widest mt-1">?�상 진단 ?�구</div>
+            파이널 서비스
+          </Link>
+          <div className="text-[10px] uppercase font-bold text-[#828f88] tracking-widest mt-1">임상 진단 도구</div>
         </div>
         
         <nav className="flex-1 mt-4">
@@ -182,25 +185,26 @@ export default function QuestionnairePage() {
             <li>
               <Link href="#" className="flex items-center gap-3 px-8 py-4 bg-white border-l-[3px] border-[#566e63] text-[#222] font-bold shadow-sm">
                 <ClipboardList size={20} className="text-[#566e63]" />
-                ?�문 진행 (진단)
+                설문 진행 (진단)
               </Link>
             </li>
             <li>
               <Link href="#" className="flex items-center gap-3 px-8 py-4 text-gray-500 hover:text-[#222] hover:bg-[#f0f2f0] transition-colors font-medium border-l-[3px] border-transparent">
                 <Contact size={20} />
-                ???�보
+                내 정보
               </Link>
             </li>
             <li>
               <Link href="#" className="flex items-center gap-3 px-8 py-4 text-gray-500 hover:text-[#222] hover:bg-[#f0f2f0] transition-colors font-medium border-l-[3px] border-transparent">
                 <BookOpen size={20} />
-                진단 ?�내
+                진단 안내
               </Link>
             </li>
             <li>
               <Link href="/my-situation" className="flex items-center gap-3 px-8 py-4 text-gray-500 hover:text-[#222] hover:bg-[#f0f2f0] transition-colors font-medium border-l-[3px] border-transparent">
                 <BarChart2 size={20} />
-                결과 리포??              </Link>
+                결과 리포트
+              </Link>
             </li>
           </ul>
         </nav>
@@ -212,13 +216,13 @@ export default function QuestionnairePage() {
         {/* Top Navbar */}
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-[#eaeced] px-6 lg:px-10 py-5 flex flex-col sm:flex-row gap-4 sm:gap-0 sm:items-center justify-between">
           <div className="flex items-center gap-6">
-            <h1 className="lg:hidden font-extrabold text-[#4a5c53] text-lg">?�이???�비??/h1>
+            <h1 className="lg:hidden font-extrabold text-[#4a5c53] text-lg">파이널 서비스</h1>
             
             <nav className="flex gap-4 md:gap-6 text-sm font-bold text-gray-500 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 whitespace-nowrap">
                <span className="text-[#566e63] border-b-2 border-[#566e63] pb-1 cursor-default shrink-0">칠정 진단</span>
-               <Link href="/select" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">?��??�구??Cure)</Link>
-               <Link href="/my-situation" className="hover:text-[#566e63] cursor-pointer transition-colors shrink-0 pt-0.5">???�태 분석</Link>
-               <Link href="/chat" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">?�리?�담 챗봇</Link>
+               <Link href="/select" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">인지재구성(Cure)</Link>
+               <Link href="/my-situation" className="hover:text-[#566e63] cursor-pointer transition-colors shrink-0 pt-0.5">내 상태 분석</Link>
+               <Link href="/chat" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">심리상담 챗봇</Link>
             </nav>
           </div>
           
@@ -245,11 +249,11 @@ export default function QuestionnairePage() {
                <div className="text-xl font-bold text-[#222]">2026-Guest</div>
              </div>
              <div className="flex-1 md:border-r border-gray-100 px-4 mb-4 md:mb-0">
-               <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1.5">?�용???�보</div>
-               <div className="text-xl font-bold text-[#222]">?�의 ?�황</div>
+               <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1.5">사용자 정보</div>
+               <div className="text-xl font-bold text-[#222]">나의 현황</div>
              </div>
              <div className="flex-1 px-4">
-               <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1.5">진단 ?�자</div>
+               <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1.5">진단 일자</div>
                <div className="flex items-center gap-2 text-[#4a5c53]">
                  <Calendar size={18} />
                  <span className="font-bold text-[#222]">{today}</span>
@@ -260,9 +264,9 @@ export default function QuestionnairePage() {
           {/* Gender and Age Selection (New) */}
           <div className="bg-[#f0f4f1] rounded-2xl p-6 mb-12 border border-[#dce6df] flex flex-col md:flex-row gap-8">
             <div className="flex-1">
-              <label className="text-xs font-bold text-[#566e63] uppercase tracking-widest mb-3 block">?�별 ?�택</label>
+              <label className="text-xs font-bold text-[#566e63] uppercase tracking-widest mb-3 block">성별 선택</label>
               <div className="flex gap-3">
-                {([['male', '?�성'], ['female', '?�성']] as const).map(([val, label]) => (
+                {([['male', '남성'], ['female', '여성']] as const).map(([val, label]) => (
                   <button
                     key={val}
                     onClick={() => setGender(val)}
@@ -274,7 +278,7 @@ export default function QuestionnairePage() {
               </div>
             </div>
             <div className="flex-1">
-              <label className="text-xs font-bold text-[#566e63] uppercase tracking-widest mb-3 block">?�령?� ?�택</label>
+              <label className="text-xs font-bold text-[#566e63] uppercase tracking-widest mb-3 block">연령대 선택</label>
               <div className="grid grid-cols-4 gap-2">
                 {(['20s', '30s', '40s', '50s_plus'] as const).map((val) => (
                   <button
@@ -282,7 +286,7 @@ export default function QuestionnairePage() {
                     onClick={() => setAgeGroup(val)}
                     className={`py-3 rounded-xl font-bold text-xs transition-all ${ageGroup === val ? 'bg-[#566e63] text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
                   >
-                    {val === '50s_plus' ? '50?� ?�상' : val.replace('s', '?�')}
+                    {val === '50s_plus' ? '50대 이상' : val.replace('s', '대')}
                   </button>
                 ))}
               </div>
@@ -292,37 +296,38 @@ export default function QuestionnairePage() {
           {/* Survey Header */}
           <div className="mb-12 max-w-2xl">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-5 tracking-tight text-[#222]">
-              ?�심칠정척도 ?�축??br className="md:hidden" /> (CSEI-s)
+              핵심칠정척도 단축형<br className="md:hidden" /> (CSEI-s)
             </h2>
             <p className="text-[#64716a] text-[15px] leading-relaxed font-medium">
-              ?�음 문장?�을 ?�고 <strong className="text-[#3c4a43]">최근 ?�주?�동???�늘???�함?�서)</strong> ?�신??가?????��??�다�??�각?�는 곳에 ?�택??주십?�오. ?�무 ?�래 곰곰???�각?�기보다??질문???�고 바로 ?�오르는 첫인?�으�??�답?�시�?바랍?�다.
+              다음 문장들을 읽고 <strong className="text-[#3c4a43]">최근 일주일동안(오늘을 포함해서)</strong> 자신을 가장 잘 나타낸다고 생각하는 곳에 선택해 주십시오. 너무 오래 곰곰이 생각하기보다는 질문을 읽고 바로 떠오르는 첫인상으로 응답하시기 바랍니다.
             </p>
           </div>
 
           {/* Scale Legend Header */}
           <div className="sticky top-[80px] z-10 bg-[#f5f6f4]/95 backdrop-blur py-5 flex items-end justify-between border-b 2 border-[#eaeced] mb-6">
             <div className="text-[11px] font-bold text-gray-600 uppercase tracking-widest pl-4 hidden md:block">
-              감정 ?�태 지??            </div>
+              감정 상태 지표
+            </div>
             {/* The 5 labels */}
             <div className="flex justify-between md:w-[350px] w-full text-center px-2">
               <div className="flex flex-col items-center gap-2 flex-1">
-                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">?��?<br/>?�니??/span>
+                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">전혀<br/>아니다</span>
                 <span className="text-[10px] font-bold text-gray-600">1</span>
               </div>
               <div className="flex flex-col items-center gap-2 flex-1">
-                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">?�간</span>
+                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">약간</span>
                 <span className="text-[10px] font-bold text-gray-600">2</span>
               </div>
               <div className="flex flex-col items-center gap-2 flex-1">
-                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">?�만??/span>
+                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">웬만큼</span>
                 <span className="text-[10px] font-bold text-gray-600">3</span>
               </div>
               <div className="flex flex-col items-center gap-2 flex-1">
-                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">�?/span>
+                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">꽤</span>
                 <span className="text-[10px] font-bold text-gray-600">4</span>
               </div>
               <div className="flex flex-col items-center gap-2 flex-1">
-                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">매우<br/>그렇??/span>
+                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">매우<br/>그렇다</span>
                 <span className="text-[10px] font-bold text-gray-600">5</span>
               </div>
             </div>
@@ -391,7 +396,8 @@ export default function QuestionnairePage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-[#a3b8ad]" />
               </div>
               <p className="text-sm font-bold text-[#64716a]">
-                ?��? ?�답 문항: {totalCount - answeredCount}�?              </p>
+                남은 응답 문항: {totalCount - answeredCount}개
+              </p>
             </div>
           )}
           
@@ -405,8 +411,8 @@ export default function QuestionnairePage() {
          <div className="flex items-center gap-3 text-sm font-medium text-[#64716a]">
            <Info size={18} className="text-[#3b6b8b]" />
            {isComplete 
-             ? <span className="text-[#566e63] font-bold">모든 문항???�답?�셨?�니?? ?�출 가?�합?�다.</span>
-             : <span>?�출?�기 ?�에 28개의 문항??모두 ?�답?�주?�요. (<strong className="text-[#222]">{answeredCount}/{totalCount}</strong>)</span>
+             ? <span className="text-[#566e63] font-bold">모든 문항에 응답하셨습니다. 제출 가능합니다.</span>
+             : <span>제출하기 전에 28개의 문항에 모두 응답해주세요. (<strong className="text-[#222]">{answeredCount}/{totalCount}</strong>)</span>
            }
          </div>
          
@@ -415,7 +421,8 @@ export default function QuestionnairePage() {
              onClick={handleSaveProgress}
              className="flex-1 sm:flex-none bg-[#f5f6f4] hover:bg-white text-[#4a5c53] font-bold px-6 py-3.5 rounded-xl border border-[#d0d3d5] transition-colors text-sm"
            >
-             ?�시 ?�??           </button>
+             임시 저장
+           </button>
            <button 
              onClick={handleComplete}
              disabled={!isComplete}
@@ -425,7 +432,7 @@ export default function QuestionnairePage() {
                  : 'bg-[#b6c4bc] text-white/70 cursor-not-allowed border-transparent'
                }`}
            >
-             진단 ?�료?�기
+             진단 완료하기
            </button>
          </div>
       </div>

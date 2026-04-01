@@ -39,13 +39,13 @@ interface HistoryLog {
 }
 
 const DEFAULT_RADAR: RadarItem[] = [
-  { subject: '??(??', A: 84, fullMark: 100 },
-  { subject: '??(??', A: 75, fullMark: 100 },
-  { subject: '??(??', A: 62, fullMark: 100 },
-  { subject: '??(??', A: 41, fullMark: 100 },
-  { subject: '�?(??', A: 70, fullMark: 100 },
-  { subject: '�?(??', A: 65, fullMark: 100 },
-  { subject: '�?(�?', A: 80, fullMark: 100 },
+  { subject: '희 (喜)', A: 84, fullMark: 100 },
+  { subject: '노 (怒)', A: 75, fullMark: 100 },
+  { subject: '사 (思)', A: 62, fullMark: 100 },
+  { subject: '우 (憂)', A: 41, fullMark: 100 },
+  { subject: '비 (悲)', A: 70, fullMark: 100 },
+  { subject: '공 (恐)', A: 65, fullMark: 100 },
+  { subject: '경 (驚)', A: 80, fullMark: 100 },
 ]
 
 export default function MySituationPage() {
@@ -116,8 +116,8 @@ export default function MySituationPage() {
               id: `csei-${item.id}`,
               date: new Date(item.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase(),
               type: '칠정(七情) 진단 기록',
-              summary: `[가???��? 지?? ${topEmotion.subject} (${topEmotion.A}%)] ?�반??분석 결과?�니??`,
-              tags: ['진단', '7??],
+              summary: `[가장 높은 지표: ${topEmotion.subject} (${topEmotion.A}%)] 전반적 분석 결과입니다.`,
+              tags: ['진단', '7정'],
               sentiment: 'neutral',
               isAssessment: true
             })
@@ -177,7 +177,7 @@ export default function MySituationPage() {
     }
   }
 
-  // 초기 로드 ??가?�드 ?�이???�정 로직 ?�거 (?�의 useEffect?� ?�합??
+  // 초기 로드 시 가이드 데이터 설정 로직 제거 (위의 useEffect와 통합됨)
 
   const trendData = [...allCsei].reverse().map(item => {
     const d = new Date(item.created_at || item.timestamp)
@@ -196,34 +196,34 @@ export default function MySituationPage() {
   return (
     <div className="min-h-screen bg-[#fffdfa] text-[#333] font-sans selection:bg-[#566e63]/20">
       <nav className="border-b border-gray-100 px-6 md:px-10 py-6 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <Link href="/" className="font-extrabold text-2xl text-[#4a5c53] tracking-tighter">?�이???�비??/Link>
+        <Link href="/" className="font-extrabold text-2xl text-[#4a5c53] tracking-tighter">파이널 서비스</Link>
         <div className="hidden md:flex gap-12 text-[10px] font-extrabold tracking-[0.2em] text-gray-600">
-           <Link href="/select" className="hover:text-[#566e63] transition-colors">?��??�구??Cure)</Link>
-           <Link href="/my-situation" className="text-[#566e63] border-b-2 border-[#566e63] pb-1">???�태 분석</Link>
-           <Link href="/chat" className="hover:text-[#566e63] transition-colors">?�리?�담 챗봇</Link>
+           <Link href="/select" className="hover:text-[#566e63] transition-colors">인지재구성(Cure)</Link>
+           <Link href="/my-situation" className="text-[#566e63] border-b-2 border-[#566e63] pb-1">내 상태 분석</Link>
+           <Link href="/chat" className="hover:text-[#566e63] transition-colors">심리상담 챗봇</Link>
         </div>
         {!isGuest ? (
           <button onClick={logout} className="flex items-center gap-2 group">
              <div className="w-10 h-10 rounded-full bg-[#f0f2f0] flex items-center justify-center text-[#566e63] group-hover:bg-[#566e63] group-hover:text-white transition-all overflow-hidden shadow-inner">
                <LogOut size={16} />
              </div>
-             <span className="text-[10px] font-bold text-gray-600 group-hover:text-[#566e63] hidden sm:inline">로그?�웃</span>
+             <span className="text-[10px] font-bold text-gray-600 group-hover:text-[#566e63] hidden sm:inline">로그아웃</span>
           </button>
         ) : (
-          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2.5 rounded-full text-[10px] font-bold tracking-widest hover:bg-[#43574d] hover:-translate-y-0.5 transition-all shadow-lg active:scale-95">로그??/ ?�원가??/Link>
+          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2.5 rounded-full text-[10px] font-bold tracking-widest hover:bg-[#43574d] hover:-translate-y-0.5 transition-all shadow-lg active:scale-95">로그인 / 회원가입</Link>
         )}
       </nav>
 
       <main className="max-w-[1200px] mx-auto px-6 py-12 md:py-20">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 fade-in">
           <div>
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-4">?�녕?�세??</h1>
-            <p className="text-gray-600 font-medium text-lg md:text-xl">?�신??마음?� ?�나???�식처입?�다. ?�기 �?�?��진이 ?�습?�다.</p>
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-4">안녕하세요.</h1>
+            <p className="text-gray-600 font-medium text-lg md:text-xl">당신의 마음은 하나의 안식처입니다. 여기 그 청사진이 있습니다.</p>
           </div>
           {isGuest && (
             <div className="bg-[#fff9e6] border border-[#f5e1a4] p-5 rounded-[30px] flex items-center gap-4 shadow-sm animate-pulse">
                <AlertCircle className="text-[#b48d1a]" size={24} />
-               <p className="text-[#856404] text-xs font-bold leading-tight">게스??모드: 로그?�하�??�이?��? 기기???��??�이 ?�기?�할 ???�습?�다.</p>
+               <p className="text-[#856404] text-xs font-bold leading-tight">게스트 모드: 로그인하면 데이터를 기기에 상관없이 동기화할 수 있습니다.</p>
             </div>
           )}
         </div>
@@ -232,8 +232,8 @@ export default function MySituationPage() {
           <div className="bg-[#fcfaf7] rounded-[40px] p-8 md:p-12 shadow-sm border border-gray-100/50 relative">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
               <div>
-                <h2 className="text-xl font-bold text-[#4a5c53]">칠정(七情) ?�로?�일</h2>
-                <p className="text-xs text-gray-600 mt-1 font-medium italic">?�신??마음??구성?�는 7가지 ?�소</p>
+                <h2 className="text-xl font-bold text-[#4a5c53]">칠정(七情) 프로파일</h2>
+                <p className="text-xs text-gray-600 mt-1 font-medium italic">당신의 마음을 구성하는 7가지 요소</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="bg-white/60 p-1 rounded-full border border-gray-100 flex shadow-sm">
@@ -259,9 +259,9 @@ export default function MySituationPage() {
                     <PolarAngleAxis dataKey="subject" tick={{ fill: '#4a5c53', fontSize: 10, fontWeight: 'bold' }} />
                     <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
                     
-                    {/* 가?�드 ?�역 (?�상 범위: 40~60) */}
+                    {/* 가이드 영역 (정상 범위: 40~60) */}
                     <Radar
-                      name="?�상 범위"
+                      name="정상 범위"
                       dataKey="max"
                       stroke="#566e63"
                       strokeWidth={1}
@@ -271,7 +271,7 @@ export default function MySituationPage() {
                       isAnimationActive={false}
                     />
                     
-                    <Radar name="?�의 ?�태" dataKey="A" stroke="#4a5c53" strokeWidth={2.5} fill="#566e63" fillOpacity={0.4} />
+                    <Radar name="나의 상태" dataKey="A" stroke="#4a5c53" strokeWidth={2.5} fill="#566e63" fillOpacity={0.4} />
                     
                     <Tooltip 
                       content={({ active, payload }) => {
@@ -286,8 +286,8 @@ export default function MySituationPage() {
                                 <span className="text-[10px] font-bold text-[#566e63]">T-score</span>
                               </div>
                               <div className="pt-2 border-t border-gray-50 flex flex-col gap-1">
-                                <p className="text-[11px] font-bold text-gray-500">?�점?? <span className="text-[#222]">{data.rawScore}??/span></p>
-                                <p className="text-[11px] font-bold text-gray-500">?�태: <span className={data.group === 'risk' ? 'text-red-500' : data.group === 'caution' ? 'text-amber-500' : 'text-green-600'}>{data.groupLabel}</span></p>
+                                <p className="text-[11px] font-bold text-gray-500">원점수: <span className="text-[#222]">{data.rawScore}점</span></p>
+                                <p className="text-[11px] font-bold text-gray-500">상태: <span className={data.group === 'risk' ? 'text-red-500' : data.group === 'caution' ? 'text-amber-500' : 'text-green-600'}>{data.groupLabel}</span></p>
                               </div>
                             </div>
                           );
@@ -300,11 +300,11 @@ export default function MySituationPage() {
                   <LineChart data={trendData} margin={{ top: 20, right: 30, left: 10, bottom: 60 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f1f1" />
                     
-                    {/* 구간�?배경 ?�상 (ReferenceArea) */}
-                    <ReferenceArea y1={40} y2={60} fill="#22c55e" fillOpacity={0.10} label={{ position: 'insideRight', value: '?�상', fill: '#16a34a', fontSize: 10, fontWeight: 'bold' }} />
+                    {/* 구간별 배경 색상 (ReferenceArea) */}
+                    <ReferenceArea y1={40} y2={60} fill="#22c55e" fillOpacity={0.10} label={{ position: 'insideRight', value: '정상', fill: '#16a34a', fontSize: 10, fontWeight: 'bold' }} />
                     <ReferenceArea y1={60} y2={70} fill="#f59e0b" fillOpacity={0.10} label={{ position: 'insideRight', value: '주의', fill: '#d97706', fontSize: 10, fontWeight: 'bold' }} />
                     <ReferenceArea y1={30} y2={40} fill="#f59e0b" fillOpacity={0.10} />
-                    <ReferenceArea y1={70} y2={100} fill="#ef4444" fillOpacity={0.07} label={{ position: 'insideRight', value: '?�험', fill: '#dc2626', fontSize: 10, fontWeight: 'bold' }} />
+                    <ReferenceArea y1={70} y2={100} fill="#ef4444" fillOpacity={0.07} label={{ position: 'insideRight', value: '위험', fill: '#dc2626', fontSize: 10, fontWeight: 'bold' }} />
                     <ReferenceArea y1={0} y2={30} fill="#ef4444" fillOpacity={0.07} />
                     
                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#999', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
@@ -316,13 +316,13 @@ export default function MySituationPage() {
                       onClick={handleLegendClick} 
                       wrapperStyle={{ paddingTop: '40px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }} 
                     />
-                    <Line type="monotone" name="??(??" dataKey="??(??" hide={hiddenSeries.includes('??(??')} stroke="#8884d8" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                    <Line type="monotone" name="??(??" dataKey="??(??" hide={hiddenSeries.includes('??(??')} stroke="#ff8042" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" name="??(??" dataKey="??(??" hide={hiddenSeries.includes('??(??')} stroke="#ffbb28" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" name="??(??" dataKey="??(??" hide={hiddenSeries.includes('??(??')} stroke="#82ca9d" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" name="�?(??" dataKey="�?(??" hide={hiddenSeries.includes('�?(??')} stroke="#0088fe" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" name="�?(??" dataKey="�?(??" hide={hiddenSeries.includes('�?(??')} stroke="#bdc3c7" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" name="�?(�?" dataKey="�?(�?" hide={hiddenSeries.includes('�?(�?')} stroke="#9b59b6" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" name="희 (喜)" dataKey="희 (喜)" hide={hiddenSeries.includes('희 (喜)')} stroke="#8884d8" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" name="노 (怒)" dataKey="노 (怒)" hide={hiddenSeries.includes('노 (怒)')} stroke="#ff8042" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" name="사 (思)" dataKey="사 (思)" hide={hiddenSeries.includes('사 (思)')} stroke="#ffbb28" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" name="우 (憂)" dataKey="우 (憂)" hide={hiddenSeries.includes('우 (憂)')} stroke="#82ca9d" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" name="비 (悲)" dataKey="비 (悲)" hide={hiddenSeries.includes('비 (悲)')} stroke="#0088fe" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" name="공 (恐)" dataKey="공 (恐)" hide={hiddenSeries.includes('공 (恐)')} stroke="#bdc3c7" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" name="경 (驚)" dataKey="경 (驚)" hide={hiddenSeries.includes('경 (驚)')} stroke="#9b59b6" strokeWidth={3} dot={{ r: 4 }} />
                   </LineChart>
                 )}
               </ResponsiveContainer>
@@ -331,12 +331,12 @@ export default function MySituationPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
               {radar.map((item: any, idx) => {
                 const group = item.group || 'normal'
-                const groupLabel = item.groupLabel || '?�상�?
+                const groupLabel = item.groupLabel || '정상군'
                 const bgColor = group === 'risk' ? 'bg-red-50' : group === 'caution' ? 'bg-yellow-50' : 'bg-[#f0ece5]'
                 const textColor = group === 'risk' ? 'text-red-600' : group === 'caution' ? 'text-amber-600' : 'text-[#4a5c53]'
                 const borderColor = group === 'risk' ? 'border-red-100' : group === 'caution' ? 'border-yellow-100' : 'border-white/50'
 
-                // ?�단 4개만 ?�시 (공간??
+                // 하단 4개만 표시 (공간상)
                 if (idx > 3) return null
 
                 return (
@@ -351,18 +351,18 @@ export default function MySituationPage() {
               })}
               <div className="bg-[#e8efe9] rounded-3xl py-4 px-6 text-center flex flex-col items-center justify-center border border-[#566e63]/10 shadow-sm cursor-pointer hover:bg-[#d0dfd3] transition-all active:scale-95 group">
                 <Sparkles size={16} className="text-[#566e63] mb-1 group-hover:rotate-12 transition-transform" />
-                <div className="text-[10px] font-bold text-[#566e63] uppercase tracking-widest text-center">?�체 진단<br/>분석</div>
+                <div className="text-[10px] font-bold text-[#566e63] uppercase tracking-widest text-center">전체 진단<br/>분석</div>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-6">
-            {/* ?�문가???�견: ?�제 ?�이??기반 ?�동 분석 */}
+            {/* 전문가의 소견: 실제 데이터 기반 자동 분석 */}
             {allCsei.length > 0 && (
               <div className="bg-[#d2eaf7] rounded-[40px] p-8 md:p-10 flex-1 relative overflow-hidden group border border-[#b8d6e9]">
                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
                  <Sparkles size={24} className="text-[#3b6b8b] mb-6" />
-                 <h3 className="text-xl font-bold text-[#222] mb-4 relative z-10 tracking-tight">지??분석 결과</h3>
+                 <h3 className="text-xl font-bold text-[#222] mb-4 relative z-10 tracking-tight">지표 분석 결과</h3>
                  
                  <div className="relative z-10 space-y-4">
                     {(() => {
@@ -374,37 +374,37 @@ export default function MySituationPage() {
                       if (riskItems.length > 0) {
                         return (
                           <p className="text-[#c13030] bg-white/40 p-4 rounded-2xl font-bold leading-relaxed text-[14px] border border-red-100/50">
-                            "?�재 <strong>{riskItems.map((f: any) => f.subject).join(', ')}</strong> 지?��? ?�험 ?�치???�당?�니?? 칠정(七情)??균형???�해 ?��??�구???�련???�한 ?�서 조절??권장?�니??"
+                            "현재 <strong>{riskItems.map((f: any) => f.subject).join(', ')}</strong> 지표가 위험 수치에 해당합니다. 칠정(七情)의 균형을 위해 인지재구성 훈련을 통한 정서 조절이 권장됩니다."
                           </p>
                         )
                       } else if (cautionItems.length > 0) {
                         return (
                           <p className="text-[#8c7457] bg-white/40 p-4 rounded-2xl font-bold leading-relaxed text-[14px] border border-yellow-100/50">
-                            "<strong>{cautionItems.map((f: any) => f.subject).join(', ')}</strong> 지?��? 주의 ?�계?�니?? ?�소보다 ?��??�진 ?�태?????�으?? 챗봇 ?�담?�나 명상???�해 ?�식??취해보세??"
+                            "<strong>{cautionItems.map((f: any) => f.subject).join(', ')}</strong> 지표가 주의 단계입니다. 평소보다 예민해진 상태일 수 있으니, 챗봇 상담이나 명상을 통해 휴식을 취해보세요."
                           </p>
                         )
                       } else {
                         return (
                           <p className="text-[#3b6b8b] bg-white/40 p-4 rounded-2xl font-bold leading-relaxed text-[14px] border border-[#b8d6e9]/50">
-                            "모든 감정 지?��? ?�상 범위 ?�에???�정?�으�??��??�고 ?�습?�다. ?�재???�리????��?�을 ?��??�기 ?�한 루틴??지?�해 보세??"
+                            "모든 감정 지표가 정상 범위 내에서 안정적으로 유지되고 있습니다. 현재의 심리적 항상성을 유지하기 위한 루틴을 지속해 보세요."
                           </p>
                         )
                       }
                     })()}
                     
                     <p className="text-[11px] text-[#3b6b8b]/70 font-medium italic">
-                      * ??분석?� ?��??�된 T-?�수(?�균 50, ?��??�차 10)�?기�??�로 ?�출?�었?�니??
+                      * 이 분석은 표준화된 T-점수(평균 50, 표준편차 10)를 기준으로 산출되었습니다.
                     </p>
                  </div>
               </div>
             )}
             <div className="bg-[#f0ece5] rounded-[30px] p-8 border border-white/50 shadow-sm">
-               <h3 className="text-sm font-bold text-[#222] mb-6">?�음 목표</h3>
+               <h3 className="text-sm font-bold text-[#222] mb-6">다음 목표</h3>
                <div className="flex items-center gap-4">
                   <div className="bg-white p-3 rounded-2xl text-[#566e63] shadow-sm border border-gray-100"><Moon size={20} /></div>
                   <div className="flex-1">
-                     <div className="text-sm font-bold text-[#222] mb-1">?�면 ?�턴 ?�정?�게 ?��??�기</div>
-                     <div className="text-xs text-gray-500 font-medium">?�재 �?4/7???�성 �?/div>
+                     <div className="text-sm font-bold text-[#222] mb-1">수면 패턴 일정하게 유지하기</div>
+                     <div className="text-xs text-gray-500 font-medium">현재 주 4/7일 달성 중</div>
                      <div className="h-2 w-full bg-white/60 rounded-full mt-3 overflow-hidden border border-white/50">
                        <div className="h-full bg-[#566e63] w-[57%] rounded-full shadow-[0_0_10px_rgba(86,110,99,0.3)] transition-all duration-1000" />
                      </div>
@@ -417,13 +417,13 @@ export default function MySituationPage() {
         <div className="mb-20 fade-in slide-in-bottom delay-200">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
             <div>
-              <h2 className="text-3xl font-extrabold mb-2 tracking-tight">?�스?�리 �?기록</h2>
-              <p className="text-gray-600 font-medium text-sm">과거???��? ?�구??�??�리 진단 기록?�니??</p>
+              <h2 className="text-3xl font-extrabold mb-2 tracking-tight">히스토리 및 기록</h2>
+              <p className="text-gray-600 font-medium text-sm">과거의 인지 재구성 및 심리 진단 기록입니다.</p>
             </div>
             <div className="flex gap-3">
               <div className="relative group">
                 <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#566e63] transition-colors" />
-                <input type="text" placeholder="기록 검??.." className="bg-white px-10 py-3 rounded-full text-sm outline-none border border-gray-100 focus:ring-4 focus:ring-[#566e63]/5 w-[240px] shadow-sm transition-all" />
+                <input type="text" placeholder="기록 검색..." className="bg-white px-10 py-3 rounded-full text-sm outline-none border border-gray-100 focus:ring-4 focus:ring-[#566e63]/5 w-[240px] shadow-sm transition-all" />
               </div>
               <button className="bg-white w-12 h-12 border border-gray-100 shadow-sm rounded-full flex items-center justify-center text-gray-500 hover:bg-[#566e63] hover:text-white transition-all active:scale-90"><Filter size={18} /></button>
             </div>
@@ -445,27 +445,27 @@ export default function MySituationPage() {
                   <div className="flex gap-2">
                     {log.tags.map((tag: string, idx: number) => (<span key={idx} className={`px-2.5 py-1 rounded-lg text-[9px] font-bold transition-colors ${log.isAssessment ? 'bg-[#f0ece5] text-[#4a5c53]' : 'bg-[#e8efe9] text-[#566e63]'}`}>#{tag}</span>))}
                   </div>
-                  <div className="text-[10px] font-bold flex items-center gap-1 text-gray-600 group-hover:text-[#566e63] transition-colors">?�세보기 <ArrowRight size={12} /></div>
+                  <div className="text-[10px] font-bold flex items-center gap-1 text-gray-600 group-hover:text-[#566e63] transition-colors">상세보기 <ArrowRight size={12} /></div>
                 </div>
               </div>
             ))}
           </div>
           <div className="flex justify-center">
-            <button className="bg-white border border-gray-100 shadow-sm hover:bg-[#f0ece5] text-[#4a5c53] font-bold text-sm px-10 py-3.5 rounded-full transition-all active:scale-95">?�전 기록 ??불러?�기</button>
+            <button className="bg-white border border-gray-100 shadow-sm hover:bg-[#f0ece5] text-[#4a5c53] font-bold text-sm px-10 py-3.5 rounded-full transition-all active:scale-95">이전 기록 더 불러오기</button>
           </div>
         </div>
       </main>
 
       <footer className="border-t border-gray-100 px-6 md:px-10 py-16 flex flex-col md:flex-row justify-between items-center gap-8 mt-20 bg-white">
         <div>
-          <div className="font-extrabold text-lg mb-1 text-[#4a5c53] tracking-tighter">?�이???�비??/div>
-          <p className="text-[10px] text-gray-600 font-medium">© 2024 ?�이???�비?? 마음???�식�?</p>
+          <div className="font-extrabold text-lg mb-1 text-[#4a5c53] tracking-tighter">파이널 서비스</div>
+          <p className="text-[10px] text-gray-600 font-medium">© 2024 파이널 서비스. 마음의 안식처.</p>
         </div>
         <div className="flex gap-12 text-[10px] font-extrabold text-gray-600 uppercase tracking-[0.2em]">
-          <Link href="#" className="hover:text-[#566e63] transition-colors">?�개</Link>
-          <Link href="#" className="hover:text-[#566e63] transition-colors">개인?�보처리방침</Link>
-          <Link href="#" className="hover:text-[#566e63] transition-colors">문의?�기</Link>
-          <Link href="#" className="hover:text-[#566e63] transition-colors">?�용?��?</Link>
+          <Link href="#" className="hover:text-[#566e63] transition-colors">소개</Link>
+          <Link href="#" className="hover:text-[#566e63] transition-colors">개인정보처리방침</Link>
+          <Link href="#" className="hover:text-[#566e63] transition-colors">문의하기</Link>
+          <Link href="#" className="hover:text-[#566e63] transition-colors">이용약관</Link>
         </div>
       </footer>
 
