@@ -25,16 +25,37 @@ export default function SelectPage() {
         
         {/* Header Title Section */}
         <div className="text-center mb-16 fade-in">
-          <span className="text-[10px] font-bold text-gray-600 tracking-[0.2em] uppercase mb-4 block">
-            명확한 내일을 향한 길
-          </span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight text-[#222]">
-            나에게 맞는 치유 방법을 <br className="hidden md:block" />
-            <span className="italic font-serif text-[#566e63]">찾아보세요.</span>
+            치유 방법을 <span className="italic font-serif text-[#566e63]">찾아드립니다.</span>
           </h1>
           <p className="text-gray-500 font-medium md:text-lg max-w-2xl mx-auto leading-relaxed">
-            치유는 목적지가 아니라 리듬 있는 여정입니다. 현재 내 감정 상태에 맞는 치료적 접근 방식을 둘러보고 선택하세요.
+            현재 내 감정 상태에 맞는 치료적 접근 방식을 진단해 드립니다.
           </p>
+        </div>
+
+        {/* Assessment Banner Section (Moved Up) */}
+        <div className="bg-[#f0ece5] rounded-[40px] p-8 md:p-16 flex flex-col md:flex-row items-center gap-10 overflow-hidden relative fade-in slide-in-bottom mb-10">
+          <div className="md:w-[55%] relative z-10">
+            <h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight">치료를 시작합니다.</h2>
+            <p className="text-sm md:text-base text-gray-500 font-medium leading-relaxed mb-10 max-w-md">
+              모든 여정은 특별합니다. 2분 만에 끝나는 "상태 진단"을 통해 현재 나의 감정적 필요에 가장 알맞은 치료적 접근 방식을 추천받아 보세요.
+            </p>
+            <Link href="/questionnaire" className="bg-[#333] hover:bg-black text-white px-8 py-4 rounded-full font-bold inline-flex items-center w-fit gap-3 transition-colors shadow-xl shadow-black/10">
+              오늘의 마음 진단하기 <FileQuestion size={18} />
+            </Link>
+          </div>
+          
+          <div className="md:w-[45%] relative z-10 flex justify-center w-full mt-10 md:mt-0">
+             <div className="w-full max-w-[350px] aspect-square rounded-[40px] bg-gradient-to-br from-[#4db4b6] to-[#127a7c] flex items-center justify-center shadow-2xl relative overflow-hidden">
+                <div className="w-[85%] h-[85%] border-4 border-white/30 rounded-2xl relative flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full border-2 border-white/50 flex items-center justify-center">
+                     <Sparkles size={16} className="text-white/80" />
+                  </div>
+                </div>
+                <div className="absolute bottom-6 left-6 w-12 h-4 bg-white/20 rounded-sm" />
+                <div className="absolute bottom-6 right-8 w-10 h-8 bg-white/30 rounded-t-md shrink-0" />
+             </div>
+          </div>
         </div>
 
         {/* Methods Grid Section */}
@@ -139,33 +160,6 @@ export default function SelectPage() {
 
         </div>
 
-        {/* Assessment Banner Section */}
-        <div className="bg-[#f0ece5] rounded-[40px] p-8 md:p-16 flex flex-col md:flex-row items-center gap-10 overflow-hidden relative fade-in slide-in-bottom delay-500">
-          <div className="md:w-[55%] relative z-10">
-            <h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight">어디서부터 시작해야 할지 모르겠나요?</h2>
-            <p className="text-sm md:text-base text-gray-500 font-medium leading-relaxed mb-10 max-w-md">
-              모든 여정은 특별합니다. 2분 만에 끝나는 "상태 진단"을 통해 현재 나의 감정적 필요에 가장 알맞은 치료적 접근 방식을 추천받아 보세요.
-            </p>
-            <Link href="/questionnaire" className="bg-[#333] hover:bg-black text-white px-8 py-4 rounded-full font-bold inline-flex items-center w-fit gap-3 transition-colors shadow-xl shadow-black/10">
-              오늘의 마음 진단하기 <FileQuestion size={18} />
-            </Link>
-          </div>
-          
-          <div className="md:w-[45%] relative z-10 flex justify-center w-full mt-10 md:mt-0">
-             {/* Abstract Teal Room Graphic Placeholder */}
-             <div className="w-full max-w-[350px] aspect-square rounded-[40px] bg-gradient-to-br from-[#4db4b6] to-[#127a7c] flex items-center justify-center shadow-2xl relative overflow-hidden">
-                {/* Inner screen frame mimicking the design */}
-                <div className="w-[85%] h-[85%] border-4 border-white/30 rounded-2xl relative flex items-center justify-center">
-                  <div className="w-12 h-12 rounded-full border-2 border-white/50 flex items-center justify-center">
-                     <Sparkles size={16} className="text-white/80" />
-                  </div>
-                </div>
-                {/* Small items at bottom */}
-                <div className="absolute bottom-6 left-6 w-12 h-4 bg-white/20 rounded-sm" />
-                <div className="absolute bottom-6 right-8 w-10 h-8 bg-white/30 rounded-t-md shrink-0" />
-             </div>
-          </div>
-        </div>
 
       </main>
 
