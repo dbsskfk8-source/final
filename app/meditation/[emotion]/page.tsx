@@ -89,9 +89,21 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   // Next 15+ 에서는 params를 비동기로 언래핑해야 함
   const resolvedParams = use(params)
   
-  // URL에서 감정 키워드 추출 (예: '경(놀람)'에서 '놀람' 매칭)
+  // 다양한 포맷('경(놀람)', '경 (驚)', '놀람')에 방어적으로 대응하는 매칭 딕셔너리
+  const MATCH_KEYS: Record<string, string[]> = {
+    '기쁨': ['희', '기쁨', '喜'],
+    '분노': ['노', '분노', '怒'],
+    '생각': ['사', '생각', '思'],
+    '우울': ['우', '우울', '憂'],
+    '슬픔': ['비', '슬픔', '悲'],
+    '두려움': ['공', '두려움', '恐'],
+    '놀람': ['경', '놀람', '驚']
+  }
+
   let rawEmotion = decodeURIComponent(resolvedParams.emotion)
-  const emotionKey = Object.keys(MEDITATION_MAP).find(key => rawEmotion.includes(key)) || '기쁨'
+  const emotionKey = Object.keys(MEDITATION_MAP).find(key => 
+    MATCH_KEYS[key].some(k => rawEmotion.includes(k))
+  ) || '기쁨'
 
   const data = MEDITATION_MAP[emotionKey]
   const Icon = data.icon || Brain
