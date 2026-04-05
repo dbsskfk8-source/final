@@ -18,7 +18,7 @@ import {
   Legend,
   ReferenceArea
 } from 'recharts'
-import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle, LogOut, TrendingUp, LayoutGrid, Calendar, User, Bell, Settings, Activity } from 'lucide-react'
+import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle, LogOut, TrendingUp, LayoutGrid, Calendar, User, Bell, Settings, Activity, Brain, Heart, Fingerprint, Wind } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -221,12 +221,80 @@ export default function MySituationPage() {
             <p className="text-gray-600 font-medium text-lg md:text-xl">당신의 마음은 하나의 안식처입니다. 여기 그 청사진이 있습니다.</p>
             
             {allCsei.length > 0 && (
-              <div className="mt-8 flex animate-in fade-in slide-in-from-left duration-700">
+              <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 animate-in fade-in slide-in-from-left duration-700">
                 <Link href="/result" className="flex items-center gap-3 bg-[#566e63] text-white px-6 py-4 rounded-2xl font-bold shadow-lg hover:bg-[#43574d] hover:-translate-y-1 transition-all active:scale-95 group">
                   <Activity size={20} className="group-hover:rotate-12 transition-transform" />
                   <span>✨ 가장 최근 진단 결과 요약 보기</span>
                   <ArrowRight size={18} />
                 </Link>
+              </div>
+            )}
+            
+            {/* ✨ 대시보드 강화: 추천 훈련 숏컷 섹션 */}
+            {allCsei.length > 0 && (
+              <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 w-full max-w-3xl">
+                {(() => {
+                  const latestScores = allCsei[0].scores;
+                  const attentionEmotions = latestScores.filter((s: any) => s.group === 'risk' || s.group === 'caution').sort((a: any, b: any) => b.A - a.A);
+                  
+                  if (attentionEmotions.length === 0) {
+                    return (
+                      <div className="bg-[#f0f9f3] border border-[#d1e8da] rounded-2xl p-6 flex items-center justify-between shadow-sm">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+                            <Smile size={24} className="text-[#2fa65a]" />
+                          </div>
+                          <div>
+                            <h3 className="font-extrabold text-[#222] text-sm">현재 모든 감정이 안정권입니다</h3>
+                            <p className="text-xs text-gray-500 font-medium">특별히 권장되는 치료 훈련이 없습니다. 평온한 하루를 보내세요.</p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <div className="space-y-4">
+                      <h3 className="font-extrabold text-sm text-gray-500 flex items-center gap-2 uppercase tracking-widest">
+                        <Brain size={14} className="text-[#566e63]" /> 진행 권장 훈련
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {attentionEmotions.slice(0, 2).map((emotion: any, idx: number) => {
+                          const isFearFright = emotion.subject.includes('공') || emotion.subject.includes('두려움') || emotion.subject.includes('경') || emotion.subject.includes('놀람');
+                          const isRisk = emotion.group === 'risk';
+                          
+                          return (
+                            <Link 
+                              key={idx}
+                              href={`/meditation/${encodeURIComponent(emotion.subject)}`}
+                              className={`p-5 rounded-2xl border transition-all hover:-translate-y-1 hover:shadow-md group flex flex-col justify-between
+                                ${isRisk ? 'bg-red-50/50 border-red-200' : 'bg-orange-50/50 border-orange-200'}
+                              `}
+                            >
+                              <div className="flex items-start justify-between mb-4">
+                                <div className={`px-2 py-1 rounded text-[10px] font-bold ${isRisk ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                                  {emotion.groupLabel}
+                                </div>
+                                {isFearFright && <div className="text-[10px] font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded">CBT 병행 권장</div>}
+                              </div>
+                              
+                              <div>
+                                <h4 className="font-extrabold text-[#222] text-lg mb-1">{emotion.subject} 치유 명상</h4>
+                                <p className="text-xs text-gray-500 font-medium mb-3">T-점수 {Math.round(emotion.A)}점으로 집중 관리가 필요합니다.</p>
+                              </div>
+                              
+                              <div className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors
+                                ${isRisk ? 'bg-red-100 text-red-700 group-hover:bg-red-600 group-hover:text-white' : 'bg-orange-100 text-orange-700 group-hover:bg-orange-500 group-hover:text-white'}
+                              `}>
+                                훈련 시작하기 <ArrowRight size={14} />
+                              </div>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             )}
           </div>

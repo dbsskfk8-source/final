@@ -280,7 +280,7 @@ function ResultContent() {
             <div className="flex flex-wrap justify-center gap-6">
               {attentionRequired.map((score, idx) => (
                 <Link 
-                  href={`/select?target=${encodeURIComponent(score.subject)}`} 
+                  href={`/meditation/${encodeURIComponent(score.subject)}`} 
                   key={idx}
                   className="w-full sm:w-[280px] bg-white border-2 border-[#eaeced] hover:border-[#566e63] rounded-[24px] p-8 text-center group hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center"
                 >
