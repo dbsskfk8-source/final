@@ -89,18 +89,17 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   // Next 15+ 에서는 params를 비동기로 언래핑해야 함
   const resolvedParams = use(params)
   
-  // URL에서 감정 키워드 추출 (예: '분노(怒)' -> '분노')
+  // URL에서 감정 키워드 추출 (예: '경(놀람)'에서 '놀람' 매칭)
   let rawEmotion = decodeURIComponent(resolvedParams.emotion)
-  const emotionMatch = rawEmotion.match(/([가-힣]+)/)
-  const emotionKey = emotionMatch ? emotionMatch[1] : rawEmotion
+  const emotionKey = Object.keys(MEDITATION_MAP).find(key => rawEmotion.includes(key)) || '기쁨'
 
-  const data = MEDITATION_MAP[emotionKey] || Object.values(MEDITATION_MAP)[0]
+  const data = MEDITATION_MAP[emotionKey]
   const Icon = data.icon || Brain
 
   const [isPlaying, setIsPlaying] = useState(false)
   const [progress, setProgress] = useState(0)
 
-  // 가상의 타이머 로직 (프로토타입용)
+  // 가상의 타이머 로직 (프로토타입용 및 완료 이력 저장)
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isPlaying) {
@@ -108,6 +107,17 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
         setProgress(prev => {
           if (prev >= 100) {
             setIsPlaying(false)
+            
+            // ⭐️ 명상을 100% 완료했을 때 완료 이력을 로컬 스토리지에 저장
+            try {
+              const doneLog = JSON.parse(localStorage.getItem('completed_meditations') || '{}')
+              doneLog[rawEmotion] = Date.now() // '경(놀람)' 등 URL에서 받은 원본 문자열을 키로 저장
+              localStorage.setItem('completed_meditations', JSON.stringify(doneLog))
+              console.log('명상 완료 기록됨:', rawEmotion)
+            } catch (e) {
+              console.error('완료 이력 저장 실패', e)
+            }
+            
             return 100
           }
           return prev + 0.5
@@ -115,7 +125,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
       }, 50) // 10초 명상 데모
     }
     return () => clearInterval(interval)
-  }, [isPlaying])
+  }, [isPlaying, rawEmotion])
 
   const togglePlay = () => setIsPlaying(!isPlaying)
   const resetPlay = () => {

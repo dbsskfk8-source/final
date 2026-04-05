@@ -235,8 +235,25 @@ export default function MySituationPage() {
               <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 w-full max-w-3xl">
                 {(() => {
                   const latestScores = allCsei[0].scores;
-                  const attentionEmotions = latestScores.filter((s: any) => s.group === 'risk' || s.group === 'caution').sort((a: any, b: any) => b.A - a.A);
+                  let attentionEmotions = latestScores.filter((s: any) => s.group === 'risk' || s.group === 'caution').sort((a: any, b: any) => b.A - a.A);
                   
+                  // 명상 완료 이력 필터링 로직
+                  try {
+                    if (typeof window !== 'undefined') {
+                      const doneLog = JSON.parse(localStorage.getItem('completed_meditations') || '{}')
+                      const testDate = new Date(allCsei[0].created_at || allCsei[0].timestamp).getTime()
+                      
+                      // 가장 최근 테스트 이후에 해당 명상을 100% 클리어했다면 추천에서 제외
+                      attentionEmotions = attentionEmotions.filter((emotion: any) => {
+                        const doneAt = doneLog[emotion.subject]
+                        if (!doneAt) return true // 기록 없으면 추천에 띄움
+                        return doneAt < testDate // 클리어 날짜가 과거 테스트보다 예전이라면 다시 띄움
+                      })
+                    }
+                  } catch (e) {
+                    console.error('완료 이력 필터링 오류', e)
+                  }
+
                   if (attentionEmotions.length === 0) {
                     return (
                       <div className="bg-[#f0f9f3] border border-[#d1e8da] rounded-2xl p-6 flex items-center justify-between shadow-sm">
@@ -259,7 +276,7 @@ export default function MySituationPage() {
                         <Brain size={14} className="text-[#566e63]" /> 진행 권장 훈련
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {attentionEmotions.slice(0, 2).map((emotion: any, idx: number) => {
+                        {attentionEmotions.map((emotion: any, idx: number) => {
                           const isFearFright = emotion.subject.includes('공') || emotion.subject.includes('두려움') || emotion.subject.includes('경') || emotion.subject.includes('놀람');
                           const isRisk = emotion.group === 'risk';
                           
