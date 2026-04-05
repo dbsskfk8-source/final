@@ -158,8 +158,8 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
         <div className="w-24"></div> {/* 여백 밸런스 */}
       </header>
 
-      {/* 메인 콘텐츠 영역 */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 max-w-4xl mx-auto w-full relative z-10">
+      {/* 메인 콘텐츠 영역 (CBT 팝업이 활성화될 경우 하단 여백 대폭 추가하여 가림 방지) */}
+      <main className={`flex-1 flex flex-col items-center justify-center p-6 md:p-12 max-w-4xl mx-auto w-full relative z-10 ${data.cbt ? 'pb-40 md:pb-32' : 'pb-12'}`}>
         
         {/* 설명 헤더 */}
         <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
