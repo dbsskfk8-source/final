@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
@@ -46,7 +46,7 @@ const LINE_COLORS: Record<string, string> = {
   risk: '#ef4444',
 }
 
-export default function ResultPage() {
+function ResultContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const idQuery = searchParams.get('id')
@@ -362,5 +362,13 @@ export default function ResultPage() {
 
       </main>
     </div>
+  )
+}
+
+export default function ResultPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#fcfdfc]"><div className="animate-spin w-10 h-10 border-4 border-[#566e63] border-t-transparent rounded-full" /></div>}>
+      <ResultContent />
+    </Suspense>
   )
 }

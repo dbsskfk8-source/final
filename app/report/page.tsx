@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 import { BrainCircuit, ChevronRight, Download, Activity, HeartPulse, ChevronLeft, Calendar as CalendarIcon, User, Info } from 'lucide-react'
 import { FactorResult } from '@/utils/diagnostics'
 
-export default function ReportPage() {
+function ReportContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const idQuery = searchParams.get('id')
@@ -320,5 +320,13 @@ export default function ReportPage() {
         }
       `}} />
     </div>
+  )
+}
+
+export default function ReportPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#fcfdfc]"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#566e63]"></div></div>}>
+      <ReportContent />
+    </Suspense>
   )
 }
