@@ -12,7 +12,7 @@ export default function SelectPage() {
         <Link href="/" className="font-extrabold text-xl tracking-tight text-[#4a5c53]">파이널 서비스</Link>
         <div className="hidden md:flex gap-12 font-medium text-sm text-gray-500">
           <Link href="/select" className="text-black border-b-2 border-black pb-1">치유 여정(Cure)</Link>
-          <Link href="/my-situation" className="hover:text-black hover:border-b-2 hover:border-black transition-all pb-1">내 상태 분석</Link>
+          <Link href="/my-situation" className="hover:text-black hover:border-b-2 hover:border-black transition-all pb-1">마이페이지</Link>
           <Link href="/chat" className="hover:text-black hover:border-b-2 hover:border-black transition-all pb-1">상담 챗봇</Link>
         </div>
         <div className="flex items-center gap-6">

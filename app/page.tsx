@@ -17,7 +17,7 @@ export default async function HomePage() {
         <div className="font-extrabold text-xl tracking-tight text-[#4a5c53]">파이널 서비스</div>
         <nav className="sm:flex hidden gap-12 font-medium text-sm text-gray-500">
           <Link href="/select" className="hover:text-black">인지재구성(Cure)</Link>
-          <Link href="/my-situation" className="hover:text-black">내 상태 분석</Link>
+          <Link href="/my-situation" className="hover:text-black">마이페이지</Link>
           <Link href="/chat" className="hover:text-black">상담 챗봇</Link>
         </nav>
         <div className="flex items-center gap-6">

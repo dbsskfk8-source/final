@@ -18,7 +18,7 @@ import {
   Legend,
   ReferenceArea
 } from 'recharts'
-import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle, LogOut, TrendingUp, LayoutGrid, Calendar, User, Bell, Settings } from 'lucide-react'
+import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle, LogOut, TrendingUp, LayoutGrid, Calendar, User, Bell, Settings, Activity } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -199,7 +199,7 @@ export default function MySituationPage() {
         <Link href="/" className="font-extrabold text-2xl text-[#4a5c53] tracking-tighter">파이널 서비스</Link>
         <div className="hidden md:flex gap-12 text-[10px] font-extrabold tracking-[0.2em] text-gray-600">
            <Link href="/select" className="hover:text-[#566e63] transition-colors">인지재구성(Cure)</Link>
-           <Link href="/my-situation" className="text-[#566e63] border-b-2 border-[#566e63] pb-1">내 상태 분석</Link>
+           <Link href="/my-situation" className="text-[#566e63] border-b-2 border-[#566e63] pb-1">마이페이지</Link>
            <Link href="/chat" className="hover:text-[#566e63] transition-colors">심리상담 챗봇</Link>
         </div>
         {!isGuest ? (
@@ -219,6 +219,16 @@ export default function MySituationPage() {
           <div>
             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-4">안녕하세요.</h1>
             <p className="text-gray-600 font-medium text-lg md:text-xl">당신의 마음은 하나의 안식처입니다. 여기 그 청사진이 있습니다.</p>
+            
+            {allCsei.length > 0 && (
+              <div className="mt-8 flex animate-in fade-in slide-in-from-left duration-700">
+                <Link href="/result" className="flex items-center gap-3 bg-[#566e63] text-white px-6 py-4 rounded-2xl font-bold shadow-lg hover:bg-[#43574d] hover:-translate-y-1 transition-all active:scale-95 group">
+                  <Activity size={20} className="group-hover:rotate-12 transition-transform" />
+                  <span>✨ 가장 최근 진단 결과 요약 보기</span>
+                  <ArrowRight size={18} />
+                </Link>
+              </div>
+            )}
           </div>
           {isGuest && (
             <div className="bg-[#fff9e6] border border-[#f5e1a4] p-5 rounded-[30px] flex items-center gap-4 shadow-sm animate-pulse">
@@ -228,7 +238,7 @@ export default function MySituationPage() {
           )}
         </div>
 
-        <div className="grid lg:grid-cols-[1fr_350px] gap-6 mb-20 fade-in slide-in-bottom delay-100">
+        <div className="flex flex-col gap-6 mb-20 fade-in slide-in-bottom delay-100">
           <div className="bg-[#fcfaf7] rounded-[40px] p-8 md:p-12 shadow-sm border border-gray-100/50 relative">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
               <div>
@@ -328,7 +338,7 @@ export default function MySituationPage() {
               </ResponsiveContainer>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
+            <div className="grid grid-cols-7 gap-1.5 md:gap-4 mt-10">
               {radar.map((item: any, idx) => {
                 const group = item.group || 'normal'
                 const groupLabel = item.groupLabel || '정상군'
@@ -336,71 +346,29 @@ export default function MySituationPage() {
                 const textColor = group === 'risk' ? 'text-red-600' : group === 'caution' ? 'text-amber-600' : 'text-[#4a5c53]'
                 const borderColor = group === 'risk' ? 'border-red-100' : group === 'caution' ? 'border-yellow-100' : 'border-white/50'
 
-                // 하단 4개만 표시 (공간상)
-                if (idx > 3) return null
-
                 return (
-                  <div key={idx} className={`${bgColor} rounded-3xl py-4 px-6 text-center border ${borderColor} shadow-sm transition-all hover:scale-105`}>
-                    <div className={`text-2xl font-extrabold ${textColor}`}>{item.A}</div>
-                    <div className="text-[10px] font-bold text-gray-600 tracking-widest mt-1 uppercase">{item.subject}</div>
-                    <div className={`text-[9px] font-bold mt-1.5 px-2 py-0.5 rounded-full inline-block ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <div key={idx} className={`${bgColor} rounded-xl sm:rounded-3xl py-2 sm:py-4 px-1 sm:px-6 text-center border ${borderColor} shadow-sm transition-all hover:scale-105`}>
+                    <div className={`text-base sm:text-2xl font-extrabold ${textColor}`}>{item.A}</div>
+                    <div className="text-[8px] sm:text-[10px] font-bold text-gray-600 tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 uppercase truncate">
+                      {item.subject.replace(/[^가-힣]/g, '')}
+                    </div>
+                    <div className={`hidden sm:inline-block text-[9px] font-bold mt-1.5 px-2 py-0.5 rounded-full ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
                        {groupLabel}
                     </div>
                   </div>
                 )
               })}
-              <div className="bg-[#e8efe9] rounded-3xl py-4 px-6 text-center flex flex-col items-center justify-center border border-[#566e63]/10 shadow-sm cursor-pointer hover:bg-[#d0dfd3] transition-all active:scale-95 group">
-                <Sparkles size={16} className="text-[#566e63] mb-1 group-hover:rotate-12 transition-transform" />
-                <div className="text-[10px] font-bold text-[#566e63] uppercase tracking-widest text-center">전체 진단<br/>분석</div>
-              </div>
             </div>
           </div>
+        </div>
 
-          <div className="flex flex-col gap-6">
-            {/* 전문가의 소견: 실제 데이터 기반 자동 분석 */}
-            {allCsei.length > 0 && (
-              <div className="bg-[#d2eaf7] rounded-[40px] p-8 md:p-10 flex-1 relative overflow-hidden group border border-[#b8d6e9]">
-                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/30 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-                 <Sparkles size={24} className="text-[#3b6b8b] mb-6" />
-                 <h3 className="text-xl font-bold text-[#222] mb-4 relative z-10 tracking-tight">지표 분석 결과</h3>
-                 
-                 <div className="relative z-10 space-y-4">
-                    {(() => {
-                      const current = allCsei[selectedIndex] || allCsei[0]
-                      const scores = current.scores as any[]
-                      const riskItems = scores.filter(s => s.group === 'risk')
-                      const cautionItems = scores.filter(s => s.group === 'caution')
-                      
-                      if (riskItems.length > 0) {
-                        return (
-                          <p className="text-[#c13030] bg-white/40 p-4 rounded-2xl font-bold leading-relaxed text-[14px] border border-red-100/50">
-                            "현재 <strong>{riskItems.map((f: any) => f.subject).join(', ')}</strong> 지표가 위험 수치에 해당합니다. 칠정(七情)의 균형을 위해 인지재구성 훈련을 통한 정서 조절이 권장됩니다."
-                          </p>
-                        )
-                      } else if (cautionItems.length > 0) {
-                        return (
-                          <p className="text-[#8c7457] bg-white/40 p-4 rounded-2xl font-bold leading-relaxed text-[14px] border border-yellow-100/50">
-                            "<strong>{cautionItems.map((f: any) => f.subject).join(', ')}</strong> 지표가 주의 단계입니다. 평소보다 예민해진 상태일 수 있으니, 챗봇 상담이나 명상을 통해 휴식을 취해보세요."
-                          </p>
-                        )
-                      } else {
-                        return (
-                          <p className="text-[#3b6b8b] bg-white/40 p-4 rounded-2xl font-bold leading-relaxed text-[14px] border border-[#b8d6e9]/50">
-                            "모든 감정 지표가 정상 범위 내에서 안정적으로 유지되고 있습니다. 현재의 심리적 항상성을 유지하기 위한 루틴을 지속해 보세요."
-                          </p>
-                        )
-                      }
-                    })()}
-                    
-                    <p className="text-[11px] text-[#3b6b8b]/70 font-medium italic">
-                      * 이 분석은 표준화된 T-점수(평균 50, 표준편차 10)를 기준으로 산출되었습니다.
-                    </p>
-                 </div>
-              </div>
-            )}
-            <div className="bg-[#f0ece5] rounded-[30px] p-8 border border-white/50 shadow-sm">
-               <h3 className="text-sm font-bold text-[#222] mb-6">다음 목표</h3>
-               <div className="flex items-center gap-4">
+        <div className="bg-[#f0ece5] rounded-[30px] p-8 md:p-10 border border-gray-100/50 shadow-sm mb-16 fade-in slide-in-bottom delay-150 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+           <div>
+               <h3 className="text-xl font-extrabold text-[#222] mb-2 tracking-tight">트래커: 다음 목표</h3>
+               <p className="text-sm font-medium text-gray-500 mb-0">마음의 안정을 위한 장기 과제를 달성해 보세요.</p>
+           </div>
+           
+           <div className="flex items-center gap-5 bg-white p-5 rounded-[24px] pl-6 w-full md:w-auto md:min-w-[400px] border border-gray-50/50 shadow-sm">
                   <div className="bg-white p-3 rounded-2xl text-[#566e63] shadow-sm border border-gray-100"><Moon size={20} /></div>
                   <div className="flex-1">
                      <div className="text-sm font-bold text-[#222] mb-1">수면 패턴 일정하게 유지하기</div>
@@ -410,9 +378,7 @@ export default function MySituationPage() {
                      </div>
                   </div>
                </div>
-            </div>
-          </div>
-        </div>
+              </div>
 
         <div className="mb-20 fade-in slide-in-bottom delay-200">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
@@ -430,7 +396,15 @@ export default function MySituationPage() {
           </div>
           <div className="grid md:grid-cols-3 gap-6 mb-10">
             {history.map((log: HistoryLog) => (
-              <div key={log.id} className={`bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group flex flex-col h-full ${log.isAssessment ? 'ring-2 ring-[#566e63]/5' : ''}`}>
+              <div 
+                key={log.id} 
+                onClick={() => {
+                  if (log.isAssessment) {
+                    router.push(`/result?id=${log.id}`)
+                  }
+                }}
+                className={`bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group flex flex-col h-full ${log.isAssessment ? 'relative ring-2 ring-[#566e63]/5' : ''}`}
+              >
                 <div className="flex justify-between items-center mb-6">
                   <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full tracking-widest ${log.isAssessment ? 'bg-[#566e63] text-white' : 'bg-[#f5f5f5] text-gray-500'}`}>{log.date}</span>
                   <div>
@@ -445,7 +419,11 @@ export default function MySituationPage() {
                   <div className="flex gap-2">
                     {log.tags.map((tag: string, idx: number) => (<span key={idx} className={`px-2.5 py-1 rounded-lg text-[9px] font-bold transition-colors ${log.isAssessment ? 'bg-[#f0ece5] text-[#4a5c53]' : 'bg-[#e8efe9] text-[#566e63]'}`}>#{tag}</span>))}
                   </div>
-                  <div className="text-[10px] font-bold flex items-center gap-1 text-gray-600 group-hover:text-[#566e63] transition-colors">상세보기 <ArrowRight size={12} /></div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-[10px] font-bold flex items-center gap-1 text-gray-600 group-hover:text-[#566e63] transition-colors">
+                      요약보기 <ArrowRight size={12} />
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

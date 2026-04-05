@@ -183,7 +183,7 @@ export default function CurePage() {
         <Link href="/" className="font-extrabold text-xl text-[#4a5c53]">파이널 서비스</Link>
         <div className="hidden md:flex gap-10 text-sm font-medium text-gray-600">
           <Link href="/select" className="text-black border-b-2 border-black pb-1">치유 여정(Cure)</Link>
-          <Link href="/my-situation" className="hover:text-black">내 상태 분석</Link>
+          <Link href="/my-situation" className="hover:text-black">마이페이지</Link>
           <Link href="/chat" className="hover:text-black">상담 챗봇</Link>
         </div>
         <div className="flex gap-4 items-center">

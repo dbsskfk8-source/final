@@ -86,7 +86,7 @@ export default function ChatPage() {
         <div className="font-extrabold text-xl text-[#4a5c53]">파이널 서비스</div>
         <div className="flex gap-10 font-medium text-sm text-gray-500">
           <Link href="/select">치유 여정(Cure)</Link>
-          <Link href="/my-situation">내 상태 분석</Link>
+          <Link href="/my-situation">마이페이지</Link>
           <Link href="#" className="text-black border-b-2 border-black pb-1">상담 챗봇</Link>
         </div>
         <div className="flex gap-6 items-center">

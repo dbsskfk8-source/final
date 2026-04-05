@@ -152,8 +152,8 @@ export default function QuestionnairePage() {
       }
     }
     
-    // 완료 후 마이페이지로 자동 이동
-    router.push('/my-situation')
+    // 완료 후 결과 요약/브릿지 페이지로 이동
+    router.push('/result')
   }
 
   const handleSaveProgress = () => {
@@ -221,7 +221,7 @@ export default function QuestionnairePage() {
             <nav className="flex gap-4 md:gap-6 text-sm font-bold text-gray-500 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 whitespace-nowrap">
                <span className="text-[#566e63] border-b-2 border-[#566e63] pb-1 cursor-default shrink-0">칠정 진단</span>
                <Link href="/select" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">인지재구성(Cure)</Link>
-               <Link href="/my-situation" className="hover:text-[#566e63] cursor-pointer transition-colors shrink-0 pt-0.5">내 상태 분석</Link>
+               <Link href="/my-situation" className="hover:text-[#566e63] cursor-pointer transition-colors shrink-0 pt-0.5">마이페이지</Link>
                <Link href="/chat" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">심리상담 챗봇</Link>
             </nav>
           </div>
