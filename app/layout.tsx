@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "파이널 서비스 | 마음의 안식처",
-  description: "정서적 전환과 인지 재구성을 위한 당신만의 안전한 공간",
+  title: "MoodB | 스마트 칠정 정서 진단 서비스",
+  description: "28문항 핵심칠정척도와 오지상승위 치료 알고리즘을 통한 데이터 기반 마음 건강 파트너",
 };
 
 export default function RootLayout({

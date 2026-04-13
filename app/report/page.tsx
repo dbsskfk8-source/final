@@ -138,7 +138,7 @@ function ReportContent() {
       <header className="px-6 md:px-10 py-6 flex justify-between items-center bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <Link href="/" className="font-extrabold text-xl tracking-tight text-[#4a5c53] flex items-center gap-2">
           <BrainCircuit size={24} />
-          파이널 서비스
+          MoodB
         </Link>
         <nav className="hidden md:flex gap-10 font-bold text-[11px] text-gray-500 uppercase tracking-widest">
           <Link href="/" className="hover:text-black transition-colors">홈</Link>

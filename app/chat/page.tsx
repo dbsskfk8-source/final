@@ -83,7 +83,7 @@ export default function ChatPage() {
     <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans">
       {/* Navbar */}
       <nav className="px-10 py-8 flex justify-between items-center bg-transparent max-w-[1200px] mx-auto w-full">
-        <div className="font-extrabold text-xl text-[#4a5c53]">파이널 서비스</div>
+        <Link href="/" className="font-extrabold text-3xl tracking-tight text-[#4a5c53]">MoodB</Link>
         <div className="flex gap-10 font-medium text-sm text-gray-500">
           <Link href="/select">치유 여정(Cure)</Link>
           <Link href="/my-situation">마이페이지</Link>
@@ -183,14 +183,14 @@ export default function ChatPage() {
       </main>
 
       <footer className="px-10 py-12 flex flex-col items-center gap-12 border-t border-gray-50 mt-20">
-        <div className="font-extrabold text-lg text-[#4a5c53]">파이널 서비스</div>
+        <div className="font-extrabold text-lg text-[#4a5c53]">MoodB</div>
         <div className="flex gap-16 text-xs font-bold text-gray-300 uppercase tracking-widest">
           <Link href="#" className="hover:text-black transition-colors">소개</Link>
           <Link href="#" className="hover:text-black transition-colors">개인정보처리방침</Link>
           <Link href="#" className="hover:text-black transition-colors">문의하기</Link>
           <Link href="#" className="hover:text-black transition-colors">이용약관</Link>
         </div>
-        <div className="text-[10px] text-gray-300 font-bold">© 2024 파이널 서비스. 마음의 안식처.</div>
+        <div className="text-[10px] text-gray-300 font-bold">© 2024 MoodB. 마음의 안식처.</div>
       </footer>
     </div>
   )

@@ -29,7 +29,7 @@ export default function LoginPage() {
               <path d="M12 22V12" stroke="white"/>
             </svg>
           </div>
-          파이널 서비스
+          MoodB
         </div>
       </div>
 

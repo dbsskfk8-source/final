@@ -39,13 +39,13 @@ interface HistoryLog {
 }
 
 const DEFAULT_RADAR: RadarItem[] = [
-  { subject: '희 (喜)', A: 84, fullMark: 100 },
-  { subject: '노 (怒)', A: 75, fullMark: 100 },
-  { subject: '사 (思)', A: 62, fullMark: 100 },
-  { subject: '우 (憂)', A: 41, fullMark: 100 },
-  { subject: '비 (悲)', A: 70, fullMark: 100 },
-  { subject: '공 (恐)', A: 65, fullMark: 100 },
-  { subject: '경 (驚)', A: 80, fullMark: 100 },
+  { subject: '기쁨', A: 84, fullMark: 100 },
+  { subject: '분노', A: 75, fullMark: 100 },
+  { subject: '생각', A: 62, fullMark: 100 },
+  { subject: '우울', A: 41, fullMark: 100 },
+  { subject: '슬픔', A: 70, fullMark: 100 },
+  { subject: '두려움', A: 65, fullMark: 100 },
+  { subject: '놀람', A: 80, fullMark: 100 },
 ]
 
 export default function MySituationPage() {
@@ -110,7 +110,7 @@ export default function MySituationPage() {
 
         const combined: HistoryLog[] = []
         if (dbCsei) {
-          dbCsei.forEach(item => {
+          dbCsei.forEach((item: any) => {
             const topEmotion = [...item.scores].sort((a: any, b: any) => b.A - a.A)[0]
             combined.push({
               id: `csei-${item.id}`,
@@ -124,7 +124,7 @@ export default function MySituationPage() {
           })
         }
         if (dbCure) {
-          dbCure.forEach(c => {
+          dbCure.forEach((c: any) => {
             combined.push({
               id: c.id,
               date: new Date(c.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase(),
@@ -196,11 +196,13 @@ export default function MySituationPage() {
   return (
     <div className="min-h-screen bg-[#fffdfa] text-[#333] font-sans selection:bg-[#566e63]/20">
       <nav className="border-b border-gray-100 px-6 md:px-10 py-6 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <Link href="/" className="font-extrabold text-2xl text-[#4a5c53] tracking-tighter">파이널 서비스</Link>
-        <div className="hidden md:flex gap-12 text-[10px] font-extrabold tracking-[0.2em] text-gray-600">
-           <Link href="/select" className="hover:text-[#566e63] transition-colors">인지재구성(Cure)</Link>
-           <Link href="/my-situation" className="text-[#566e63] border-b-2 border-[#566e63] pb-1">마이페이지</Link>
-           <Link href="/chat" className="hover:text-[#566e63] transition-colors">심리상담 챗봇</Link>
+        <Link href="/" className="font-extrabold text-3xl md:text-4xl text-[#566e63] tracking-tighter">MoodB</Link>
+        <div className="hidden md:flex gap-12 font-medium text-base text-gray-500">
+           <Link href="/about" className="hover:text-black font-bold text-base">MoodB 소개</Link>
+           <Link href="/select" className="hover:text-black text-base transition-colors">인지재구성(Cure)</Link>
+           <Link href="/my-situation" className="text-[#566e63] font-bold text-base border-b-2 border-[#566e63] pb-1">마이페이지</Link>
+           <Link href="/chat" className="hover:text-black text-base transition-colors">심리상담 챗봇</Link>
+           <Link href="/dashboard" className="text-[#bfa588] hover:text-[#a68a6d] font-bold text-base">관리자 뷰어</Link>
         </div>
         {!isGuest ? (
           <button onClick={logout} className="flex items-center gap-2 group">
@@ -402,8 +404,8 @@ export default function MySituationPage() {
                     <ReferenceArea y1={70} y2={100} fill="#ef4444" fillOpacity={0.07} label={{ position: 'insideRight', value: '위험', fill: '#dc2626', fontSize: 10, fontWeight: 'bold' }} />
                     <ReferenceArea y1={0} y2={30} fill="#ef4444" fillOpacity={0.07} />
                     
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#999', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#999' }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 16, fill: '#999', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 16, fill: '#666', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', fontSize: '12px' }} />
                     <Legend 
                       verticalAlign="bottom" 
@@ -434,7 +436,7 @@ export default function MySituationPage() {
                 return (
                   <div key={idx} className={`${bgColor} rounded-xl sm:rounded-3xl py-2 sm:py-4 px-1 sm:px-6 text-center border ${borderColor} shadow-sm transition-all hover:scale-105`}>
                     <div className={`text-base sm:text-2xl font-extrabold ${textColor}`}>{item.A}</div>
-                    <div className="text-[8px] sm:text-[10px] font-bold text-gray-600 tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 uppercase truncate">
+                    <div className="text-base font-bold text-gray-600 tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 uppercase truncate">
                       {item.subject.replace(/[^가-힣]/g, '')}
                     </div>
                     <div className={`hidden sm:inline-block text-[9px] font-bold mt-1.5 px-2 py-0.5 rounded-full ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
@@ -521,8 +523,8 @@ export default function MySituationPage() {
 
       <footer className="border-t border-gray-100 px-6 md:px-10 py-16 flex flex-col md:flex-row justify-between items-center gap-8 mt-20 bg-white">
         <div>
-          <div className="font-extrabold text-lg mb-1 text-[#4a5c53] tracking-tighter">파이널 서비스</div>
-          <p className="text-[10px] text-gray-600 font-medium">© 2024 파이널 서비스. 마음의 안식처.</p>
+          <div className="font-extrabold text-lg mb-1 text-[#4a5c53] tracking-tighter">MoodB</div>
+          <p className="text-[10px] text-gray-600 font-medium">© 2024 MoodB. 마음의 안식처.</p>
         </div>
         <div className="flex gap-12 text-[10px] font-extrabold text-gray-600 uppercase tracking-[0.2em]">
           <Link href="#" className="hover:text-[#566e63] transition-colors">소개</Link>
