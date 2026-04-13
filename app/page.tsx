@@ -25,9 +25,7 @@ export default async function HomePage() {
           <Link href="/select" className="hover:text-black">인지재구성(Cure)</Link>
           <Link href="/my-situation" className="hover:text-black">마이페이지</Link>
           <Link href="/chat" className="hover:text-black">상담 챗봇</Link>
-          {isDoctor && (
-            <Link href="/dashboard" className="text-[#bfa588] hover:text-[#a68a6d] font-bold">관리자 뷰어</Link>
-          )}
+          <Link href="/dashboard" className="text-[#bfa588] hover:text-[#a68a6d] font-bold">관리자 뷰어</Link>
         </nav>
         <div className="flex items-center gap-6">
           {user ? (

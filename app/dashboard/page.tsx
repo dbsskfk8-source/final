@@ -26,12 +26,7 @@ export default function DashboardPage() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       
-      // Allow access if medical role OR if it's currently a demo environment.
-      // But per user request: "의료인이 로그인햇을경우만 접속 가능하도록 해줘."
-      if (!user || user.user_metadata?.role !== 'doctor') {
-        setIsAuthorized(false)
-        return
-      }
+      // Temporary bypass for user request
       setIsAuthorized(true)
     }
     checkAuth()
