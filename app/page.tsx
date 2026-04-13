@@ -11,6 +11,10 @@ export default async function HomePage() {
     .select('*')
     .order('created_at', { ascending: true })
 
+  // 현재 로그인 유저 및 역할 확인
+  const { data: { user } } = await supabase.auth.getUser()
+  const isDoctor = user?.user_metadata?.role === 'doctor'
+
   return (
     <div className="min-h-screen bg-[#fffdfa] text-[#333]">
       {/* Header and Nav */}
@@ -21,11 +25,22 @@ export default async function HomePage() {
           <Link href="/select" className="hover:text-black">인지재구성(Cure)</Link>
           <Link href="/my-situation" className="hover:text-black">마이페이지</Link>
           <Link href="/chat" className="hover:text-black">상담 챗봇</Link>
-          <Link href="/dashboard" className="text-[#bfa588] hover:text-[#a68a6d] font-bold">관리자 뷰어</Link>
+          {isDoctor && (
+            <Link href="/dashboard" className="text-[#bfa588] hover:text-[#a68a6d] font-bold">관리자 뷰어</Link>
+          )}
         </nav>
         <div className="flex items-center gap-6">
-          <Link href="/login" className="text-base font-medium text-gray-600">로그인</Link>
-          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-base font-bold shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all">회원가입</Link>
+          {user ? (
+            <>
+              <span className="text-sm text-gray-500 font-medium">{user.email?.split('@')[0]}</span>
+              <Link href="/my-situation" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-base font-bold shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all">마이페이지</Link>
+            </>
+          ) : (
+            <>
+              <Link href="/login" className="text-base font-medium text-gray-600">로그인</Link>
+              <Link href="/login" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-base font-bold shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all">회원가입</Link>
+            </>
+          )}
         </div>
       </header>
 
