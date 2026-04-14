@@ -343,7 +343,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
           {showSubtitle && (
             <div className="h-20 flex items-center justify-center text-center w-full px-4 mb-8">
               <p className="text-lg md:text-xl font-bold bg-white/50 px-6 py-2 rounded-2xl text-[#444] break-keep transition-all duration-700">
-                {currentScript || "..."}
+                {currentDisplayScript || "..."}
               </p>
             </div>
           )}
