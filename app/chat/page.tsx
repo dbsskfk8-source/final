@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Mic, Send, ArrowUp, Sparkles, Database } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
@@ -18,6 +19,7 @@ export default function ChatPage() {
   ])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [isIndexing, setIsIndexing] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -72,10 +74,8 @@ export default function ChatPage() {
       const data = await res.json()
 
       if (!data.success) {
-        // 에러가 났을 경우 구체적인 사유 표시
         alert(`인덱싱 실패: ${data.error || '알 수 없는 오류'}`)
       } else {
-        // 성공 시 데이터 개수와 함께 표시
         alert(data.message)
       }
     } catch (error) {
@@ -136,7 +136,6 @@ export default function ChatPage() {
           )}
         </div>
 
-        {/* Suggestion Chips */}
         <div className="flex justify-center gap-4 mb-12 flex-wrap animate-in fade-in duration-1000 delay-700">
           {['아침에 커피 마시기', '공원 짧게 산책하기', '책 몇 페이지 읽기'].map(text => (
             <button
@@ -149,9 +148,7 @@ export default function ChatPage() {
           ))}
         </div>
 
-        {/* Input Area */}
         <div className="relative">
-          {/* Breathing Circle Effect - Enhanced pulse during typing or loading */}
           <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-[#566e63]/5 -z-10
                 ${isTyping ? 'animate-pulse scale-150 duration-[2000ms]' : ''}`}></div>
 

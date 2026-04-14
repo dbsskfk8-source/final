@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   try {
     const { csei_results, cure_history } = await req.json()
 
-    // 1. CSEI(칠정) 설문 기록 일괄 Insert
+    // 1. CSEI(7가지 감정) 설문 기록 일괄 Insert
     if (csei_results && Array.isArray(csei_results) && csei_results.length > 0) {
       const cseiInserts = csei_results.map((r: any) => ({
         user_id: user.id,

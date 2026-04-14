@@ -180,9 +180,9 @@ function ReportContent() {
                 <div className="font-extrabold text-sm text-[#222]">{reportData.gender === 'male' ? '남성' : '여성'} / {reportData.ageGroup}대</div>
              </div>
              <div>
-                <div className="flex items-center gap-1.5 text-gray-500 mb-1 text-xs font-bold uppercase"><Activity size={12} /> 종합 T-점수 (전체)</div>
+                <div className="flex items-center gap-1.5 text-gray-500 mb-1 text-xs font-bold uppercase"><Activity size={12} /> 종합 dB (전체)</div>
                 <div className="flex items-center gap-2">
-                   <span className="px-1.5 py-0.5 bg-gray-200 rounded text-[10px] font-black text-gray-500">T</span>
+                   <span className="px-1.5 py-0.5 bg-gray-200 rounded text-[10px] font-black text-gray-500">dB</span>
                    <div className="font-extrabold text-sm text-[#222]">{(Number(totalTScore) || 0).toFixed(1)}</div>
                 </div>
              </div>
@@ -205,7 +205,7 @@ function ReportContent() {
                  {overallInsight}
                </p>
                <div className="mt-6 flex flex-wrap gap-2">
-                 <span className="text-[11px] font-bold bg-[#e8efe9] text-[#566e63] px-3 py-1.5 rounded-full">T-Score 기준 산출</span>
+                 <span className="text-[11px] font-bold bg-[#e8efe9] text-[#566e63] px-3 py-1.5 rounded-full">dB 기준 산출</span>
                  <span className="text-[11px] font-bold bg-[#e8efe9] text-[#566e63] px-3 py-1.5 rounded-full">임상 규준 적용완료</span>
                </div>
             </div>
@@ -241,7 +241,7 @@ function ReportContent() {
                   <div key={idx} className={`p-5 sm:p-6 rounded-2xl flex flex-col md:flex-row gap-6 border ${isRisk ? 'bg-red-50/50 border-red-200/60' : isCaution ? 'bg-orange-50/50 border-orange-200/60' : 'bg-gray-50 border-gray-100'}`}>
                     <div className="md:w-1/4 flex flex-col justify-center items-center md:border-r border-gray-200/60 md:pr-6">
                       <div className="flex items-center gap-2 mb-1">
-                         <span className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-[10px] font-black text-gray-400">T</span>
+                         <span className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-[10px] font-black text-gray-400">dB</span>
                          <div className="text-3xl sm:text-4xl font-extrabold" style={{ color: isRisk ? '#dc2626' : isCaution ? '#d97706' : '#4a5c53' }}>
                             {Number(scoreValue).toFixed(0)}
                          </div>
