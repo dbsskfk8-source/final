@@ -117,6 +117,10 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   const [showSubtitle, setShowSubtitle] = useState(true)
   const [showResultModal, setShowResultModal] = useState(false)
   
+  // 브라우저 지원 음성 목록 상태
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>('')
+  
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -131,6 +135,28 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
       iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [bgmVolume] }), '*')
     }
   }, [isPlaying, bgmVolume])
+
+  // 브라우저 보이스 로드
+  useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = window.speechSynthesis.getVoices().filter(v => v.lang.includes('ko'))
+      setVoices(availableVoices)
+      if (availableVoices.length > 0 && !selectedVoiceURI) {
+        setSelectedVoiceURI(availableVoices[0].voiceURI)
+      }
+    }
+    loadVoices()
+    window.speechSynthesis.onvoiceschanged = loadVoices
+  }, [selectedVoiceURI])
+
+  // 즉시 설정 반영 (드래그 종료 시)
+  const applySettingsNow = () => {
+    if (isPlaying && isSpeaking) {
+      window.speechSynthesis.cancel()
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      speakSegment(currentSegmentIndex)
+    }
+  }
 
   // 현재 명상 기호에 맞는 실제 스크립트 도출
   const activeScripts = getScriptForMeditation(data.name)
@@ -159,6 +185,14 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
     utterance.rate = speechRate
     utterance.pitch = 1.0
     utterance.volume = voiceVolume / 100
+    
+    // 선택된 보이스 적용
+    if (voices.length > 0) {
+      const selectedVoice = voices.find(v => v.voiceURI === selectedVoiceURI)
+      if (selectedVoice) {
+        utterance.voice = selectedVoice
+      }
+    }
     
     utterance.onend = () => {
       setIsSpeaking(false)
@@ -325,9 +359,24 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
                         <span>읽기 속도</span>
                         <span>{speechRate.toFixed(2)}x</span>
                       </div>
-                      <input type="range" min="0.5" max="1.5" step="0.05" value={speechRate} onChange={(e) => setSpeechRate(Number(e.target.value))} className="w-full accent-[#566e63]" />
+                      <input type="range" min="0.5" max="1.5" step="0.05" value={speechRate} onChange={(e) => setSpeechRate(Number(e.target.value))} onMouseUp={applySettingsNow} onTouchEnd={applySettingsNow} className="w-full accent-[#566e63]" />
                     </div>
                     <div>
+                      <div className="flex justify-between text-sm font-bold text-gray-600 mb-2">
+                        <span>목소리 종류</span>
+                      </div>
+                      <select 
+                        value={selectedVoiceURI} 
+                        onChange={(e) => { setSelectedVoiceURI(e.target.value); setTimeout(applySettingsNow, 50); }}
+                        className="w-full p-2 border border-gray-200 rounded-xl bg-white text-sm font-medium text-[#222]"
+                      >
+                        {voices.length === 0 && <option>목소리 로딩 중...</option>}
+                        {voices.map(v => (
+                          <option key={v.voiceURI} value={v.voiceURI}>{v.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="pt-2">
                       <div className="flex justify-between text-sm font-bold text-gray-600 mb-2">
                         <span>문장 간 쉬는 시간 (호흡)</span>
                         <span>{pauseBetween}초</span>
