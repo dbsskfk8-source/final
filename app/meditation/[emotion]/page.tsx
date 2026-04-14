@@ -211,7 +211,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
     utterance.lang = 'ko-KR'
     
     // 동적 Rate 계산 (end time이 있는 경우 성우 템포 재현)
-    let dynamicRate = speechRate
+    let dynamicRate = 0.8
     if (script.endTime) {
        const durationSec = script.endTime - script.time
        // 한국어 평균 초당 글자 수 기준 (약 5~7자)
