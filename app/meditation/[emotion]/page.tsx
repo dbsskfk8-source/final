@@ -109,9 +109,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   const [isSpeaking, setIsSpeaking] = useState(false)
 
   // Studio States
-  const [activeTab, setActiveTab] = useState<'script' | 'audio' | 'subtitle' | 'export'>('audio')
-  const [speechRate, setSpeechRate] = useState(0.8)
-  const [pauseBetween, setPauseBetween] = useState(7)
+  const [activeTab, setActiveTab] = useState<'script' | 'audio' | 'subtitle'>('audio')
   const [voiceVolume, setVoiceVolume] = useState(100)
   const [bgmVolume, setBgmVolume] = useState(30)
   const [showSubtitle, setShowSubtitle] = useState(true)
@@ -220,7 +218,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
        const charsPerSec = script.text.length / durationSec
        const targetRate = charsPerSec / 6.0
        // 너무 빠르거나 느리지 않게 limit
-       dynamicRate = Math.max(0.6, Math.min(1.4, targetRate * speechRate))
+       dynamicRate = Math.max(0.6, Math.min(1.4, targetRate * 0.8))
     }
     
     utterance.rate = dynamicRate
@@ -375,9 +373,6 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
             <button onClick={() => setActiveTab('subtitle')} className={`flex-1 py-5 text-sm font-bold transition-colors ${activeTab === 'subtitle' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
                <Type size={18} className="mx-auto mb-1" /> 자막
             </button>
-            <button onClick={() => setActiveTab('export')} className={`flex-1 py-5 text-sm font-bold transition-colors ${activeTab === 'export' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
-               <Download size={18} className="mx-auto mb-1" /> 내보내기
-            </button>
           </div>
 
           {/* Tab Contents */}
@@ -388,13 +383,6 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
                 <div>
                   <h3 className="font-extrabold text-[#222] mb-4 text-lg">리딩 설정 (내장 음성)</h3>
                   <div className="space-y-6 bg-[#faf8f5] p-5 rounded-2xl border border-gray-100">
-                    <div>
-                      <div className="flex justify-between text-sm font-bold text-gray-600 mb-2">
-                        <span>읽기 속도</span>
-                        <span>{speechRate.toFixed(2)}x</span>
-                      </div>
-                      <input type="range" min="0.5" max="1.5" step="0.05" value={speechRate} onChange={(e) => setSpeechRate(Number(e.target.value))} onMouseUp={applySettingsNow} onTouchEnd={applySettingsNow} className="w-full accent-[#566e63]" />
-                    </div>
                     <div>
                       <div className="flex justify-between text-sm font-bold text-gray-600 mb-2">
                         <span>목소리 종류</span>
@@ -410,11 +398,6 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
                         ))}
                       </select>
                     </div>
-                    <div className="pt-2">
-                      <div className="flex justify-between text-sm font-bold text-gray-600 mb-2">
-                        <span>문장 간 쉬는 시간 (호흡)</span>
-                        <span>{pauseBetween}초</span>
-                      </div>
                       <input type="range" min="1" max="15" step="1" value={pauseBetween} onChange={(e) => setPauseBetween(Number(e.target.value))} className="w-full accent-[#566e63]" />
                     </div>
                   </div>
@@ -478,23 +461,6 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
               </div>
             )}
 
-            {activeTab === 'export' && (
-              <div className="animate-in fade-in duration-300 text-center py-6 space-y-6">
-                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-                   <Download size={32} />
-                </div>
-                <h3 className="font-extrabold text-[#222] text-xl">멀티 플랫폼 인코딩</h3>
-                <p className="text-gray-500 font-medium text-sm">현재 작성된 믹싱 설정(스크립트, BGM, 자막)으로 하나의 영상 파일을 생성합니다.</p>
-                <div className="grid grid-cols-2 gap-3 mt-6">
-                  <button onClick={() => alert('인코딩 프로세스 (Mock)')} className="p-4 border border-gray-200 rounded-2xl hover:border-[#566e63] hover:text-[#566e63] transition-colors font-bold flex flex-col items-center gap-2">
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">16:9</span> 유튜브용
-                  </button>
-                  <button onClick={() => alert('인코딩 프로세스 (Mock)')} className="p-4 border border-gray-200 rounded-2xl hover:border-[#566e63] hover:text-[#566e63] transition-colors font-bold flex flex-col items-center gap-2">
-                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">9:16</span> 쇼츠 / 릴스용
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </main>
