@@ -115,6 +115,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   const [voiceVolume, setVoiceVolume] = useState(100)
   const [bgmVolume, setBgmVolume] = useState(30)
   const [showSubtitle, setShowSubtitle] = useState(true)
+  const [showResultModal, setShowResultModal] = useState(false)
   
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -139,6 +140,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   const speakSegment = (index: number) => {
     if (index >= activeScripts.length) {
       setIsPlaying(false)
+      setShowResultModal(true)
       try {
         const doneLog = JSON.parse(localStorage.getItem('completed_meditations') || '{}')
         doneLog[rawEmotion] = Date.now() 
@@ -434,7 +436,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
       )}
 
       {/* 명상 완료 시 다시 검사 플로우 */}
-      {currentTimeSec >= durationSec && (
+      {showResultModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#faf8f5]/95 backdrop-blur-sm animate-in fade-in duration-1000 p-4">
           <div className="max-w-md w-full bg-white rounded-[32px] border border-[#d7eadf] p-8 md:p-10 shadow-2xl flex flex-col items-center text-center">
             <div className="w-20 h-20 bg-[#f5ebd9] rounded-full flex items-center justify-center mb-6 text-[#bfa588] shadow-inner">
