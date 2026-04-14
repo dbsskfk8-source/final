@@ -116,6 +116,8 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   const [bgmVolume, setBgmVolume] = useState(30)
   const [showSubtitle, setShowSubtitle] = useState(true)
   const [showResultModal, setShowResultModal] = useState(false)
+  const [elapsedTime, setElapsedTime] = useState(0)
+  const [currentDisplayScript, setCurrentDisplayScript] = useState("")
   
   // 브라우저 지원 음성 목록 상태
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
@@ -153,36 +155,75 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   const applySettingsNow = () => {
     if (isPlaying && isSpeaking) {
       window.speechSynthesis.cancel()
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
       speakSegment(currentSegmentIndex)
     }
   }
 
   // 현재 명상 기호에 맞는 실제 스크립트 도출
   const activeScripts = getScriptForMeditation(data.name)
-  const currentScript = activeScripts[currentSegmentIndex]?.text || ""
+  
+  // 전역 초 단위 타이머 (Time-driven Engine)
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setElapsedTime(prev => prev + 0.1)
+      }, 100)
+    }
+    return () => clearInterval(interval)
+  }, [isPlaying])
 
-  // TTS 재생 코어 로직
-  const speakSegment = (index: number) => {
-    if (index >= activeScripts.length) {
-      setIsPlaying(false)
-      setShowResultModal(true)
-      try {
-        const doneLog = JSON.parse(localStorage.getItem('completed_meditations') || '{}')
-        doneLog[rawEmotion] = Date.now() 
-        localStorage.setItem('completed_meditations', JSON.stringify(doneLog))
-      } catch (e) {
-        console.error('완료 이력 저장 실패', e)
+  // 타이머 트리거
+  useEffect(() => {
+    if (!isPlaying) return
+    
+    // 명상 종료 체크
+    if (currentSegmentIndex >= activeScripts.length) {
+      const lastSegment = activeScripts[activeScripts.length - 1]
+      const endTime = lastSegment?.endTime || (lastSegment?.time + 5) || 5
+      if (elapsedTime >= endTime + 3) {
+        setIsPlaying(false)
+        setShowResultModal(true)
+        try {
+          const doneLog = JSON.parse(localStorage.getItem('completed_meditations') || '{}')
+          doneLog[rawEmotion] = Date.now() 
+          localStorage.setItem('completed_meditations', JSON.stringify(doneLog))
+        } catch (e) {
+          console.error('완료 이력 저장 실패', e)
+        }
       }
       return
     }
+
+    const nextScript = activeScripts[currentSegmentIndex]
+    if (elapsedTime >= nextScript.time) {
+      setCurrentDisplayScript(nextScript.text)
+      speakSegment(currentSegmentIndex)
+      setCurrentSegmentIndex(prev => prev + 1)
+    }
+  }, [elapsedTime, isPlaying, currentSegmentIndex, activeScripts, rawEmotion])
+
+  // TTS 재생 코어 로직
+  const speakSegment = (index: number) => {
+    if (index >= activeScripts.length) return
     
-    setCurrentSegmentIndex(index)
     setIsSpeaking(true)
-    
-    const utterance = new SpeechSynthesisUtterance(activeScripts[index].text)
+    const script = activeScripts[index]
+    const utterance = new SpeechSynthesisUtterance(script.text)
     utterance.lang = 'ko-KR'
-    utterance.rate = speechRate
+    
+    // 동적 Rate 계산 (end time이 있는 경우 성우 템포 재현)
+    let dynamicRate = speechRate
+    if (script.endTime) {
+       const durationSec = script.endTime - script.time
+       // 한국어 평균 초당 글자 수 기준 (약 5~7자)
+       const charsPerSec = script.text.length / durationSec
+       const targetRate = charsPerSec / 6.0
+       // 너무 빠르거나 느리지 않게 limit
+       dynamicRate = Math.max(0.6, Math.min(1.4, targetRate * speechRate))
+    }
+    
+    utterance.rate = dynamicRate
     utterance.pitch = 1.0
     utterance.volume = voiceVolume / 100
     
@@ -196,15 +237,6 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
     
     utterance.onend = () => {
       setIsSpeaking(false)
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
-      timeoutRef.current = setTimeout(() => {
-        setIsPlaying(prev => {
-          if (prev) {
-            speakSegment(index + 1)
-          }
-          return prev
-        })
-      }, pauseBetween * 1000)
     }
     
     window.speechSynthesis.speak(utterance)
@@ -213,14 +245,14 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   const togglePlay = () => {
     if (isPlaying) {
       window.speechSynthesis.pause()
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
       setIsPlaying(false)
     } else {
       if (window.speechSynthesis.paused) {
         window.speechSynthesis.resume()
       } else {
         window.speechSynthesis.cancel()
-        speakSegment(currentSegmentIndex)
+        // resume where it left off? The global timer handles it.
+        // Actually, if it was paused, we just resume the timer, and if we missed something, it triggers again.
       }
       setIsPlaying(true)
     }
@@ -228,10 +260,11 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
 
   const resetPlay = () => {
     window.speechSynthesis.cancel()
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
     setIsPlaying(false)
+    setElapsedTime(0)
     setCurrentSegmentIndex(0)
     setIsSpeaking(false)
+    setCurrentDisplayScript("")
     if (iframeRef.current && iframeRef.current.contentWindow) {
       iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [0, true] }), '*')
     }
@@ -241,11 +274,12 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel()
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
   }, [])
 
-  const progressPercent = ((currentSegmentIndex) / (activeScripts.length || 1)) * 100
+  const lastSeg = activeScripts[activeScripts.length - 1]
+  const maxDuration = lastSeg ? ((lastSeg.endTime || lastSeg.time + 10) + 3) : 1
+  const progressPercent = (elapsedTime / maxDuration) * 100
 
   return (
     <div className={`min-h-screen ${data.bgColor} text-[#333] font-sans selection:bg-black/10 flex flex-col`}>
@@ -294,7 +328,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
                   {Math.min(100, progressPercent).toFixed(0)}<span className="text-lg opacity-50">%</span>
                </div>
                <div className="font-black tracking-widest text-[#566e63]">
-                  {isPlaying ? `STEP ${currentSegmentIndex + 1}` : 'READY'}
+                  {isPlaying ? `${Math.floor(elapsedTime / 60)}:${String(Math.floor(elapsedTime % 60)).padStart(2, '0')}` : 'READY'}
                </div>
             </div>
             
