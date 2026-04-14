@@ -18,25 +18,25 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-[#fffdfa] text-[#333]">
       {/* Header and Nav */}
-      <header className="fixed top-0 w-full z-50 px-10 py-6 flex justify-between items-center backdrop-blur-md bg-white/30">
-        <Link href="/"><img src="/moodb-logo.svg" alt="MoodB" className="h-10 w-auto" /></Link>
-        <nav className="sm:flex hidden gap-12 font-medium text-base text-gray-500">
+      <header className="fixed top-0 w-full z-50 px-4 md:px-10 py-4 md:py-6 flex justify-between items-center backdrop-blur-md bg-white/30 border-b border-white/20">
+        <Link href="/" className="shrink-0"><img src="/moodb-logo.svg" alt="MoodB" className="h-8 md:h-10 w-auto" /></Link>
+        <nav className="hidden lg:flex gap-8 md:gap-12 font-medium text-base text-gray-500">
           <Link href="/about" className="hover:text-black font-bold">MoodB 소개</Link>
           <Link href="/select" className="hover:text-black">인지재구성(Cure)</Link>
           <Link href="/my-situation" className="hover:text-black">마이페이지</Link>
           <Link href="/chat" className="hover:text-black">상담 챗봇</Link>
           <Link href="/dashboard" className="text-[#bfa588] hover:text-[#a68a6d] font-bold">관리자 뷰어</Link>
         </nav>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 md:gap-6">
           {user ? (
             <>
-              <span className="text-sm text-gray-500 font-medium">{user.email?.split('@')[0]}</span>
-              <Link href="/my-situation" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-base font-bold shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all">마이페이지</Link>
+              <span className="text-sm text-gray-500 font-medium hidden sm:inline">{user.email?.split('@')[0]}</span>
+              <Link href="/my-situation" className="bg-[#566e63] text-white px-4 md:px-6 py-2 rounded-full text-sm md:text-base font-bold shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all whitespace-nowrap shrink-0">마이페이지</Link>
             </>
           ) : (
             <>
-              <Link href="/login" className="text-base font-medium text-gray-600">로그인</Link>
-              <Link href="/login" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-base font-bold shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all">회원가입</Link>
+              <Link href="/login" className="text-sm md:text-base font-medium text-gray-600 whitespace-nowrap">로그인</Link>
+              <Link href="/login" className="bg-[#566e63] text-white px-4 md:px-6 py-2 rounded-full text-sm md:text-base font-bold shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all whitespace-nowrap shrink-0">회원가입</Link>
             </>
           )}
         </div>

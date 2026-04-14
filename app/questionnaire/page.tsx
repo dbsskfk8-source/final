@@ -216,13 +216,13 @@ export default function QuestionnairePage() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 min-w-0 w-full lg:ml-[260px] flex flex-col relative pb-[120px] min-h-screen">
+      <div className="flex-1 min-w-0 w-full lg:ml-[260px] flex flex-col relative pb-[120px] min-h-screen overflow-hidden">
         
         {/* Top Navbar */}
-        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-[#e8e0d5] px-6 lg:px-10 py-5 flex flex-col sm:flex-row gap-4 sm:gap-0 sm:items-center justify-between">
-          <div className="flex items-center gap-6">
-            <h1 className="lg:hidden font-extrabold text-[#bfa588] text-3xl">MoodB</h1>
-            <nav className="flex gap-4 md:gap-6 text-sm font-bold text-gray-500 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 whitespace-nowrap">
+        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-[#e8e0d5] px-4 lg:px-10 py-4 md:py-5 flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-center justify-between">
+          <div className="flex items-center gap-4 md:gap-6 overflow-hidden">
+            <h1 className="lg:hidden font-extrabold text-[#bfa588] text-2xl md:text-3xl shrink-0">MoodB</h1>
+            <nav className="flex gap-4 md:gap-6 text-sm font-bold text-gray-500 overflow-x-auto no-scrollbar w-full sm:w-auto pb-1 sm:pb-0 whitespace-nowrap">
                <span className="text-[#bfa588] border-b-2 border-[#bfa588] pb-1 cursor-default shrink-0">칠정 진단</span>
                <Link href="/select" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">인지재구성(Cure)</Link>
                <Link href="/my-situation" className="hover:text-[#bfa588] cursor-pointer transition-colors shrink-0 pt-0.5">마이페이지</Link>

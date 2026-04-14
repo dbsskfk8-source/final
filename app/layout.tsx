@@ -17,6 +17,13 @@ export const metadata: Metadata = {
   description: "28문항 핵심칠정척도와 오지상승위 치료 알고리즘을 통한 데이터 기반 마음 건강 파트너",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{

@@ -205,14 +205,16 @@ export default function MySituationPage() {
            <Link href="/dashboard" className="text-[#bfa588] hover:text-[#a68a6d] font-bold text-base">관리자 뷰어</Link>
         </div>
         {!isGuest ? (
-          <button onClick={logout} className="flex items-center gap-2 group">
-             <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-[#f0f2f0] flex items-center justify-center text-[#566e63] group-hover:bg-[#566e63] group-hover:text-white transition-all overflow-hidden shadow-inner">
-               <LogOut size={18} />
+          <button onClick={logout} className="flex items-center gap-2 group shrink-0">
+             <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-[#f0f2f0] flex items-center justify-center text-[#566e63] group-hover:bg-[#566e63] group-hover:text-white transition-all overflow-hidden shadow-inner">
+               <LogOut size={16} className="md:size-[18px]" />
              </div>
              <span className="text-sm font-bold text-gray-600 group-hover:text-[#566e63] hidden sm:inline">로그아웃</span>
           </button>
         ) : (
-          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2.5 rounded-full text-sm font-bold tracking-widest hover:bg-[#43574d] hover:-translate-y-0.5 transition-all shadow-lg active:scale-95">로그인 / 회원가입</Link>
+          <Link href="/login" className="bg-[#566e63] text-white px-3 md:px-6 py-2 md:py-2.5 rounded-full text-sm font-bold tracking-tight md:tracking-widest hover:bg-[#43574d] hover:-translate-y-0.5 transition-all shadow-lg active:scale-95 whitespace-nowrap shrink-0">
+            로그인 / 회원가입
+          </Link>
         )}
       </nav>
 

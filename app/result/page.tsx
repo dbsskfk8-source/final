@@ -136,12 +136,12 @@ function ResultContent() {
   return (
     <div className="min-h-screen bg-[#fcfdfc] font-sans text-[#333] pb-24">
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
-      <header className="px-6 md:px-10 py-6 flex justify-between items-center max-w-[1400px] mx-auto border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <Link href="/" className="font-extrabold text-3xl tracking-tight text-[#4a5c53] flex items-center gap-2">
-          <BrainCircuit size={28} />
+      <header className="px-4 md:px-10 py-4 md:py-6 flex justify-between items-center max-w-[1400px] mx-auto border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+        <Link href="/" className="font-extrabold text-2xl md:text-3xl tracking-tight text-[#4a5c53] flex items-center gap-2 shrink-0">
+          <BrainCircuit size={24} className="md:size-[28px]" />
           MoodB
         </Link>
-        <nav className="hidden md:flex gap-10 font-bold text-[11px] text-gray-500 uppercase tracking-widest">
+        <nav className="hidden lg:flex gap-10 font-bold text-[11px] text-gray-500 uppercase tracking-widest">
           <Link href="/" className="hover:text-black transition-colors">홈</Link>
           <Link href="/select" className="hover:text-black transition-colors">인지재구성(Cure)</Link>
           <Link href="/my-situation" className="hover:text-black transition-colors">마이페이지</Link>
