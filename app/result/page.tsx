@@ -9,6 +9,8 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts'
 import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle, LogOut, TrendingUp, LayoutGrid, Calendar, User, Bell, Settings, Activity, BrainCircuit, HeartPulse, ChevronRight, CheckCircle2 } from 'lucide-react'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 
 interface EmotionScore {
   subject: string
@@ -41,18 +43,13 @@ const GROUP_TEXT_COLOR: Record<string, string> = {
   risk: 'text-red-500',
 }
 
-const LINE_COLORS: Record<string, string> = {
-  normal: '#22c55e',
-  caution: '#f59e0b',
-  risk: '#ef4444',
-}
-
 function ResultContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const idQuery = searchParams.get('id')
   
   const [result, setResult] = useState<ResultData | null>(null)
+  const [preResult, setPreResult] = useState<ResultData | null>(null)
   const [resultId, setResultId] = useState<string | null>(null)
   const [allResults, setAllResults] = useState<ResultData[]>([])
   const [loading, setLoading] = useState(true)
@@ -72,8 +69,6 @@ function ResultContent() {
                 (r.id === idQuery || `csei-${r.id}` === idQuery || r.timestamp === idQuery)
               )
             }
-            
-            // 파라미터로 못 찾았거나 idQuery가 없으면 가장 최근 것 사용
             if (!foundRecord) {
               foundRecord = resultsArray[0]
             }
@@ -84,6 +79,11 @@ function ResultContent() {
           if (foundRecord) {
             setResultId(foundRecord.id ? `csei-${foundRecord.id}` : foundRecord.timestamp)
             setResult(foundRecord)
+
+            if ((foundRecord as any).isPostMeditation && (foundRecord as any).relatedPreTimestamp) {
+               const pre = resultsArray.find((r: any) => r.timestamp === (foundRecord as any).relatedPreTimestamp)
+               if (pre) setPreResult(pre)
+            }
           }
         }
       } catch (e) {
@@ -91,7 +91,7 @@ function ResultContent() {
       }
     }
     setLoading(false)
-  }, [])
+  }, [idQuery])
 
   if (loading) {
     return (
@@ -114,21 +114,14 @@ function ResultContent() {
   }
 
   const { scores } = result
-  const chartData = scores.map(s => ({
-    ...s,
-    min: 40,
-    max: 60
-  }))
   const attentionRequired = scores.filter(s => s.group !== 'normal')
 
-  // 감정별 맞춤형 코멘트 
   const getEmotionComment = (score: EmotionScore) => {
     if (score.group === 'risk') return `'${score.subject}' 감정이 위험 수준입니다. 각별한 관리와 주의가 필요합니다.`
     if (score.group === 'caution') return `'${score.subject}' 감정이 다소 불안정합니다. 편안한 휴식이 도움이 될 수 있습니다.`
     return `'${score.subject}' 측면에서 안정적입니다.`
   }
 
-  // 중단 우측 요약 텍스트
   const getOverallSummary = () => {
     if (attentionRequired.length > 0) {
       const mainEmotion = attentionRequired.reduce((prev, current) => 
@@ -138,49 +131,103 @@ function ResultContent() {
     return '현재 전체적인 감정 상태가 모두 정상 범위에 있으며 매우 평온합니다. 지금의 안정을 유지하기 위한 가벼운 마음챙김 명상이나 일상 속 관리를 계속해 주세요.'
   }
 
+  const radarData = scores.map(s => {
+    const preScore = preResult?.scores.find(ps => ps.subject === s.subject)
+    return {
+      subject: s.subject.replace(/[^가-힣]/g, ''),
+      fullSubject: s.subject,
+      A: s.A, 
+      B: preScore ? preScore.A : null, 
+      mean: 50, 
+      groupLabel: s.groupLabel,
+      group: s.group,
+      preGroupLabel: preScore?.groupLabel
+    }
+  })
+
+  const CustomRadarTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload
+      return (
+        <div className="bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-2xl border border-gray-100 min-w-[200px] animate-in fade-in zoom-in duration-200">
+          <div className="text-sm font-black text-gray-400 mb-3 tracking-widest uppercase">{data.fullSubject}</div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-6">
+                <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-gray-400 uppercase">
+                  {preResult ? '사후 점수(Post)' : '현재 점수'}
+                </span>
+                <span className={`text-lg font-black ${GROUP_TEXT_COLOR[data.group]}`}>
+                   {data.groupLabel}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 bg-gray-100 rounded-lg text-sm font-bold text-gray-500">dB</span>
+                <div className="text-3xl font-black text-[#222]">{data.A}</div>
+              </div>
+            </div>
+
+            {preResult && data.B !== null && (
+              <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-6">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">사전 점수(Pre)</span>
+                  <span className="text-xs font-bold text-gray-500">{data.preGroupLabel}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                   <span className="px-2 py-0.5 bg-[#f5ebd9] rounded-md text-[10px] font-bold text-[#bfa588]">dB</span>
+                   <div className="text-xl font-bold text-[#bfa588]">{data.B}</div>
+                </div>
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-[10px] font-bold text-gray-300 uppercase">MoodB 평균 가이드</span>
+              <span className="px-2 py-0.5 bg-gray-50 rounded text-[10px] font-black text-gray-300">50 dB</span>
+            </div>
+          </div>
+          {preResult && data.B !== null && (
+             <div className="mt-4 py-2 bg-gray-50 rounded-xl text-center">
+                <span className="text-[10px] font-bold text-gray-400">
+                   점수 변화: {data.A - data.B > 0 ? `+${data.A - data.B}` : data.A - data.B}dB
+                </span>
+             </div>
+          )}
+        </div>
+      )
+    }
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-[#fcfdfc] font-sans text-[#333] pb-24">
-      {/* ── HEADER ─────────────────────────────────────────────────────── */}
-      <header className="px-4 md:px-10 py-4 md:py-6 flex justify-between items-center max-w-[1400px] mx-auto border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <Link href="/" className="font-extrabold text-2xl md:text-3xl tracking-tight text-[#4a5c53] flex items-center gap-2 shrink-0">
-          <BrainCircuit size={24} className="md:size-[28px]" />
-          MoodB
-        </Link>
-        <nav className="hidden lg:flex gap-10 font-bold text-[11px] text-gray-500 uppercase tracking-widest">
-          <Link href="/" className="hover:text-black transition-colors">홈</Link>
-          <Link href="/select" className="hover:text-black transition-colors">인지재구성(Cure)</Link>
-          <Link href="/my-situation" className="hover:text-black transition-colors">마이페이지</Link>
-          <Link href="/chat" className="hover:text-black transition-colors">상담 챗봇</Link>
-        </nav>
-        <Link href="/my-situation" className="text-sm font-bold text-[#566e63] hover:text-black flex items-center gap-1 transition-colors">
-          전체 기록 <ChevronRight size={16} />
-        </Link>
-      </header>
+      <Navbar />
 
       <main className="max-w-[1200px] mx-auto px-6 pt-10">
-        
         <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <span className="text-sm font-bold text-[#566e63] tracking-[0.2em] uppercase mb-4 block">
             RESULT SUMMARY
           </span>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#222]">
-            나의 감정 진단 요약
+            {preResult ? '명상 효과 분석 리포트' : '나의 감정 진단 요약'}
           </h1>
         </div>
 
-        {/* ── 섹션 ①: 7가지 감정 점수 요약 트랙 (반응형 1줄 배치) ────────── */}
         <div className="mb-12 animate-in fade-in slide-in-from-bottom-6 duration-500 delay-100">
-          <div className="grid grid-cols-7 gap-1.5 md:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 md:gap-4">
             {scores.map((score, idx) => (
               <div 
                 key={idx} 
-                className={`flex flex-col items-center justify-center p-1.5 sm:p-3 rounded-xl sm:rounded-2xl border ${GROUP_COLOR[score.group]} transition-all`}
+                className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${GROUP_COLOR[score.group]} transition-all`}
               >
-                <span className="text-base font-bold tracking-widest text-current/60 mb-1 sm:mb-2 truncate max-w-full">
-                  {score.subject.replace(/[^가-힣]/g, '')} {/* 한자 제외 한글만 */}
+                <span className="text-sm font-bold tracking-widest text-[#566e63] mb-2 truncate max-w-full">
+                  {score.subject.replace(/[^가-힣]/g, '') || score.subject}
                 </span>
-                <span className="text-base sm:text-2xl font-extrabold mb-1">{score.A}</span>
-                <div className={`text-sm font-black px-1.5 sm:px-3 py-1 rounded-full bg-white/60 ${GROUP_TEXT_COLOR[score.group]} whitespace-nowrap`}>
+                <div className="flex items-center gap-1.5 mb-2">
+                   <span className="px-1.5 py-0.5 bg-white/50 rounded text-[10px] font-black text-gray-400">dB</span>
+                   <span className="text-2xl font-extrabold">{score.A}</span>
+                </div>
+                <div className={`text-[10px] font-black px-2 py-0.5 rounded-full bg-white/60 ${GROUP_TEXT_COLOR[score.group]} whitespace-nowrap`}>
                   {score.groupLabel}
                 </div>
               </div>
@@ -188,22 +235,35 @@ function ResultContent() {
           </div>
         </div>
 
-        {/* ── 섹션 1.5: 레이더 차트 (상세 프로파일) ────────── */}
         <div className="mb-12 animate-in fade-in slide-in-from-bottom-8 duration-500 delay-150">
           <div className="bg-white p-8 md:p-12 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center">
             <div className="text-center mb-8 w-full flex flex-col md:flex-row justify-between items-center">
               <div className="text-left">
-                <h2 className="text-2xl font-extrabold text-[#222]">칠정(七情) 프로파일</h2>
-                <p className="text-sm font-medium text-gray-500 mt-2">당신의 마음을 구성하는 7가지 요소</p>
+                <h2 className="text-2xl font-extrabold text-[#222]">7가지 감정 프로파일</h2>
+                <p className="text-sm font-medium text-gray-500 mt-2">
+                  {preResult ? '명상 전후의 감정 변화를 한눈에 비교해 보세요.' : '당신의 마음을 구성하는 7가지 요소'}
+                </p>
               </div>
+              {preResult && (
+                <div className="flex gap-4 mt-4 md:mt-0">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#f87171] opacity-50"></div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">사전(Pre)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#566e63]"></div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">사후(Post)</span>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="w-full max-w-lg h-[350px] md:h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
+                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarData}>
                   <PolarGrid stroke="#e5e7eb" strokeDasharray="3 3" />
                   <PolarAngleAxis 
                     dataKey="subject" 
-                    tick={{ fill: '#4a5c53', fontSize: 14, fontWeight: 'bold' }} 
+                    tick={{ fill: '#4b5563', fontSize: 13, fontWeight: 'bold' }} 
                   />
                   <PolarRadiusAxis 
                     angle={90} 
@@ -211,49 +271,38 @@ function ResultContent() {
                     tick={false} 
                     axisLine={false} 
                   />
+                  <RechartsTooltip content={<CustomRadarTooltip />} />
                   
-                  {/* 가이드 영역 (정상 범위: 40~60) */}
                   <Radar
-                    name="정상 범위"
-                    dataKey="max"
-                    stroke="#566e63"
+                    name="MoodB 평균"
+                    dataKey="mean"
+                    stroke="#94a3b8"
                     strokeWidth={1}
                     strokeDasharray="4 4"
+                    fill="none"
+                    fillOpacity={0}
+                  />
+
+                  {preResult && (
+                    <Radar
+                      name="사전 점수"
+                      dataKey="B"
+                      stroke="#f87171"
+                      strokeWidth={2}
+                      strokeOpacity={0.5}
+                      fill="#f87171"
+                      fillOpacity={0.1}
+                    />
+                  )}
+
+                  <Radar
+                    name={preResult ? "사후 점수" : "감정 지수"}
+                    dataKey="A"
+                    stroke="#566e63"
+                    strokeWidth={preResult ? 3 : 2}
                     fill="#566e63"
                     fillOpacity={0.15}
                     isAnimationActive={false}
-                  />
-
-                  <Radar
-                    name="나의 상태"
-                    dataKey="A"
-                    stroke="#4a5c53"
-                    strokeWidth={2.5}
-                    fill="#566e63"
-                    fillOpacity={0.4}
-                  />
-
-                  <RechartsTooltip 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        if (!data.subject) return null;
-                        return (
-                          <div className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl border border-gray-100 animate-in zoom-in-95 duration-200 text-left">
-                            <p className="text-sm font-bold text-gray-600 mb-1 tracking-widest uppercase">{data.subject}</p>
-                            <div className="flex items-baseline gap-2 mb-2">
-                              <span className="text-2xl font-extrabold text-[#4a5c53]">{data.A}</span>
-                              <span className="text-sm font-bold text-[#566e63]">T-score</span>
-                            </div>
-                            <div className="pt-2 border-t border-gray-50 flex flex-col gap-1">
-                              <p className="text-sm font-bold text-gray-500">원점수: <span className="text-[#222]">{data.rawScore}점</span></p>
-                              <p className="text-sm font-bold text-gray-500">상태: <span className={data.group === 'risk' ? 'text-red-500' : data.group === 'caution' ? 'text-amber-500' : 'text-green-600'}>{data.groupLabel}</span></p>
-                            </div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
                   />
                 </RadarChart>
               </ResponsiveContainer>
@@ -261,20 +310,15 @@ function ResultContent() {
           </div>
         </div>
 
-        {/* ── 섹션 ② & ③: 시각화 차트 및 핵심 진단 리포트 (좌우 분할) ────── */}
         <div className="grid md:grid-cols-5 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-500 delay-200">
-          
-          {/* 차트 영역 (좌측 3열) */}
           <div className="md:col-span-3 bg-white p-6 md:p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col justify-center">
-            <h3 className="text-sm font-bold text-gray-500 mb-6 flex items-center gap-2">
-              <Activity size={18} /> 감정 지수 프로파일 (Line Chart)
+            <h3 className="text-xl font-bold text-gray-700 mb-6 flex items-center gap-2">
+              <Activity size={24} /> 7가지 감정 지수 프로파일 (Line Chart)
             </h3>
             <div className="w-full h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={scores} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                  
-                  {/* T-Score 배경 영역 판별 */}
                   <ReferenceArea y1={40} y2={60} fill="#22c55e" fillOpacity={0.05} />
                   <ReferenceArea y1={60} y2={70} fill="#f59e0b" fillOpacity={0.08} />
                   <ReferenceArea y1={30} y2={40} fill="#f59e0b" fillOpacity={0.08} />
@@ -292,6 +336,7 @@ function ResultContent() {
                     tick={{ fontSize: 14, fill: '#999' }} 
                     axisLine={false} 
                     tickLine={false} 
+                    label={{ value: 'dB', angle: -90, position: 'insideLeft', fill: '#999', fontSize: 12 }}
                   />
                   <RechartsTooltip
                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.08)' }}
@@ -313,7 +358,6 @@ function ResultContent() {
             </div>
           </div>
 
-          {/* 리포트 정리 영역 (우측 2열) */}
           <div className="md:col-span-2 bg-[#f9faf9] p-8 md:p-10 rounded-[32px] flex flex-col justify-between">
             <div>
                <h3 className="text-xl font-extrabold mb-6 text-[#222] tracking-tight">현 상태 요약</h3>
@@ -336,7 +380,7 @@ function ResultContent() {
                </div>
             </div>
             
-            <Link href={`/report?id=${resultId}`} className="mt-8 bg-white border border-gray-200 text-[#4a5c53] font-bold py-3 px-8 rounded-full inline-flex items-center gap-2 hover:bg-gray-50 transition-colors shadow-sm self-start group">
+            <Link href={`/dashboard`} className="mt-8 bg-white border border-gray-200 text-[#4a5c53] font-bold py-3 px-8 rounded-full inline-flex items-center gap-2 hover:bg-gray-50 transition-colors shadow-sm self-start group">
               <BrainCircuit size={16} className="group-hover:text-[#566e63]" />
               의학적 심층 리포트 보기
               <ArrowRight size={16} className="text-gray-400 group-hover:translate-x-1 transition-transform" />
@@ -344,7 +388,6 @@ function ResultContent() {
           </div>
         </div>
 
-        {/* ── 섹션 ④: 치료 연계 (Action Section) ─────────────────────── */}
         <div className="mb-20 animate-in fade-in slide-in-from-bottom-10 duration-500 delay-300">
           <div className="text-center max-w-2xl mx-auto mb-10">
             <h2 className="text-2xl md:text-3xl font-extrabold mb-4 tracking-tight text-[#222]">
@@ -393,7 +436,6 @@ function ResultContent() {
           )}
         </div>
 
-        {/* ── 섹션 ⑤: 이전 기록 선택 (나의 진단 히스토리) ──────────────── */}
         {allResults.length > 1 && (
           <div className="mb-20 pt-10 border-t border-gray-200 animate-in fade-in slide-in-from-bottom-8 duration-500 delay-500">
             <h3 className="text-xl font-extrabold text-[#222] mb-6 flex items-center gap-2">
@@ -429,8 +471,11 @@ function ResultContent() {
                     <div className={`font-extrabold text-sm mb-1 ${isCurrent ? 'text-white' : 'text-[#222]'}`}>
                       {rec.overallGroup === 'risk' ? '위험' : rec.overallGroup === 'caution' ? '주의' : '안정'} 단계
                     </div>
-                    <div className={`text-xs font-medium ${isCurrent ? 'text-white/80' : 'text-gray-500 line-clamp-1 group-hover:text-[#566e63]'}`}>
-                      T점수: {Math.round(rec.overallTScore)}
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${isCurrent ? 'bg-white/20 text-white' : 'bg-[#e8efe9] text-[#566e63]'}`}>dB</span>
+                      <div className={`text-xs font-medium ${isCurrent ? 'text-white/80' : 'text-gray-500'}`}>
+                        {Math.round(rec.overallTScore)}
+                      </div>
                     </div>
                   </Link>
                 )
@@ -438,8 +483,8 @@ function ResultContent() {
             </div>
           </div>
         )}
-
       </main>
+      <Footer />
     </div>
   )
 }

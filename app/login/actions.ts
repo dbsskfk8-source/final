@@ -40,12 +40,15 @@ export async function signup(prevState: any, formData: FormData) {
   }
 
   const supabase = await createClient()
+  const licenseKey = formData.get('licenseKey') as string
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         role,  // 'general' | 'patient' | 'doctor' — user_metadata에 저장됨
+        doctor_license: licenseKey || null,
       }
     }
   })

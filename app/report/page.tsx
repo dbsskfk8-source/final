@@ -166,7 +166,7 @@ function ReportContent() {
             </div>
             <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tighter text-[#222] mb-4 mt-12 sm:mt-0">심리 진단 심층 리포트</h1>
             <p className="text-gray-500 font-medium flex items-center justify-center gap-2 text-sm sm:text-base">
-              <span className="font-serif italic tracking-wider">Clinical Seven Emotions Evaluation Report</span>
+              <span className="font-serif italic tracking-wider">Clinical 7-Emotions Evaluation Report</span>
             </p>
           </div>
 
@@ -181,7 +181,10 @@ function ReportContent() {
              </div>
              <div>
                 <div className="flex items-center gap-1.5 text-gray-500 mb-1 text-xs font-bold uppercase"><Activity size={12} /> 종합 T-점수 (전체)</div>
-                <div className="font-extrabold text-sm text-[#222]">{(Number(totalTScore) || 0).toFixed(1)} 점</div>
+                <div className="flex items-center gap-2">
+                   <span className="px-1.5 py-0.5 bg-gray-200 rounded text-[10px] font-black text-gray-500">T</span>
+                   <div className="font-extrabold text-sm text-[#222]">{(Number(totalTScore) || 0).toFixed(1)}</div>
+                </div>
              </div>
              <div>
                 <div className="flex items-center gap-1.5 text-gray-500 mb-1 text-xs font-bold uppercase"><HeartPulse size={12} /> 종합 판정</div>
@@ -212,7 +215,7 @@ function ReportContent() {
           <section className="mb-16">
             <h2 className="flex items-center gap-3 text-2xl font-extrabold mb-6 border-b border-gray-200 pb-3">
               <span className="bg-[#4a5c53] text-white w-8 h-8 flex items-center justify-center rounded-full text-sm">B</span>
-              7정(七情) 수치 심층 분석
+              7가지 감정 수치 심층 분석
             </h2>
             <div className="space-y-6">
               {detailScores.map((score, idx) => {
@@ -237,8 +240,11 @@ function ReportContent() {
                 return (
                   <div key={idx} className={`p-5 sm:p-6 rounded-2xl flex flex-col md:flex-row gap-6 border ${isRisk ? 'bg-red-50/50 border-red-200/60' : isCaution ? 'bg-orange-50/50 border-orange-200/60' : 'bg-gray-50 border-gray-100'}`}>
                     <div className="md:w-1/4 flex flex-col justify-center items-center md:border-r border-gray-200/60 md:pr-6">
-                      <div className="text-3xl sm:text-4xl font-extrabold mb-1" style={{ color: isRisk ? '#dc2626' : isCaution ? '#d97706' : '#4a5c53' }}>
-                         {Number(scoreValue).toFixed(0)} <span className="text-sm font-bold text-gray-400">T</span>
+                      <div className="flex items-center gap-2 mb-1">
+                         <span className="px-1.5 py-0.5 bg-white border border-gray-200 rounded text-[10px] font-black text-gray-400">T</span>
+                         <div className="text-3xl sm:text-4xl font-extrabold" style={{ color: isRisk ? '#dc2626' : isCaution ? '#d97706' : '#4a5c53' }}>
+                            {Number(scoreValue).toFixed(0)}
+                         </div>
                       </div>
                       <div className="text-sm font-bold tracking-widest text-[#222] mb-1">{scoreName}</div>
                       <div className={`text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full ${isRisk ? 'bg-red-100 text-red-700' : isCaution ? 'bg-orange-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>

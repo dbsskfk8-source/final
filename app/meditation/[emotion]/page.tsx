@@ -197,14 +197,14 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   return (
     <div className={`min-h-screen ${data.bgColor} text-[#333] font-sans selection:bg-black/10 flex flex-col`}>
       {/* HEADER */}
-      <header className="p-6 md:p-8 flex justify-between items-center relative z-10">
-        <button onClick={() => router.back()} className="flex items-center gap-2 font-bold text-gray-500 hover:text-black transition-colors">
-          <ArrowLeft size={20} /> 돌아가기
+      <header className="p-6 md:p-8 flex justify-between items-center relative z-20">
+        <button onClick={() => router.back()} className="flex items-center gap-2 font-black text-xs uppercase tracking-widest text-[#566e63] hover:text-black transition-colors bg-white/50 px-4 py-2 rounded-full shadow-sm">
+          <ArrowLeft size={16} /> 돌아가기
         </button>
-        <div className="font-extrabold tracking-widest text-[#222] text-xl">
-          MoodB
+        <div className="font-extrabold tracking-widest text-[#222] text-xl md:text-2xl hidden sm:block">
+          MoodB <span className="text-[10px] font-bold text-gray-400">7가지 감정 STUDIO</span>
         </div>
-        <div className="w-24"></div> {/* 여백 밸런스 */}
+        <div className="w-10 sm:w-24"></div> {/* 여백 밸런스 */}
       </header>
 
       {/* 메인 스튜디오 구조 (가로 2분할) */}
@@ -225,57 +225,58 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
         />
 
         {/* 1. 좌측: 명상 플레이어 영역 */}
-        <div className="flex-1 bg-white/80 backdrop-blur-md rounded-[40px] shadow-2xl border border-white p-8 flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="flex-1 bg-white/80 backdrop-blur-md rounded-[40px] shadow-2xl border border-white p-6 md:p-8 flex flex-col items-center justify-center relative overflow-hidden min-h-[500px]">
           
-          <div className="absolute top-8 left-8 inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-sm text-xs font-bold text-gray-600">
+          <div className="absolute top-6 left-6 md:top-8 md:left-8 inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-sm text-[10px] font-bold text-gray-600">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
             스튜디오 믹싱 모드
           </div>
 
-          <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tighter text-[#222] mt-10 mb-4 text-center">
+          <h1 className="text-responsive-h2 mt-12 mb-2 text-center">
             {data.name}
           </h1>
+          <p className="text-xs font-bold text-gray-400 mb-6 uppercase tracking-widest">{data.target}</p>
 
           {/* 인터랙티브 명상 서클 */}
-          <div className="relative w-[240px] h-[240px] md:w-[320px] md:h-[320px] flex items-center justify-center my-8">
+          <div className="relative w-[210px] h-[210px] sm:w-[240px] sm:h-[240px] md:w-[300px] md:h-[300px] flex items-center justify-center my-6">
             <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${data.color} opacity-20 blur-2xl ${isPlaying ? 'animate-ping' : ''}`} style={{ animationDuration: '4s' }}></div>
             <div className={`absolute inset-4 rounded-full bg-gradient-to-br ${data.color} opacity-40 blur-lg ${isPlaying ? 'animate-pulse' : ''}`} style={{ animationDuration: '3s' }}></div>
             
-            <div className="relative z-10 bg-white border. border-white/50 w-[200px] h-[200px] md:w-[260px] md:h-[260px] rounded-full shadow-lg flex flex-col items-center justify-center space-y-2">
-               <Icon size={40} className={`opacity-40 text-[#566e63] ${isPlaying ? 'animate-bounce' : ''}`} style={{ animationDuration: '2s' }} />
-               <div className="text-3xl font-extrabold text-[#222]">
-                  {Math.min(100, progressPercent).toFixed(0)}<span className="text-lg opacity-50">%</span>
+            <div className="relative z-10 bg-white border border-white/50 w-[180px] h-[180px] sm:w-[200px] sm:h-[200px] md:w-[240px] md:h-[240px] rounded-full shadow-lg flex flex-col items-center justify-center space-y-1">
+               <Icon size={32} className={`opacity-40 text-[#566e63] ${isPlaying ? 'animate-bounce' : ''}`} style={{ animationDuration: '2s' }} />
+               <div className="text-2xl md:text-3xl font-black text-[#222]">
+                  {Math.min(100, progressPercent).toFixed(0)}<span className="text-sm md:text-lg opacity-50">%</span>
                </div>
-               <div className="font-black tracking-widest text-[#566e63]">
+               <div className="text-[10px] md:text-xs font-black tracking-widest text-[#566e63]">
                   {isPlaying ? `${Math.floor(currentTimeSec / 60)}:${String(Math.floor(currentTimeSec % 60)).padStart(2, '0')}` : 'READY'}
                </div>
             </div>
             
             {/* 프로그레스 바 */}
             <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
-              <circle cx="50%" cy="50%" r="48%" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="8" />
-              <circle cx="50%" cy="50%" r="48%" fill="none" stroke="currentColor" strokeWidth="8" className="text-black/20 transition-all duration-500 linear" strokeDasharray="301.59%" strokeDashoffset={`${301.59 - (Math.min(100, progressPercent) / 100) * 301.59}%`} />
+              <circle cx="50%" cy="50%" r="48%" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="6" />
+              <circle cx="50%" cy="50%" r="48%" fill="none" stroke="currentColor" strokeWidth="6" className="text-black/20 transition-all duration-500 linear" strokeDasharray="301.59%" strokeDashoffset={`${301.59 - (Math.min(100, progressPercent) / 100) * 301.59}%`} />
             </svg>
           </div>
 
           {/* 자막 구역 */}
           {showSubtitle && (
-            <div className="h-20 flex items-center justify-center text-center w-full px-4 mb-8">
-              <p className="text-lg md:text-xl font-bold bg-white/50 px-6 py-2 rounded-2xl text-[#444] break-keep transition-all duration-700">
-                {currentScript || "..."}
+            <div className="h-20 flex items-center justify-center text-center w-full px-4 mb-6">
+              <p className="text-base md:text-xl font-bold bg-white/50 px-6 py-2 rounded-2xl text-[#444] break-keep transition-all duration-700 shadow-sm border border-white/50">
+                {currentScript || "조용히 숨을 고릅니다..."}
               </p>
             </div>
           )}
 
           {/* 컨트롤 패널 */}
-          <div className="flex items-center gap-6 mt-auto">
-            <button onClick={resetPlay} className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-black hover:bg-white shadow-sm hover:shadow-md transition-all active:scale-95">
-              <RotateCcw size={22} />
+          <div className="flex items-center gap-6 mt-6">
+            <button onClick={resetPlay} className="w-12 h-12 md:w-14 md:h-14 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-black hover:bg-white shadow-sm transition-all active:scale-95">
+              <RotateCcw size={18} />
             </button>
-            <button onClick={togglePlay} className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-xl transition-all hover:scale-105 active:scale-95 ${isPlaying ? 'bg-gray-800' : 'bg-gradient-to-br ' + data.color}`}>
-              {isPlaying ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
+            <button onClick={togglePlay} className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-white shadow-xl transition-all hover:scale-105 active:scale-95 ${isPlaying ? 'bg-gray-800' : 'bg-gradient-to-br ' + data.color}`}>
+              {isPlaying ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
             </button>
-            <button onClick={() => router.push('/')} className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center text-red-400 hover:text-red-500 hover:bg-white shadow-sm hover:shadow-md transition-all active:scale-95 font-bold text-[10px] tracking-widest break-keep">
+            <button onClick={() => router.push('/')} className="w-12 h-12 md:w-14 md:h-14 bg-gray-50 rounded-full flex items-center justify-center text-red-300 hover:text-red-500 hover:bg-white shadow-sm transition-all active:scale-95 font-black text-[9px] tracking-widest uppercase">
               종료
             </button>
           </div>
@@ -284,18 +285,18 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
         {/* 2. 우측: 기능 제어 탭 (Studio Tools) */}
         <div className="lg:w-[400px] flex flex-col bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-xl">
           {/* Tab Headers */}
-          <div className="flex border-b border-gray-100 bg-[#faf8f5]">
-            <button onClick={() => setActiveTab('audio')} className={`flex-1 py-5 text-sm font-bold transition-colors ${activeTab === 'audio' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
-               <Settings size={18} className="mx-auto mb-1" /> 오디오
+          <div className="flex border-b border-gray-100 bg-[#faf8f5] overflow-x-auto no-scrollbar">
+            <button onClick={() => setActiveTab('audio')} className={`flex-1 min-w-[80px] py-4 text-[10px] font-black uppercase tracking-widest transition-colors ${activeTab === 'audio' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
+               <Settings size={16} className="mx-auto mb-1.5" /> 오디오
             </button>
-            <button onClick={() => setActiveTab('script')} className={`flex-1 py-5 text-sm font-bold transition-colors ${activeTab === 'script' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
-               <FileText size={18} className="mx-auto mb-1" /> 스크립트
+            <button onClick={() => setActiveTab('script')} className={`flex-1 min-w-[80px] py-4 text-[10px] font-black uppercase tracking-widest transition-colors ${activeTab === 'script' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
+               <FileText size={16} className="mx-auto mb-1.5" /> 스크립트
             </button>
-            <button onClick={() => setActiveTab('subtitle')} className={`flex-1 py-5 text-sm font-bold transition-colors ${activeTab === 'subtitle' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
-               <Type size={18} className="mx-auto mb-1" /> 자막
+            <button onClick={() => setActiveTab('subtitle')} className={`flex-1 min-w-[80px] py-4 text-[10px] font-black uppercase tracking-widest transition-colors ${activeTab === 'subtitle' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
+               <Type size={16} className="mx-auto mb-1.5" /> 자막
             </button>
-            <button onClick={() => setActiveTab('export')} className={`flex-1 py-5 text-sm font-bold transition-colors ${activeTab === 'export' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
-               <Download size={18} className="mx-auto mb-1" /> 내보내기
+            <button onClick={() => setActiveTab('export')} className={`flex-1 min-w-[80px] py-4 text-[10px] font-black uppercase tracking-widest transition-colors ${activeTab === 'export' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
+               <Download size={16} className="mx-auto mb-1.5" /> 내보내기
             </button>
           </div>
 
@@ -402,17 +403,17 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
 
       {/* CBT / 심층 처방 연계 버튼 (공, 경 감정일 때만 활성화) */}
       {data.cbt && currentTimeSec < durationSec && (
-        <div className="fixed bottom-0 left-0 w-full p-4 md:p-8 animate-in fade-in slide-in-from-bottom-full duration-1000 delay-700 z-20">
-          <div className="max-w-2xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl border border-gray-200/50 p-6 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="text-center sm:text-left">
-              <h4 className="text-sm font-extrabold text-[#222] mb-1 flex items-center justify-center sm:justify-start gap-2">
+        <div className="fixed bottom-0 left-0 w-full p-4 md:p-8 animate-in fade-in slide-in-from-bottom-full duration-1000 delay-700 z-30">
+          <div className="max-w-2xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl border border-gray-200/50 p-5 md:p-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
+            <div className="text-center md:text-left">
+              <h4 className="text-xs md:text-sm font-black text-[#222] mb-1 flex items-center justify-center md:justify-start gap-2">
                 <Brain size={16} className="text-indigo-500" />
                 추가적인 인지 교정이 필요하신가요?
               </h4>
-              <p className="text-xs text-gray-500 font-medium">현재 이 감정은 명상뿐만 아니라 인지행동치료(CBT)를 병행하면 더욱 큰 효과를 볼 수 있습니다.</p>
+              <p className="text-[10px] md:text-xs text-gray-400 font-bold uppercase tracking-wider">CBT 인지행동치료 병행 솔루션</p>
             </div>
-            <Link href="/cure" className="shrink-0 bg-indigo-600 text-white font-bold px-6 py-3 rounded-full hover:bg-indigo-700 transition-colors shadow-md flex items-center gap-2">
-              <MessageCircle size={18} />
+            <Link href="/cure" className="w-full md:w-auto shrink-0 bg-indigo-600 text-white font-black px-6 py-3 rounded-xl hover:bg-indigo-700 transition-colors shadow-lg flex items-center justify-center gap-2 text-xs">
+              <MessageCircle size={16} />
               CBT 챗봇 입장
             </Link>
           </div>
@@ -431,7 +432,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
               짧은 휴식으로도 마음의 크기는 달라집니다.<br className="hidden md:block" />나의 감정 크기를 다시 측정하여 이전 진단 결과와 어떻게 달라졌는지 비교해 보세요.
             </p>
             
-            <Link href="/questionnaire" className="w-full bg-[#566e63] text-white font-bold py-4 rounded-xl hover:bg-[#4a5c53] shadow-lg transition-transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 mb-4">
+            <Link href={`/questionnaire?mode=post&emotion=${encodeURIComponent(rawEmotion)}`} className="w-full bg-[#566e63] text-white font-bold py-4 rounded-xl hover:bg-[#4a5c53] shadow-lg transition-transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 mb-4">
               <Activity size={20} />
               나의 감정 크기 다시 확인하기
             </Link>

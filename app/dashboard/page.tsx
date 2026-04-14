@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Search, Filter, Activity, Users, FileText, ChevronDown, Bell, CheckCircle2, AlertCircle, X } from 'lucide-react'
+import { ArrowLeft, Search, Filter, Activity, Users, FileText, ChevronDown, Bell, CheckCircle2, AlertCircle, X, Menu } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 
 // Mock Data for Patients
@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedPatient, setSelectedPatient] = useState<any>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -59,9 +60,14 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#f3ede1] text-[#333] font-sans selection:bg-[#566e63]/20 flex">
       
       {/* Sidebar for Dashboard */}
-      <aside className="hidden lg:flex flex-col w-[260px] bg-white border-r border-[#e8e0d5] fixed h-full z-20">
+      <aside className={`${isSidebarOpen ? 'flex' : 'hidden'} lg:flex flex-col w-[260px] bg-white border-r border-[#e8e0d5] fixed h-full z-[60] transition-all duration-300`}>
         <div className="p-6">
-          <div className="font-extrabold tracking-widest text-[#bfa588] text-2xl mb-10">MoodB<span className="text-sm font-bold text-gray-400 block tracking-normal mt-1">Medical Portal</span></div>
+          <div className="flex justify-between items-center mb-10">
+            <div className="font-extrabold tracking-widest text-[#bfa588] text-2xl">MoodB<span className="text-sm font-bold text-gray-400 block tracking-normal mt-1">Medical Portal</span></div>
+            <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 text-gray-400">
+               <X size={24} />
+            </button>
+          </div>
           <nav className="flex flex-col gap-2">
             <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#f5ebd9] text-[#bfa588] font-bold">
               <Users size={18} />
@@ -78,11 +84,20 @@ export default function DashboardPage() {
       {/* Main Area */}
       <main className="flex-1 lg:ml-[260px] min-h-screen flex flex-col pt-6 px-6 md:px-10 pb-20">
         
+        {/* Mobile Header Toggle */}
+        <div className="lg:hidden flex justify-between items-center mb-6 bg-white p-4 rounded-xl border border-[#e8e0d5] shadow-sm">
+           <button onClick={() => setIsSidebarOpen(true)} className="p-2 bg-[#faf8f5] rounded-lg text-[#bfa588]">
+              <Menu size={24} />
+           </button>
+           <div className="font-black text-[#566e63] text-lg tracking-tight">MoodB Admin</div>
+           <div className="w-10"></div>
+        </div>
+        
         {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-[#e8e0d5]">
           <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold text-[#222]">통합 환자 현황 뷰어</h1>
-            <p className="text-gray-500 text-sm font-medium mt-1">원내 등록된 전체 환자의 CSEI 진단 및 CBT 진행 현황입니다.</p>
+            <h1 className="text-responsive-h2">통합 환자 현황 뷰어</h1>
+            <p className="text-gray-600 text-lg md:text-[16pt] font-extrabold mt-2">등록된 환자의 CSEI 결과 및 오지상승위치료, CBT 진행 현황입니다.</p>
           </div>
           <div className="flex gap-3 w-full md:w-auto">
             <div className="relative group flex-1 md:w-[280px]">
@@ -103,64 +118,68 @@ export default function DashboardPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="bg-white p-6 rounded-2xl border border-[#e8e0d5] shadow-sm flex items-center gap-4 border-l-4 border-l-[#566e63]">
-            <div className="bg-[#f0ece5] p-3 rounded-full text-[#566e63]">
-              <Users size={24} />
+          <div className="bg-white p-8 rounded-3xl border border-[#e8e0d5] shadow-sm flex items-center gap-6 border-l-8 border-l-[#566e63]">
+            <div className="bg-[#f0ece5] p-4 rounded-full text-[#566e63]">
+              <Users size={32} />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-500">총 등록 환자</p>
-              <h3 className="text-3xl font-extrabold text-[#222]">1,208</h3>
+              <p className="text-lg font-bold text-gray-500">총 등록 환자</p>
+              <h3 className="text-4xl font-black text-[#222]">1,208</h3>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-[#e8e0d5] shadow-sm flex items-center gap-4 border-l-4 border-l-red-400">
-            <div className="bg-red-50 p-3 rounded-full text-red-500">
-              <AlertCircle size={24} />
+          <div className="bg-white p-8 rounded-3xl border border-[#e8e0d5] shadow-sm flex items-center gap-6 border-l-8 border-l-red-400">
+            <div className="bg-red-50 p-4 rounded-full text-red-500">
+              <AlertCircle size={32} />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-500">위험군 관심 환자</p>
-              <h3 className="text-3xl font-extrabold text-[#222]">84</h3>
+              <p className="text-lg font-bold text-gray-500">위험군 관심 환자</p>
+              <h3 className="text-4xl font-black text-[#222]">84</h3>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-2xl border border-[#e8e0d5] shadow-sm flex items-center gap-4 border-l-4 border-l-[#4db4b6]">
-            <div className="bg-cyan-50 p-3 rounded-full text-[#4db4b6]">
-              <CheckCircle2 size={24} />
+          <div className="bg-white p-8 rounded-3xl border border-[#e8e0d5] shadow-sm flex items-center gap-6 border-l-8 border-l-[#4db4b6]">
+            <div className="bg-cyan-50 p-4 rounded-full text-[#4db4b6]">
+              <CheckCircle2 size={32} />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-500">CBT 솔루션 완료자</p>
-              <h3 className="text-3xl font-extrabold text-[#222]">432</h3>
+              <p className="text-lg font-bold text-gray-500">CBT 솔루션 완료자</p>
+              <h3 className="text-4xl font-black text-[#222]">432</h3>
             </div>
           </div>
         </div>
 
         {/* Table Area */}
         <div className="bg-white border text-sm font-medium border-[#e8e0d5] shadow-sm rounded-2xl overflow-hidden flex-1 flex flex-col">
+          <div className="p-4 border-b border-gray-50 flex justify-between items-center lg:hidden">
+             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">환자 데이터 목록</span>
+             <span className="text-[10px] text-gray-300 animate-pulse">가로로 밀어서 더 보기 →</span>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#fcfaf5] border-b border-[#e8e0d5] text-gray-500 uppercase tracking-widest text-[11px] font-bold">
-                  <th className="p-5 whitespace-nowrap">환자 ID</th>
-                  <th className="p-5 whitespace-nowrap">이름 / 인적</th>
-                  <th className="p-5 whitespace-nowrap">최근 진단일</th>
-                  <th className="p-5 whitespace-nowrap">주요 취약 감정</th>
-                  <th className="p-5 whitespace-nowrap">최고 T-점수</th>
-                  <th className="p-5 whitespace-nowrap">상태</th>
-                  <th className="p-5 whitespace-nowrap">솔루션 진행률</th>
-                  <th className="p-5 text-right whitespace-nowrap">리포트 조회</th>
+                <tr className="bg-[#fcfaf5] border-b border-[#e8e0d5] text-gray-500 uppercase tracking-widest text-[16pt] font-black">
+                  <th className="p-8 whitespace-nowrap">환자 ID</th>
+                  <th className="p-8 whitespace-nowrap">이름 / 인적</th>
+                  <th className="p-8 whitespace-nowrap text-center">진단일</th>
+                  <th className="p-8 whitespace-nowrap">주요 취약 감정</th>
+                  <th className="p-8 whitespace-nowrap">최고 T-점수</th>
+                  <th className="p-8 whitespace-nowrap">상태</th>
+                  <th className="p-8 whitespace-nowrap">솔루션 진행률</th>
+                  <th className="p-8 text-right whitespace-nowrap">리포트</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredPatients.length > 0 ? filteredPatients.map((patient, idx) => (
-                  <tr key={idx} className="border-b border-gray-100 hover:bg-[#faf8f5] transition-colors group cursor-pointer">
-                    <td className="p-5 text-gray-500 font-bold">{patient.id}</td>
-                    <td className="p-5">
-                      <div className="font-extrabold text-[#222] text-base">{patient.name}</div>
-                      <div className="text-xs text-gray-400 mt-1">{patient.age}세 · {patient.gender}</div>
+                  <tr key={idx} className="border-b border-gray-100 hover:bg-[#faf8f5] transition-colors group cursor-pointer text-[16pt]">
+                    <td className="p-8 text-gray-500 font-bold">{patient.id}</td>
+                    <td className="p-8">
+                      <div className="font-black text-[#222] text-[18pt]">{patient.name}</div>
+                      <div className="text-sm text-gray-400 mt-1">{patient.age}세 · {patient.gender}</div>
                     </td>
-                    <td className="p-5 text-gray-600">{patient.lastTest}</td>
-                    <td className="p-5 text-[#222] font-extrabold bg-[#fcfaf5]">{patient.riskEmotion}</td>
-                    <td className="p-5 font-bold text-[#bfa588]">{patient.tScore}점</td>
-                    <td className="p-5">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                    <td className="p-8 text-gray-600 text-center">{patient.lastTest}</td>
+                    <td className="p-8 text-[#222] font-black bg-[#fcfaf5]">{patient.riskEmotion}</td>
+                    <td className="p-8 font-black text-[#bfa588]">{patient.tScore}점</td>
+                    <td className="p-8">
+                      <span className={`px-5 py-2 rounded-full text-[14pt] font-black ${
                         patient.status === '위험' ? 'bg-red-100 text-red-600' :
                         patient.status === '주의' ? 'bg-orange-100 text-orange-600' :
                         'bg-green-100 text-green-600'
@@ -168,18 +187,18 @@ export default function DashboardPage() {
                         {patient.status}
                       </span>
                     </td>
-                    <td className="p-5 w-48">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <td className="p-8 w-64">
+                      <div className="flex flex-col gap-2">
+                        <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
                           <div className={`h-full rounded-full ${patient.cbtProgress === 100 ? 'bg-[#4db4b6]' : 'bg-[#bfa588]'}`} style={{ width: `${patient.cbtProgress}%` }}></div>
                         </div>
-                        <span className="text-xs font-bold text-gray-400 w-8">{patient.cbtProgress}%</span>
+                        <span className="text-sm font-black text-gray-400">{patient.cbtProgress}% 완료</span>
                       </div>
                     </td>
-                    <td className="p-5 text-right">
+                    <td className="p-8 text-right">
                       <button 
                         onClick={() => setSelectedPatient(patient)}
-                        className="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-lg shadow-sm hover:bg-[#bfa588] hover:text-white hover:border-[#bfa588] transition-all"
+                        className="px-6 py-3 bg-[#566e63] text-white text-sm font-black rounded-xl shadow-lg hover:bg-[#4a5c53] transition-all"
                       >
                         상세보기
                       </button>

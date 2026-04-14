@@ -7,8 +7,8 @@ export default function LoginPage() {
       {/* Left side: Hero area */}
       <div className="w-full md:w-[45%] lg:w-[40%] bg-[#e8efe9] flex flex-col p-8 md:p-12 lg:p-20 relative overflow-hidden">
         <div className="flex-1 flex flex-col justify-center max-w-[500px] z-10 text-[#4a5c53]">
-          <h1 className="text-[2.5rem] leading-[1.1] md:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight">
-            내면의 평화로<br />돌아가는 시간.
+          <h1 className="text-responsive-h1 mb-6">
+            내면의 평화로<br className="hidden sm:block" /> 돌아가는 시간.
           </h1>
           <p className="text-[#64746b] text-lg lg:text-xl font-medium leading-normal mb-12">
             치유와 재발견의 안식처에 참여하세요. 정서적 균형을 향한 당신의 여정이 여기서 계속됩니다.
@@ -36,7 +36,7 @@ export default function LoginPage() {
       {/* Right side: Auth Form area */}
       <div className="w-full md:w-[55%] lg:w-[60%] flex flex-col items-center justify-center p-8 lg:p-12 min-h-screen md:min-h-0 bg-[#faf8f5]">
         <div className="w-full max-w-[420px] mb-10 text-center flex flex-col items-center">
-          <h2 className="text-4xl font-extrabold text-[#2a2e2b] mb-3">환영합니다</h2>
+          <h2 className="text-responsive-h2 mb-3">환영합니다</h2>
           <p className="text-gray-500 font-medium">당신의 안식처에 로그인하세요</p>
         </div>
         

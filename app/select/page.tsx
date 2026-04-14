@@ -2,42 +2,31 @@
 
 import Link from 'next/link'
 import { ArrowRight, BrainCircuit, Activity, Infinity, Scale, PersonStanding, FileQuestion, Sparkles } from 'lucide-react'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 
 export default function SelectPage() {
   return (
     <div className="min-h-screen bg-[#fffdfa] text-[#333] font-sans selection:bg-[#566e63]/20">
-      
-      {/* Navbar */}
-      <nav className="px-6 md:px-10 py-6 flex justify-between items-center bg-transparent max-w-[1400px] mx-auto w-full">
-        <Link href="/" className="font-extrabold text-3xl tracking-tight text-[#4a5c53]">MoodB</Link>
-        <div className="hidden md:flex gap-12 font-medium text-sm text-gray-500">
-          <Link href="/select" className="text-black border-b-2 border-black pb-1">치유 여정(Cure)</Link>
-          <Link href="/my-situation" className="hover:text-black hover:border-b-2 hover:border-black transition-all pb-1">마이페이지</Link>
-          <Link href="/chat" className="hover:text-black hover:border-b-2 hover:border-black transition-all pb-1">상담 챗봇</Link>
-        </div>
-        <div className="flex items-center gap-6">
-          <Link href="/login" className="hidden md:block text-sm font-medium text-gray-600">로그인</Link>
-          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all">회원가입</Link>
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="max-w-[1100px] mx-auto px-6 pb-24 pt-16">
         
         {/* Header Title Section */}
         <div className="text-center mb-16 fade-in">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight text-[#222] break-keep">
-            진단부터 치유까지, <br className="md:hidden" />
+          <h1 className="text-responsive-h1 mb-6 break-keep">
+            진단부터 치유까지, <br className="sm:hidden" />
             나의 마음 관리를 <span className="font-black text-[#566e63] underline decoration-4 underline-offset-8 decoration-[#566e63]/30">시작해 보세요.</span>
           </h1>
-          <p className="text-gray-500 font-medium md:text-lg max-w-2xl mx-auto leading-relaxed break-keep">
+          <p className="text-gray-500 font-medium text-base md:text-lg max-w-2xl mx-auto leading-relaxed break-keep">
             감정의 크기 측정부터 나에게 가장 최적화된 명상과 인지재구성 솔루션까지, 이어지는 원스톱 치유 프로세스를 직접 경험합니다.
           </p>
         </div>
 
         {/* Assessment Banner Section (Moved Up) */}
         <div className="bg-[#f0ece5] rounded-[40px] p-8 md:p-16 flex flex-col md:flex-row items-center gap-10 overflow-hidden relative fade-in slide-in-bottom mb-10">
-          <div className="md:w-[55%] relative z-10">
-            <h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight">나의 MoodB 측정하기</h2>
+          <div className="md:w-[55%] relative z-10 text-center md:text-left flex flex-col items-center md:items-start">
+            <h2 className="text-responsive-h2 mb-6">나의 MoodB 측정하기</h2>
             <p className="text-sm md:text-base text-gray-500 font-medium leading-relaxed mb-10 max-w-md">
               모든 감정에는 크기가 있습니다. 2분 만에 끝나는 감정 주파수(데시벨) 정밀 진단을 통해 현재 나의 감정적 크기와 파동에 가장 알맞은 맞춤형 접근 방식을 추천받아 보세요.
             </p>
@@ -103,28 +92,7 @@ export default function SelectPage() {
 
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-100 px-6 md:px-10 py-12 flex flex-col md:flex-row justify-between items-center gap-6 mt-10">
-        <div>
-          <div className="font-extrabold text-base mb-1 text-[#4a5c53]">MoodB</div>
-          <div className="text-xs text-gray-600">© 2024 MoodB. 마음의 안식처.</div>
-        </div>
-        <div className="flex gap-10 text-[10px] font-bold text-gray-600 uppercase tracking-widest">
-          <Link href="#" className="hover:text-black transition-colors">소개</Link>
-          <Link href="#" className="hover:text-black transition-colors">개인정보처리방침</Link>
-          <Link href="#" className="hover:text-black transition-colors">문의하기</Link>
-          <Link href="#" className="hover:text-black transition-colors">이용약관</Link>
-        </div>
-        {/* Social / Email icons */}
-        <div className="flex items-center gap-3">
-           <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-           </button>
-           <button className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-           </button>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Basic Global CSS for Fade-In Utilities directly embedded for simplicity if not in globals.css */}
       <style dangerouslySetInnerHTML={{__html: `

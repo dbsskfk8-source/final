@@ -22,6 +22,7 @@ function SubmitButton({ isLogin }: { isLogin: boolean }) {
 export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
+  const [selectedRole, setSelectedRole] = useState('general')
   
   const [loginState, loginAction] = useActionState(login, null)
   const [signupState, signupAction] = useActionState(signup, null)
@@ -61,25 +62,38 @@ export default function AuthForm() {
 
       {/* Auth Form (Email+Password) */}
       <form action={isLogin ? loginAction : signupAction} className="w-full flex flex-col gap-4">
-        {!isLogin && (
           <div className="flex flex-col gap-2 mb-2">
             <label className="text-sm text-gray-600 font-medium">가입 유형</label>
             <div className="flex gap-2">
               <label className="flex-1 cursor-pointer">
-                <input type="radio" name="role" value="general" defaultChecked className="peer sr-only" />
+                <input type="radio" name="role" value="general" checked={selectedRole === 'general'} onChange={(e) => setSelectedRole(e.target.value)} className="peer sr-only" />
                 <div className="py-3 text-center border-2 border-gray-100 rounded-xl peer-checked:border-[#566e63] peer-checked:bg-[#566e63]/10 peer-checked:text-[#566e63] font-bold text-sm text-gray-400 transition-all">일반인</div>
               </label>
               <label className="flex-1 cursor-pointer">
-                <input type="radio" name="role" value="patient" className="peer sr-only" />
+                <input type="radio" name="role" value="patient" checked={selectedRole === 'patient'} onChange={(e) => setSelectedRole(e.target.value)} className="peer sr-only" />
                 <div className="py-3 text-center border-2 border-gray-100 rounded-xl peer-checked:border-[#566e63] peer-checked:bg-[#566e63]/10 peer-checked:text-[#566e63] font-bold text-sm text-gray-400 transition-all">환자</div>
               </label>
               <label className="flex-1 cursor-pointer">
-                <input type="radio" name="role" value="doctor" className="peer sr-only" />
+                <input type="radio" name="role" value="doctor" checked={selectedRole === 'doctor'} onChange={(e) => setSelectedRole(e.target.value)} className="peer sr-only" />
                 <div className="py-3 text-center border-2 border-gray-100 rounded-xl peer-checked:border-[#566e63] peer-checked:bg-[#566e63]/10 peer-checked:text-[#566e63] font-bold text-sm text-gray-400 transition-all">의료인</div>
               </label>
             </div>
+            
+            {/* Conditional License Key field for Doctors */}
+            {!isLogin && selectedRole === 'doctor' && (
+              <div className="mt-4 p-4 bg-[#f8fafc] border border-slate-200 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 block">의사 면허 번호 / 인증키</label>
+                <input 
+                  name="licenseKey"
+                  type="text" 
+                  placeholder="인증키를 입력하세요 (샘플 가능)"
+                  required
+                  className="w-full py-3 px-4 bg-white rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#566e63]/20 outline-none text-sm font-medium"
+                />
+                <p className="text-[10px] text-slate-400 mt-2 font-medium">※ 현재 데모 버전으로, 소지하고 계신 어떤 키를 입력하셔도 확인 절차 없이 가입됩니다.</p>
+              </div>
+            )}
           </div>
-        )}
 
         {state?.error && (
           <div className="p-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm mb-2">

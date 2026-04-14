@@ -21,11 +21,17 @@ import {
 import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle, LogOut, TrendingUp, LayoutGrid, Calendar, User, Bell, Settings, Activity, Brain, Heart, Fingerprint, Wind } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 
 interface RadarItem {
   subject: string
   A: number
   fullMark: number
+  group?: string
+  groupLabel?: string
+  min?: number
+  max?: number
 }
 
 interface HistoryLog {
@@ -80,8 +86,6 @@ export default function MySituationPage() {
             if (res.ok) {
               localStorage.removeItem('final_csei_results')
               localStorage.removeItem('final_cure_history')
-            } else {
-              console.error('Sync failed with status:', res.status)
             }
           } catch (e) { console.error('Sync exception:', e) }
         }
@@ -115,9 +119,9 @@ export default function MySituationPage() {
             combined.push({
               id: `csei-${item.id}`,
               date: new Date(item.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase(),
-              type: '칠정(七情) 진단 기록',
-              summary: `[가장 높은 지표: ${topEmotion.subject} (${topEmotion.A}%)] 전반적 분석 결과입니다.`,
-              tags: ['진단', '7정'],
+              type: '7가지 감정 진단 기록',
+              summary: `[가장 높은 지표: ${topEmotion.subject} (${topEmotion.A}dB)] 전반적 분석 결과입니다.`,
+              tags: ['진단', '감정'],
               sentiment: 'neutral',
               isAssessment: true
             })
@@ -177,8 +181,6 @@ export default function MySituationPage() {
     }
   }
 
-  // 초기 로드 시 가이드 데이터 설정 로직 제거 (위의 useEffect와 통합됨)
-
   const trendData = [...allCsei].reverse().map(item => {
     const d = new Date(item.created_at || item.timestamp)
     const dateStr = `${d.getMonth() + 1}/${d.getDate()}`
@@ -187,42 +189,15 @@ export default function MySituationPage() {
     return entry
   })
 
-  const logout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/')
-  }
-
   return (
     <div className="min-h-screen bg-[#fffdfa] text-[#333] font-sans selection:bg-[#566e63]/20">
-      <nav className="border-b border-gray-100 px-6 md:px-10 py-6 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <Link href="/" className="font-extrabold text-3xl md:text-4xl text-[#566e63] tracking-tighter">MoodB</Link>
-        <div className="hidden md:flex gap-12 font-medium text-base text-gray-500">
-           <Link href="/about" className="hover:text-black font-bold text-base">MoodB 소개</Link>
-           <Link href="/select" className="hover:text-black text-base transition-colors">인지재구성(Cure)</Link>
-           <Link href="/my-situation" className="text-[#566e63] font-bold text-base border-b-2 border-[#566e63] pb-1">마이페이지</Link>
-           <Link href="/chat" className="hover:text-black text-base transition-colors">심리상담 챗봇</Link>
-           <Link href="/dashboard" className="text-[#bfa588] hover:text-[#a68a6d] font-bold text-base">관리자 뷰어</Link>
-        </div>
-        {!isGuest ? (
-          <button onClick={logout} className="flex items-center gap-2 group shrink-0">
-             <div className="w-9 h-9 md:w-12 md:h-12 rounded-full bg-[#f0f2f0] flex items-center justify-center text-[#566e63] group-hover:bg-[#566e63] group-hover:text-white transition-all overflow-hidden shadow-inner">
-               <LogOut size={16} className="md:size-[18px]" />
-             </div>
-             <span className="text-sm font-bold text-gray-600 group-hover:text-[#566e63] hidden sm:inline">로그아웃</span>
-          </button>
-        ) : (
-          <Link href="/login" className="bg-[#566e63] text-white px-3 md:px-6 py-2 md:py-2.5 rounded-full text-sm font-bold tracking-tight md:tracking-widest hover:bg-[#43574d] hover:-translate-y-0.5 transition-all shadow-lg active:scale-95 whitespace-nowrap shrink-0">
-            로그인 / 회원가입
-          </Link>
-        )}
-      </nav>
+      <Navbar />
 
       <main className="max-w-[1200px] mx-auto px-6 py-12 md:py-20">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 fade-in">
           <div>
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-4">안녕하세요.</h1>
-            <p className="text-gray-600 font-medium text-lg md:text-xl">당신의 마음은 하나의 안식처입니다. 여기 그 청사진이 있습니다.</p>
+            <h1 className="text-responsive-h1 tracking-tighter mb-4">안녕하세요.</h1>
+            <p className="text-gray-600 font-medium text-base md:text-xl">당신의 마음은 하나의 안식처입니다. 여기 그 청사진이 있습니다.</p>
             
             {allCsei.length > 0 && (
               <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 animate-in fade-in slide-in-from-left duration-700">
@@ -234,24 +209,20 @@ export default function MySituationPage() {
               </div>
             )}
             
-            {/* ✨ 대시보드 강화: 추천 훈련 숏컷 섹션 */}
             {allCsei.length > 0 && (
               <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 w-full max-w-3xl">
                 {(() => {
                   const latestScores = allCsei[0].scores;
                   let attentionEmotions = latestScores.filter((s: any) => s.group === 'risk' || s.group === 'caution').sort((a: any, b: any) => b.A - a.A);
                   
-                  // 명상 완료 이력 필터링 로직
                   try {
                     if (typeof window !== 'undefined') {
                       const doneLog = JSON.parse(localStorage.getItem('completed_meditations') || '{}')
                       const testDate = new Date(allCsei[0].created_at || allCsei[0].timestamp).getTime()
-                      
-                      // 가장 최근 테스트 이후에 해당 명상을 100% 클리어했다면 추천에서 제외
                       attentionEmotions = attentionEmotions.filter((emotion: any) => {
                         const doneAt = doneLog[emotion.subject]
-                        if (!doneAt) return true // 기록 없으면 추천에 띄움
-                        return doneAt < testDate // 클리어 날짜가 과거 테스트보다 예전이라면 다시 띄움
+                        if (!doneAt) return true
+                        return doneAt < testDate
                       })
                     }
                   } catch (e) {
@@ -301,7 +272,13 @@ export default function MySituationPage() {
                               
                               <div>
                                 <h4 className="font-extrabold text-[#222] text-lg mb-1">{emotion.subject} 치유 명상</h4>
-                                <p className="text-xs text-gray-500 font-medium mb-3">T-점수 {Math.round(emotion.A)}점으로 집중 관리가 필요합니다.</p>
+                                <div className="flex items-center gap-2 mb-3">
+                                   <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#fcfaf7] border border-[#e8efe9] rounded-md">
+                                      <span className="text-[10px] font-black text-gray-400">dB</span>
+                                      <span className="text-sm font-black text-[#566e63]">{Math.round(emotion.A)}</span>
+                                   </div>
+                                   <p className="text-xs text-gray-500 font-bold">집중 관리가 필요합니다.</p>
+                                </div>
                               </div>
                               
                               <div className={`w-full py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-colors
@@ -331,7 +308,7 @@ export default function MySituationPage() {
           <div className="bg-[#fcfaf7] rounded-[40px] p-8 md:p-12 shadow-sm border border-gray-100/50 relative">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
               <div>
-                <h2 className="text-xl font-bold text-[#4a5c53]">칠정(七情) 프로파일</h2>
+                <h2 className="text-xl font-bold text-[#4a5c53]">7가지 감정 프로파일</h2>
                 <p className="text-xs text-gray-600 mt-1 font-medium italic">당신의 마음을 구성하는 7가지 요소</p>
               </div>
               <div className="flex items-center gap-3">
@@ -350,7 +327,7 @@ export default function MySituationPage() {
               </div>
             </div>
             
-            <div className="grid grid-cols-7 gap-1.5 md:gap-4 mb-10">
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 md:gap-4 mb-10">
               {radar.map((item: any, idx) => {
                 const group = item.group || 'normal'
                 const groupLabel = item.groupLabel || '정상군'
@@ -364,7 +341,7 @@ export default function MySituationPage() {
                     <div className="text-sm sm:text-base font-bold text-gray-600 tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 uppercase truncate">
                       {item.subject.replace(/[^가-힣]/g, '')}
                     </div>
-                    <div className={`mt-1.5 px-3 py-1 rounded-full text-sm font-bold ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                    <div className={`mt-1.5 px-3 py-1 rounded-full text-xs font-bold ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
                        {groupLabel}
                     </div>
                   </div>
@@ -380,7 +357,6 @@ export default function MySituationPage() {
                     <PolarAngleAxis dataKey="subject" tick={{ fill: '#4a5c53', fontSize: 14, fontWeight: 'bold' }} />
                     <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
                     
-                    {/* 가이드 영역 (정상 범위: 40~60) */}
                     <Radar
                       name="정상 범위"
                       dataKey="max"
@@ -400,15 +376,25 @@ export default function MySituationPage() {
                           const data = payload[0].payload;
                           if (!data.subject) return null;
                           return (
-                            <div className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl border border-gray-100 animate-in zoom-in-95 duration-200">
-                              <p className="text-sm font-bold text-gray-600 mb-1 tracking-widest uppercase">{data.subject}</p>
-                              <div className="flex items-baseline gap-2 mb-2">
-                                <span className="text-2xl font-extrabold text-[#4a5c53]">{data.A}</span>
-                                <span className="text-sm font-bold text-[#566e63]">T-score</span>
+                            <div className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl border border-gray-100 animate-in zoom-in-95 duration-200 min-w-[160px]">
+                              <p className="text-[10px] font-bold text-gray-400 mb-2 tracking-widest uppercase">{data.subject}</p>
+                              <div className="flex items-center justify-between gap-4 mb-2">
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">상태</span>
+                                  <span className={`text-sm font-black ${data.group === 'risk' ? 'text-red-500' : data.group === 'caution' ? 'text-amber-500' : 'text-green-600'}`}>
+                                    {data.groupLabel || '정상'}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="px-1.5 py-0.5 bg-gray-100 rounded text-[8px] font-black text-gray-400">dB</span>
+                                  <div className="text-2xl font-black text-[#4a5c53]">
+                                    {data.A}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="pt-2 border-t border-gray-50 flex flex-col gap-1">
-                                <p className="text-sm font-bold text-gray-500">원점수: <span className="text-[#222]">{data.rawScore}점</span></p>
-                                <p className="text-sm font-bold text-gray-500">상태: <span className={data.group === 'risk' ? 'text-red-500' : data.group === 'caution' ? 'text-amber-500' : 'text-green-600'}>{data.groupLabel}</span></p>
+                              <div className="pt-2 border-t border-gray-50 flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-gray-300 uppercase">MoodB 평균</span>
+                                <span className="px-1.5 py-0.5 bg-gray-50 rounded text-[10px] font-black text-gray-300">50 dB</span>
                               </div>
                             </div>
                           );
@@ -421,7 +407,6 @@ export default function MySituationPage() {
                   <LineChart data={trendData} margin={{ top: 20, right: 30, left: 10, bottom: 60 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f1f1" />
                     
-                    {/* 구간별 배경 색상 (ReferenceArea) */}
                     <ReferenceArea y1={40} y2={60} fill="#22c55e" fillOpacity={0.10} label={{ position: 'insideRight', value: '정상', fill: '#16a34a', fontSize: 14, fontWeight: 'bold' }} />
                     <ReferenceArea y1={60} y2={70} fill="#f59e0b" fillOpacity={0.10} label={{ position: 'insideRight', value: '주의', fill: '#d97706', fontSize: 14, fontWeight: 'bold' }} />
                     <ReferenceArea y1={30} y2={40} fill="#f59e0b" fillOpacity={0.10} />
@@ -443,12 +428,11 @@ export default function MySituationPage() {
                     <Line type="monotone" name="우 (憂)" dataKey="우 (憂)" hide={hiddenSeries.includes('우 (憂)')} stroke="#82ca9d" strokeWidth={3} dot={{ r: 4 }} />
                     <Line type="monotone" name="비 (悲)" dataKey="비 (悲)" hide={hiddenSeries.includes('비 (悲)')} stroke="#0088fe" strokeWidth={3} dot={{ r: 4 }} />
                     <Line type="monotone" name="공 (恐)" dataKey="공 (恐)" hide={hiddenSeries.includes('공 (恐)')} stroke="#bdc3c7" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" name="경 (驚)" dataKey="경 (驚)" hide={hiddenSeries.includes('경 (驚)')} stroke="#9b59b6" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" name="경 (驚)" dataKey="경 (驚)" hide={hiddenSeries.includes('경 (惊)')} stroke="#9b59b6" strokeWidth={3} dot={{ r: 4 }} />
                   </LineChart>
                 )}
               </ResponsiveContainer>
             </div>
-
           </div>
         </div>
 
@@ -503,7 +487,9 @@ export default function MySituationPage() {
                     {log.sentiment === 'negative' && <Frown size={20} className="text-[#b13c3c]" />}
                   </div>
                 </div>
-                <h3 className="font-bold text-lg leading-tight mb-4 flex-1 group-hover:text-[#566e63] transition-colors">{log.type}</h3>
+                <h3 className="font-bold text-lg leading-tight mb-4 flex-1 group-hover:text-[#566e63] transition-colors">
+                  {log.type === '7가지 감정 진단 기록' ? '7가지 감정 진단 리포트' : log.type}
+                </h3>
                 <p className="text-xs text-gray-600 leading-relaxed mb-8 line-clamp-3">{log.summary}</p>
                 <div className="flex justify-between items-center mt-auto border-t border-gray-50 pt-5">
                   <div className="flex gap-2">
@@ -524,18 +510,7 @@ export default function MySituationPage() {
         </div>
       </main>
 
-      <footer className="border-t border-gray-100 px-6 md:px-10 py-16 flex flex-col md:flex-row justify-between items-center gap-8 mt-20 bg-white">
-        <div>
-          <div className="font-extrabold text-lg mb-1 text-[#4a5c53] tracking-tighter">MoodB</div>
-          <p className="text-[10px] text-gray-600 font-medium">© 2024 MoodB. 마음의 안식처.</p>
-        </div>
-        <div className="flex gap-12 text-[10px] font-extrabold text-gray-600 uppercase tracking-[0.2em]">
-          <Link href="#" className="hover:text-[#566e63] transition-colors">소개</Link>
-          <Link href="#" className="hover:text-[#566e63] transition-colors">개인정보처리방침</Link>
-          <Link href="#" className="hover:text-[#566e63] transition-colors">문의하기</Link>
-          <Link href="#" className="hover:text-[#566e63] transition-colors">이용약관</Link>
-        </div>
-      </footer>
+      <Footer />
 
       <style dangerouslySetInnerHTML={{__html: `
         .fade-in { animation: fadeIn 1.2s cubic-bezier(0.2, 0, 0.2, 1) forwards; opacity: 0; }

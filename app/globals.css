@@ -23,6 +23,26 @@
   --font-mono: var(--font-geist-mono);
 }
 
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .text-responsive-h1 {
+    @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter leading-[1.1];
+  }
+  .text-responsive-h2 {
+    @apply text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight;
+  }
+  .text-responsive-p {
+    @apply text-base sm:text-lg md:text-xl text-gray-600 font-medium leading-relaxed;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;

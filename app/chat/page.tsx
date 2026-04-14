@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Mic, Send, ArrowUp, Sparkles, Database } from 'lucide-react'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 
 interface Message {
   id: string
@@ -12,20 +14,25 @@ interface Message {
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', text: '안녕하세요. 지금 기분이 어떠신가요? 서두르지 않고 천천히 말씀하셔도 좋습니다.', sender: 'bot' },
-    { id: '2', text: '최근에 모든 일의 속도에 조금 압도당하는 기분이에요. 그저 조금의 평온함을 찾고 싶어요.', sender: 'user' },
-    { id: '3', text: '충분히 이해합니다. 때로는 세상이 너무 시끄럽게 느껴질 수 있죠. 우리 함께 심호흡을 해볼까요. 준비가 되시면 오늘 하루 당신에게 평온함을 준 작은 일 한 가지를 말해주세요.', sender: 'bot' }
+    { id: '1', text: '안녕하세요. MoodB 상담 인테이크 센터입니다. 지금 마음이 어떠신지, 최근에 어떤 일이 있었는지 편하게 들려주세요.', sender: 'bot' }
   ])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  const [isIndexing, setIsIndexing] = useState(false)
+  const [userRole, setUserRole] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   useEffect(() => {
+    const checkRole = async () => {
+      const supabase = (await import('@/utils/supabase/client')).createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      setUserRole(user?.user_metadata?.role || 'general')
+    }
+    checkRole()
     scrollToBottom()
   }, [messages])
 
@@ -81,36 +88,21 @@ export default function ChatPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa] flex flex-col font-sans">
-      {/* Navbar */}
-      <nav className="px-10 py-8 flex justify-between items-center bg-transparent max-w-[1200px] mx-auto w-full">
-        <Link href="/" className="font-extrabold text-3xl tracking-tight text-[#4a5c53]">MoodB</Link>
-        <div className="flex gap-10 font-medium text-sm text-gray-500">
-          <Link href="/select">치유 여정(Cure)</Link>
-          <Link href="/my-situation">마이페이지</Link>
-          <Link href="#" className="text-black border-b-2 border-black pb-1">상담 챗봇</Link>
-        </div>
-        <div className="flex gap-6 items-center">
-          <button
-            onClick={handleIndexData}
-            disabled={isIndexing}
-            className="flex items-center gap-2 text-xs font-bold text-gray-600 hover:text-[#566e63] border border-gray-100 px-4 py-2 rounded-full transition-all disabled:opacity-50"
-          >
-            <Database size={14} className={isIndexing ? 'animate-spin' : ''} />
-            {isIndexing ? '데이터 분석 중...' : '맞춤형 데이터 분석'}
-          </button>
-          <Link href="/login" className="text-sm font-medium text-gray-600">로그인</Link>
-          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-[#566e63]/20">회원가입</Link>
-        </div>
-      </nav>
+      <Navbar />
 
       <main className="flex-1 flex flex-col max-w-[800px] mx-auto w-full px-6 pb-20 mt-12">
-        <header className="mb-20 flex justify-between items-start">
-          <div>
-            <span className="text-[10px] font-bold text-[#566e63] tracking-[0.2em] mb-3 block">안전한 상담 공간</span>
-            <h1 className="text-5xl font-extrabold leading-tight text-[#222]">
-              나를 돌아보는 고요한 시간<span className="italic font-serif text-[#566e63] ml-1">.</span>
+        <header className="mb-20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+          <div className="max-w-2xl px-2">
+            <span className="text-[10px] font-bold text-[#566e63] tracking-[0.2em] mb-3 block">정서 상담 인테이크 센터</span>
+            <h1 className="text-responsive-h1">
+              마음의 이야기를 <br className="sm:hidden" /> 들려주세요<span className="italic font-serif text-[#566e63] ml-1">.</span>
             </h1>
           </div>
+          {userRole === 'general' && (
+            <Link href="/questionnaire" className="bg-white border border-gray-200 text-gray-400 px-6 py-3 rounded-full text-xs font-bold hover:bg-gray-50 transition-all shadow-sm">
+              상담 건너뛰고 진단하기
+            </Link>
+          )}
         </header>
 
         <div className="flex-1 flex flex-col gap-12 mb-10">
@@ -127,13 +119,21 @@ export default function ChatPage() {
                   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg>
                 )}
               </div>
-              <div className={`p-6 rounded-[30px] text-[1.1rem] leading-relaxed max-w-[500px] shadow-sm font-medium
+              <div className={`p-4 md:p-6 rounded-[24px] md:rounded-[30px] text-sm md:text-[1.1rem] leading-relaxed max-w-[85%] sm:max-w-[500px] shadow-sm font-medium
                 ${msg.sender === 'user' ? 'bg-[#efefef] text-black rounded-tr-none' : 'bg-[#fdebda] text-black rounded-tl-none'}`}>
                 {msg.text}
               </div>
             </div>
           ))}
           <div ref={messagesEndRef} />
+          {messages.length >= 4 && (
+             <div className="mt-10 p-8 bg-[#f5ebd9]/30 border border-[#f5ebd9] rounded-[40px] text-center animate-in fade-in zoom-in-95 duration-700">
+               <p className="text-sm font-bold text-[#bfa588] mb-6">충분히 말씀해 주셨군요. 이제 당신의 마음 상태를 객관적인 수치로 측정해 볼까요?</p>
+               <Link href="/questionnaire" className="bg-[#bfa588] text-white px-10 py-4 rounded-full font-bold shadow-xl shadow-[#bfa588]/30 hover:bg-[#a68a6d] transition-all inline-flex items-center gap-2">
+                 마음의 데시벨 측정하기 <ArrowUp size={18} className="rotate-90" />
+               </Link>
+             </div>
+          )}
         </div>
 
         {/* Suggestion Chips */}
@@ -182,16 +182,7 @@ export default function ChatPage() {
         </div>
       </main>
 
-      <footer className="px-10 py-12 flex flex-col items-center gap-12 border-t border-gray-50 mt-20">
-        <div className="font-extrabold text-lg text-[#4a5c53]">MoodB</div>
-        <div className="flex gap-16 text-xs font-bold text-gray-300 uppercase tracking-widest">
-          <Link href="#" className="hover:text-black transition-colors">소개</Link>
-          <Link href="#" className="hover:text-black transition-colors">개인정보처리방침</Link>
-          <Link href="#" className="hover:text-black transition-colors">문의하기</Link>
-          <Link href="#" className="hover:text-black transition-colors">이용약관</Link>
-        </div>
-        <div className="text-[10px] text-gray-300 font-bold">© 2024 MoodB. 마음의 안식처.</div>
-      </footer>
+      <Footer />
     </div>
   )
 }

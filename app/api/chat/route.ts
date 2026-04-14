@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     
     let userContextStr = ""
     if (user) {
-      // 가장 최근 칠정 데이터 하나 가져오기
+      // 가장 최근 7가지 감정 진단 데이터 하나 가져오기
       const { data: cseiData } = await supabase.from('csei_results')
         .select('scores')
         .eq('user_id', user.id)
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         const topEmotions = cseiData[0].scores
           .sort((a: any, b: any) => b.A - a.A)
           .slice(0, 2)
-          .map((s: any) => `${s.subject} ${s.A}%`)
+          .map((s: any) => `${s.subject} ${s.A}dB`)
           .join(', ')
         userContextStr += `\n[사용자 개인 상황 요약]\n- 최근 감정 상태(높은 지표): ${topEmotions}`
       }
@@ -78,37 +78,49 @@ export async function POST(req: Request) {
     })
 
     const promptTemplate = PromptTemplate.fromTemplate(`
-      당신은 공감적이고 전문적인 인지 행동 치료(CBT) 챗봇입니다. 
-      아래 제공된 '지식 텍스트'의 치료 사례를 참고하여 사용자의 걱정이나 부정적인 생각을 부드럽게 재구성해주세요.
+      당신은 공감적이고 전문적인 심리 상담 인테이크(Intake) 담당자입니다. 
+      사용자의 현재 기분, 최근에 있었던 구체적인 사건, 그리고 그로 인한 신체적/심리적 불편함을 부드럽게 경청하여 수집하는 것이 당신의 목표입니다.
+      
+      [핵심 가이드라인]
+      1. 치료적 개입(생각 재구성 등)은 사이트 내 '인지재구성(Cure)'이나 '7가지 감정 명상' 메뉴에서 진행할 수 있도록 안내만 하세요.
+      2. 지금 이 공간은 오직 사용자가 자신의 마음을 충분히 털어놓는 상담 입력 공간임을 명심하세요.
+      3. 따뜻한 공감을 먼저 표현하고, 사용자가 말을 이어갈 수 있도록 열린 질문을 던지세요.
+      
       {userContextStr}
 
-      [지식 텍스트 (RAG)]
-      {context}
-
-      [사용자의 현재 생각]
+      [사용자의 현재 생각/상황]
       {input}
 
-      챗봇의 답변(한국어로 구체적이고 따뜻하게 작성):
+      인테이크 담당자의 답변 (기록을 위해 상냥하고 구체적으로):
     `)
 
     const chain = promptTemplate.pipe(llm).pipe(new StringOutputParser())
     const response = await chain.invoke({ context, input: message, userContextStr })
 
-    // 5. 채팅 로그를 Pinecone 'logs' 네임스페이스에 저장
-    const logDoc = [{
-      pageContent: `User: ${message}\nBot: ${response}`,
-      metadata: {
-        user_message: message,
-        bot_response: response,
-        timestamp: new Date().toISOString(),
-        type: 'chat_log',
-      },
-    }]
+    // 4.5 메시지 요약 생성 (데이터베이스 저장용)
+    const summaryPrompt = PromptTemplate.fromTemplate(`
+      아래 상담 메시지를 의료진이 빠르게 파악할 수 있도록 1문장으로 핵심만 요약해주세요.
+      메시지: {message}
+      요약:
+    `)
+    const summaryChain = summaryPrompt.pipe(llm).pipe(new StringOutputParser())
+    const summary = await summaryChain.invoke({ message })
 
-    await PineconeStore.fromDocuments(logDoc, embeddings, {
-      pineconeIndex,
-      namespace: 'logs',
-    })
+    // 5. 상담 내용을 Supabase에 자동 기록 (전체 내용 + 요약본)
+    if (user) {
+      try {
+        await supabase.from('counseling_logs').insert([{
+          user_id: user.id,
+          user_message: message, // 전체 내용
+          summary_content: summary, // 요약 내용 (추가됨)
+          bot_response: response,
+          context_summary: userContextStr || '초기 상담',
+          created_at: new Date().toISOString()
+        }])
+      } catch (err) {
+        console.error('Logging to Supabase failed:', err)
+      }
+    }
 
     return NextResponse.json({ response })
   } catch (error: any) {
