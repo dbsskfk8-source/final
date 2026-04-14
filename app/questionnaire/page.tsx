@@ -174,7 +174,7 @@ export default function QuestionnairePage() {
   const progress = currentStep < 0 ? 0 : ((currentStep + 1) / QUESTIONS.length) * 100
 
   return (
-    <div className="min-h-screen flex bg-[#faf8f5] text-[#333] font-sans selection:bg-[#bfa588]/20">
+    <div className="min-h-screen flex bg-[#faf8f5] text-[#333] font-sans selection:bg-[#bfa588]/20 overflow-x-hidden w-full relative">
       
       {/* Sidebar (Desktop) */}
       <aside className="hidden lg:flex flex-col w-[260px] bg-[#fdfbf7] border-r border-[#e8e0d5] fixed h-full z-20 overflow-y-auto">
@@ -216,7 +216,7 @@ export default function QuestionnairePage() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:ml-[260px] flex flex-col relative pb-[120px] min-h-screen">
+      <div className="flex-1 min-w-0 w-full lg:ml-[260px] flex flex-col relative pb-[120px] min-h-screen">
         
         {/* Top Navbar */}
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-[#e8e0d5] px-6 lg:px-10 py-5 flex flex-col sm:flex-row gap-4 sm:gap-0 sm:items-center justify-between">

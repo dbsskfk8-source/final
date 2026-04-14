@@ -192,9 +192,9 @@ function ResultContent() {
                 <p className="text-sm font-medium text-gray-500 mt-2">당신의 마음을 구성하는 7가지 요소</p>
               </div>
             </div>
-            <div className="w-full max-w-lg h-[400px]">
+            <div className="w-full max-w-lg h-[350px] md:h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={scores}>
+                <RadarChart cx="50%" cy="50%" outerRadius="60%" data={scores}>
                   <PolarGrid stroke="#e5e7eb" strokeDasharray="3 3" />
                   <PolarAngleAxis 
                     dataKey="subject" 
