@@ -338,8 +338,8 @@ export default function MySituationPage() {
                 return (
                   <div key={idx} className={`${bgColor} rounded-xl sm:rounded-3xl py-2 sm:py-4 px-1 sm:px-6 text-center border ${borderColor} shadow-sm transition-all hover:scale-105`}>
                     <div className={`text-base sm:text-2xl font-extrabold ${textColor}`}>{item.A}</div>
-                    <div className="text-sm sm:text-base font-bold text-gray-600 tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 uppercase truncate">
-                      {item.subject.replace(/[^가-힣]/g, '')}
+                    <div className="text-sm sm:text-base font-bold text-gray-600 tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 uppercase truncate font-black">
+                      {item.subject}
                     </div>
                     <div className={`mt-1.5 px-3 py-1 rounded-full text-xs font-bold ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
                        {groupLabel}

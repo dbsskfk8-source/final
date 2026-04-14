@@ -267,48 +267,23 @@ function ReportContent() {
           </section>
 
           {/* Section C: Recommendations */}
-          <section>
+           <section>
             <h2 className="flex items-center gap-3 text-2xl font-extrabold mb-6 border-b border-gray-200 pb-3">
               <span className="bg-[#4a5c53] text-white w-8 h-8 flex items-center justify-center rounded-full text-sm">C</span>
               권장 가이드라인
             </h2>
-            <div className="bg-[#e8efe9] p-6 sm:p-8 rounded-3xl border border-[#d0dfd3]">
-              <ul className="space-y-4">
-                {riskItems.length > 0 ? (
-                  <>
-                    <li className="flex gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#566e63] mt-2.5 shrink-0" />
-                      <span className="text-base text-[#333] font-medium leading-relaxed"><strong>인지재구성 훈련 필수:</strong> 즉각적으로 상황을 다르게 보는 시각 교정 훈련이 요구됩니다. 우측 상단의 '인지재구성(Cure)' 메뉴를 활용하십시오.</span>
-                    </li>
-                    <li className="flex gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#566e63] mt-2.5 shrink-0" />
-                      <span className="text-base text-[#333] font-medium leading-relaxed"><strong>전문의 상담 검토:</strong> 단기간 내 감정 수치가 안정되지 않을 경우 심리 상담 센터 혹은 관련 전문의 방문을 권장합니다.</span>
-                    </li>
-                  </>
-                ) : cautionItems.length > 0 ? (
-                  <>
-                    <li className="flex gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#566e63] mt-2.5 shrink-0" />
-                      <span className="text-base text-[#333] font-medium leading-relaxed"><strong>예방적 심리 안정:</strong> 스트레스 유발 환경에서 잠시 벗어나 명상이나 호흡법을 실천해 보세요.</span>
-                    </li>
-                    <li className="flex gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#566e63] mt-2.5 shrink-0" />
-                      <span className="text-base text-[#333] font-medium leading-relaxed"><strong>자가 점검 강화:</strong> 향후 1주일 뒤 재검사를 통해 주의 감정이 위험 단계로 넘어가지 않았는지 확인하시기 바랍니다.</span>
-                    </li>
-                  </>
-                ) : (
-                  <>
-                    <li className="flex gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#566e63] mt-2.5 shrink-0" />
-                      <span className="text-base text-[#333] font-medium leading-relaxed"><strong>현상 유지:</strong> 이상적인 감정 마인드셋을 잘 유지하고 있습니다. 현재의 루틴을 변동 없이 지속해 주십시오.</span>
-                    </li>
-                    <li className="flex gap-3">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#566e63] mt-2.5 shrink-0" />
-                      <span className="text-base text-[#333] font-medium leading-relaxed"><strong>정기 점검:</strong> 1개월 단위의 정기적인 검사를 통해 예방적 심신 관리를 지속하시길 바랍니다.</span>
-                    </li>
-                  </>
-                )}
-              </ul>
+            <div className="bg-[#e8efe9] p-8 md:p-10 rounded-3xl border border-[#d0dfd3] relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-8 opacity-5">
+                  <BrainCircuit size={120} />
+               </div>
+               <p className="text-lg sm:text-xl text-[#333] leading-loose font-medium break-keep relative z-10">
+                 "감정은 흐름입니다. 하나의 감정에 매몰되는 것이 문제 감정입니다. 다른 감정으로 대체할 수 있도록, 자연스러운 흐름과 상호견제에 의해서 나의 감정은 흘러갑니다. 현재의 핵심 감정을 다른 감정으로 옮기는 방법이 오지상승요법입니다. 나의 감정 상태에 맞는 오지상승요법을 MoodB 명상으로 만나보세요."
+               </p>
+               <div className="mt-10 flex border-t border-[#d0dfd3] pt-8">
+                  <Link href="/select" className="bg-[#566e63] text-white px-8 py-3.5 rounded-full font-bold shadow-lg hover:bg-[#43574d] transition-all flex items-center gap-2">
+                     <HeartPulse size={18} /> 지금 바로 치유 명상 시작하기
+                  </Link>
+               </div>
             </div>
           </section>
 

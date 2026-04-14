@@ -220,12 +220,12 @@ function ResultContent() {
                 key={idx} 
                 className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${GROUP_COLOR[score.group]} transition-all`}
               >
-                <span className="text-sm font-bold tracking-widest text-[#566e63] mb-2 truncate max-w-full">
+                <span className="text-lg font-extrabold tracking-tight text-[#566e63] mb-2 truncate max-w-full">
                   {score.subject.replace(/[^가-힣]/g, '') || score.subject}
                 </span>
                 <div className="flex items-center gap-1.5 mb-2">
                    <span className="px-1.5 py-0.5 bg-white/50 rounded text-[10px] font-black text-gray-400">dB</span>
-                   <span className="text-2xl font-extrabold">{score.A}</span>
+                   <span className="text-3xl font-black">{score.A}</span>
                 </div>
                 <div className={`text-[10px] font-black px-2 py-0.5 rounded-full bg-white/60 ${GROUP_TEXT_COLOR[score.group]} whitespace-nowrap`}>
                   {score.groupLabel}
@@ -406,8 +406,8 @@ function ResultContent() {
                   key={idx}
                   className="w-full sm:w-[280px] bg-white border-2 border-[#eaeced] hover:border-[#566e63] rounded-[24px] p-8 text-center group hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center"
                 >
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center font-black text-xl mb-4 ${GROUP_COLOR[score.group]}`}>
-                    {score.subject.replace(/[^가-힣]/g, '')[0]}
+                  <div className={`w-full py-4 rounded-2xl flex items-center justify-center font-black text-xl mb-4 ${GROUP_COLOR[score.group]}`}>
+                    {score.subject}
                   </div>
                   <h3 className="text-lg font-extrabold text-[#222] mb-2">{score.subject}</h3>
                   <div className={`text-xs font-bold mb-6 ${GROUP_TEXT_COLOR[score.group]}`}>{score.groupLabel} 상태</div>

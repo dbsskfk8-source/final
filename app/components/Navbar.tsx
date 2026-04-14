@@ -70,7 +70,21 @@ export default function Navbar() {
         <div className="hidden lg:flex items-center gap-6">
           {user ? (
             <div className="flex items-center gap-6 font-bold">
-              <span className="text-gray-400 text-sm tracking-widest">{user.user_metadata?.full_name || 'wwww'}</span>
+              {/* Point Display for Users */}
+              <div className="flex items-center gap-2 bg-[#f0f4f1] px-4 py-2 rounded-full border border-[#e8efe9] group cursor-pointer hover:bg-[#566e63] transition-all">
+                <div className="w-5 h-5 rounded-full bg-[#566e63] group-hover:bg-white flex items-center justify-center text-white group-hover:text-[#566e63] text-[10px]">P</div>
+                <span className="text-xs text-[#566e63] group-hover:text-white">마음 점수: <span className="font-black">5,000 dB</span></span>
+                <div className="hidden group-hover:block absolute top-14 right-40 bg-white shadow-2xl p-4 rounded-2xl w-64 border border-gray-100 z-[120] text-left">
+                   <p className="text-[#222] text-sm mb-2 font-black">✨ 포인트 활용 가이드</p>
+                   <p className="text-gray-500 text-[11px] leading-relaxed font-bold">
+                     - 매일 진단 시 100P 적립<br/>
+                     - CBT 완료 시 500P 적립<br/>
+                     - 적립된 포인트로 프리미엄 명상 해금!
+                   </p>
+                </div>
+              </div>
+              
+              <span className="text-gray-400 text-sm tracking-widest">{user.user_metadata?.full_name || '로그인 중'}</span>
               <button 
                 onClick={handleLogout}
                 className="flex items-center gap-2 text-gray-400 hover:text-black transition-colors text-sm"
@@ -83,9 +97,17 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-6">
+              {/* Login Incentive for Guests */}
+              <div className="animate-bounce-subtle bg-[#bfa588]/10 text-[#bfa588] px-4 py-2 rounded-full text-[10px] font-black border border-[#bfa588]/20 flex items-center gap-2">
+                 <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#bfa588] opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#bfa588]"></span>
+                 </span>
+                 로그인하고 5,000P 받기 ✨
+              </div>
               <Link href="/login" className="text-sm font-bold hover:text-black">로그인</Link>
               <Link href="/login" className="bg-[#566e63] text-white px-6 py-2 rounded-full text-xs font-black shadow-lg shadow-[#566e63]/20 hover:bg-[#4a5c53] transition-all">
-                마이페이지
+                회원가입
               </Link>
             </div>
           )}
