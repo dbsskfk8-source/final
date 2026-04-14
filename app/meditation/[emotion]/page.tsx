@@ -367,7 +367,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
                 <h3 className="font-extrabold text-[#222] mb-4 text-lg">심리학적 템플릿 스크립트</h3>
                 <div className="space-y-4">
                   {activeScripts.map((line, idx) => (
-                    <div key={idx} className={`p-4 rounded-xl text-sm leading-relaxed font-medium transition-colors ${currentTimeSec >= line.time ? 'bg-[#566e63]/10 text-[#222] font-bold border border-[#566e63]/20' : 'text-gray-400'}`}>
+                    <div key={idx} className={`p-4 rounded-xl text-sm leading-relaxed font-medium transition-colors ${currentSegmentIndex >= idx ? 'bg-[#566e63]/10 text-[#222] font-bold border border-[#566e63]/20' : 'text-gray-400'}`}>
                       {line.text}
                     </div>
                   ))}
