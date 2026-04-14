@@ -211,14 +211,14 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
     utterance.lang = 'ko-KR'
     
     // 동적 Rate 계산 (end time이 있는 경우 성우 템포 재현)
-    let dynamicRate = 0.8
+    let dynamicRate = 1.0
     if (script.endTime) {
        const durationSec = script.endTime - script.time
-       // 한국어 평균 초당 글자 수 기준 (약 5~7자)
-       const charsPerSec = script.text.length / durationSec
-       const targetRate = charsPerSec / 6.0
-       // 너무 빠르거나 느리지 않게 limit
-       dynamicRate = Math.max(0.6, Math.min(1.4, targetRate * 0.8))
+       // 한국어 일반 발화 기준 (초당 약 5.5자 = 1.0 rate)
+       const charsPerSec = script.text.length / (durationSec || 1)
+       const targetRate = charsPerSec / 5.5
+       // 성우의 아주 느린 호흡까지 수용하도록 범위 확장 (0.3 ~ 2.0)
+       dynamicRate = Math.max(0.3, Math.min(2.0, targetRate))
     }
     
     utterance.rate = dynamicRate
