@@ -110,7 +110,7 @@ export default function MySituationPage() {
 
         const combined: HistoryLog[] = []
         if (dbCsei) {
-          dbCsei.forEach((item: any) => {
+          dbCsei.forEach(item => {
             const topEmotion = [...item.scores].sort((a: any, b: any) => b.A - a.A)[0]
             combined.push({
               id: `csei-${item.id}`,
@@ -124,7 +124,7 @@ export default function MySituationPage() {
           })
         }
         if (dbCure) {
-          dbCure.forEach((c: any) => {
+          dbCure.forEach(c => {
             combined.push({
               id: c.id,
               date: new Date(c.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase(),
@@ -196,23 +196,21 @@ export default function MySituationPage() {
   return (
     <div className="min-h-screen bg-[#fffdfa] text-[#333] font-sans selection:bg-[#566e63]/20">
       <nav className="border-b border-gray-100 px-6 md:px-10 py-6 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <Link href="/" className="font-extrabold text-3xl md:text-4xl text-[#566e63] tracking-tighter">MoodB</Link>
-        <div className="hidden md:flex gap-12 font-medium text-base text-gray-500">
-           <Link href="/about" className="hover:text-black font-bold text-base">MoodB 소개</Link>
-           <Link href="/select" className="hover:text-black text-base transition-colors">인지재구성(Cure)</Link>
-           <Link href="/my-situation" className="text-[#566e63] font-bold text-base border-b-2 border-[#566e63] pb-1">마이페이지</Link>
-           <Link href="/chat" className="hover:text-black text-base transition-colors">심리상담 챗봇</Link>
-           <Link href="/dashboard" className="text-[#bfa588] hover:text-[#a68a6d] font-bold text-base">관리자 뷰어</Link>
+        <Link href="/" className="font-extrabold text-2xl text-[#4a5c53] tracking-tighter">파이널 서비스</Link>
+        <div className="hidden md:flex gap-12 text-[10px] font-extrabold tracking-[0.2em] text-gray-600">
+           <Link href="/select" className="hover:text-[#566e63] transition-colors">인지재구성(Cure)</Link>
+           <Link href="/my-situation" className="text-[#566e63] border-b-2 border-[#566e63] pb-1">마이페이지</Link>
+           <Link href="/chat" className="hover:text-[#566e63] transition-colors">심리상담 챗봇</Link>
         </div>
         {!isGuest ? (
           <button onClick={logout} className="flex items-center gap-2 group">
-             <div className="w-10 md:w-12 h-10 md:h-12 rounded-full bg-[#f0f2f0] flex items-center justify-center text-[#566e63] group-hover:bg-[#566e63] group-hover:text-white transition-all overflow-hidden shadow-inner">
-               <LogOut size={18} />
+             <div className="w-10 h-10 rounded-full bg-[#f0f2f0] flex items-center justify-center text-[#566e63] group-hover:bg-[#566e63] group-hover:text-white transition-all overflow-hidden shadow-inner">
+               <LogOut size={16} />
              </div>
-             <span className="text-sm font-bold text-gray-600 group-hover:text-[#566e63] hidden sm:inline">로그아웃</span>
+             <span className="text-[10px] font-bold text-gray-600 group-hover:text-[#566e63] hidden sm:inline">로그아웃</span>
           </button>
         ) : (
-          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2.5 rounded-full text-sm font-bold tracking-widest hover:bg-[#43574d] hover:-translate-y-0.5 transition-all shadow-lg active:scale-95">로그인 / 회원가입</Link>
+          <Link href="/login" className="bg-[#566e63] text-white px-6 py-2.5 rounded-full text-[10px] font-bold tracking-widest hover:bg-[#43574d] hover:-translate-y-0.5 transition-all shadow-lg active:scale-95">로그인 / 회원가입</Link>
         )}
       </nav>
 
@@ -353,7 +351,7 @@ export default function MySituationPage() {
                 {viewMode === 'radar' ? (
                   <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radar}>
                     <PolarGrid stroke="#e5e7eb" strokeDasharray="3 3" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#4a5c53', fontSize: 14, fontWeight: 'bold' }} />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#4a5c53', fontSize: 10, fontWeight: 'bold' }} />
                     <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
                     
                     {/* 가이드 영역 (정상 범위: 40~60) */}
@@ -377,14 +375,14 @@ export default function MySituationPage() {
                           if (!data.subject) return null;
                           return (
                             <div className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl border border-gray-100 animate-in zoom-in-95 duration-200">
-                              <p className="text-sm font-bold text-gray-600 mb-1 tracking-widest uppercase">{data.subject}</p>
+                              <p className="text-[10px] font-bold text-gray-600 mb-1 tracking-widest uppercase">{data.subject}</p>
                               <div className="flex items-baseline gap-2 mb-2">
                                 <span className="text-2xl font-extrabold text-[#4a5c53]">{data.A}</span>
-                                <span className="text-sm font-bold text-[#566e63]">T-score</span>
+                                <span className="text-[10px] font-bold text-[#566e63]">T-score</span>
                               </div>
                               <div className="pt-2 border-t border-gray-50 flex flex-col gap-1">
-                                <p className="text-sm font-bold text-gray-500">원점수: <span className="text-[#222]">{data.rawScore}점</span></p>
-                                <p className="text-sm font-bold text-gray-500">상태: <span className={data.group === 'risk' ? 'text-red-500' : data.group === 'caution' ? 'text-amber-500' : 'text-green-600'}>{data.groupLabel}</span></p>
+                                <p className="text-[11px] font-bold text-gray-500">원점수: <span className="text-[#222]">{data.rawScore}점</span></p>
+                                <p className="text-[11px] font-bold text-gray-500">상태: <span className={data.group === 'risk' ? 'text-red-500' : data.group === 'caution' ? 'text-amber-500' : 'text-green-600'}>{data.groupLabel}</span></p>
                               </div>
                             </div>
                           );
@@ -398,20 +396,20 @@ export default function MySituationPage() {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f1f1" />
                     
                     {/* 구간별 배경 색상 (ReferenceArea) */}
-                    <ReferenceArea y1={40} y2={60} fill="#22c55e" fillOpacity={0.10} label={{ position: 'insideRight', value: '정상', fill: '#16a34a', fontSize: 14, fontWeight: 'bold' }} />
-                    <ReferenceArea y1={60} y2={70} fill="#f59e0b" fillOpacity={0.10} label={{ position: 'insideRight', value: '주의', fill: '#d97706', fontSize: 14, fontWeight: 'bold' }} />
+                    <ReferenceArea y1={40} y2={60} fill="#22c55e" fillOpacity={0.10} label={{ position: 'insideRight', value: '정상', fill: '#16a34a', fontSize: 10, fontWeight: 'bold' }} />
+                    <ReferenceArea y1={60} y2={70} fill="#f59e0b" fillOpacity={0.10} label={{ position: 'insideRight', value: '주의', fill: '#d97706', fontSize: 10, fontWeight: 'bold' }} />
                     <ReferenceArea y1={30} y2={40} fill="#f59e0b" fillOpacity={0.10} />
-                    <ReferenceArea y1={70} y2={100} fill="#ef4444" fillOpacity={0.07} label={{ position: 'insideRight', value: '위험', fill: '#dc2626', fontSize: 14, fontWeight: 'bold' }} />
+                    <ReferenceArea y1={70} y2={100} fill="#ef4444" fillOpacity={0.07} label={{ position: 'insideRight', value: '위험', fill: '#dc2626', fontSize: 10, fontWeight: 'bold' }} />
                     <ReferenceArea y1={0} y2={30} fill="#ef4444" fillOpacity={0.07} />
                     
-                    <XAxis dataKey="name" tick={{ fontSize: 14, fill: '#999', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 14, fill: '#999' }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', fontSize: '14px' }} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#999', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#999' }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', fontSize: '12px' }} />
                     <Legend 
                       verticalAlign="bottom" 
                       align="center" 
                       onClick={handleLegendClick} 
-                      wrapperStyle={{ paddingTop: '40px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold' }} 
+                      wrapperStyle={{ paddingTop: '40px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }} 
                     />
                     <Line type="monotone" name="희 (喜)" dataKey="희 (喜)" hide={hiddenSeries.includes('희 (喜)')} stroke="#8884d8" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                     <Line type="monotone" name="노 (怒)" dataKey="노 (怒)" hide={hiddenSeries.includes('노 (怒)')} stroke="#ff8042" strokeWidth={3} dot={{ r: 4 }} />
@@ -436,10 +434,10 @@ export default function MySituationPage() {
                 return (
                   <div key={idx} className={`${bgColor} rounded-xl sm:rounded-3xl py-2 sm:py-4 px-1 sm:px-6 text-center border ${borderColor} shadow-sm transition-all hover:scale-105`}>
                     <div className={`text-base sm:text-2xl font-extrabold ${textColor}`}>{item.A}</div>
-                    <div className="text-sm sm:text-base font-bold text-gray-600 tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 uppercase truncate">
+                    <div className="text-[8px] sm:text-[10px] font-bold text-gray-600 tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 uppercase truncate">
                       {item.subject.replace(/[^가-힣]/g, '')}
                     </div>
-                    <div className={`mt-1.5 px-3 py-1 rounded-full text-sm font-bold ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                    <div className={`hidden sm:inline-block text-[9px] font-bold mt-1.5 px-2 py-0.5 rounded-full ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
                        {groupLabel}
                     </div>
                   </div>
@@ -523,8 +521,8 @@ export default function MySituationPage() {
 
       <footer className="border-t border-gray-100 px-6 md:px-10 py-16 flex flex-col md:flex-row justify-between items-center gap-8 mt-20 bg-white">
         <div>
-          <div className="font-extrabold text-lg mb-1 text-[#4a5c53] tracking-tighter">MoodB</div>
-          <p className="text-[10px] text-gray-600 font-medium">© 2024 MoodB. 마음의 안식처.</p>
+          <div className="font-extrabold text-lg mb-1 text-[#4a5c53] tracking-tighter">파이널 서비스</div>
+          <p className="text-[10px] text-gray-600 font-medium">© 2024 파이널 서비스. 마음의 안식처.</p>
         </div>
         <div className="flex gap-12 text-[10px] font-extrabold text-gray-600 uppercase tracking-[0.2em]">
           <Link href="#" className="hover:text-[#566e63] transition-colors">소개</Link>
