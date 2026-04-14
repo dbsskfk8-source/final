@@ -1,526 +1,261 @@
 'use client'
 
-
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { ArrowLeft, Search, Filter, Activity, Users, FileText, ChevronDown, Bell, CheckCircle2, AlertCircle, X } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
-import { isClinician } from '@/utils/clinician'
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  Legend, ReferenceArea, ResponsiveContainer,
-  PieChart, Pie, Cell
-} from 'recharts'
-import {
-  Users, User, FileText, TrendingUp,
-  CheckCircle2, AlertCircle, LogOut, ChevronRight,
-  Calendar, Stethoscope, ClipboardList, Save, Shield
-} from 'lucide-react'
 
-// ─── 더미 환자 데이터 (DB 연동 전 임시) ───────────────────────────────────
-const DUMMY_PATIENTS = [
-  {
-    id: 'p1',
-    name: '홍길동',
-    diagnosis: '범불안장애 (GAD)',
-    age: 30,
-    gender: '남',
-    doctor: '김정신 원장',
-    sessions: 6,
-    lastVisit: '2026-03-28',
-    userId: null, // 실제 연동 시 Supabase user ID 입력
-  },
-  {
-    id: 'p2',
-    name: '김영희',
-    diagnosis: '주요우울장애 (MDD)',
-    age: 28,
-    gender: '여',
-    doctor: '이상담 원장',
-    sessions: 4,
-    lastVisit: '2026-03-25',
-    userId: null,
-  },
-  {
-    id: 'p3',
-    name: '이수현',
-    diagnosis: '적응장애',
-    age: 45,
-    gender: '여',
-    doctor: '박심리 원장',
-    sessions: 3,
-    lastVisit: '2026-03-20',
-    userId: null,
-  },
+// Mock Data for Patients
+const MOCK_PATIENTS = [
+  { id: 'PT-10023', name: '김하늘', age: 28, gender: '여성', lastTest: '2023-11-20', riskEmotion: '분노', tScore: 78, status: '위험', cbtProgress: 40 },
+  { id: 'PT-10045', name: '이바다', age: 34, gender: '남성', lastTest: '2023-11-19', riskEmotion: '우울', tScore: 65, status: '주의', cbtProgress: 80 },
+  { id: 'PT-10046', name: '박태양', age: 41, gender: '남성', lastTest: '2023-11-18', riskEmotion: '두려움', tScore: 82, status: '위험', cbtProgress: 20 },
+  { id: 'PT-10051', name: '최별빛', age: 25, gender: '여성', lastTest: '2023-11-15', riskEmotion: '슬픔', tScore: 59, status: '정상', cbtProgress: 100 },
+  { id: 'PT-10088', name: '정우주', age: 52, gender: '여성', lastTest: '2023-11-10', riskEmotion: '생각', tScore: 71, status: '위험', cbtProgress: 0 },
 ]
 
-// 더미 설문 결과 (T-score 시계열)
-const DUMMY_TREND: Record<string, any[]> = {
-  p1: [
-    { name: '1회차', '희(喜)': 82, '노(怒)': 73, '사(思)': 61, '우(憂)': 43, '비(悲)': 67, '공(恐)': 72, '경(驚)': 78 },
-    { name: '2회차', '희(喜)': 75, '노(怒)': 68, '사(思)': 59, '우(憂)': 48, '비(悲)': 70, '공(恐)': 65, '경(驚)': 71 },
-    { name: '3회차', '희(喜)': 70, '노(怒)': 62, '사(思)': 55, '우(憂)': 52, '비(悲)': 65, '공(恐)': 61, '경(驚)': 66 },
-    { name: '4회차', '희(喜)': 66, '노(怒)': 58, '사(思)': 53, '우(憂)': 55, '비(悲)': 62, '공(恐)': 57, '경(驚)': 62 },
-    { name: '5회차', '희(喜)': 63, '노(怒)': 55, '사(思)': 50, '우(憂)': 57, '비(悲)': 59, '공(恐)': 54, '경(驚)': 59 },
-    { name: '6회차', '희(喜)': 60, '노(怒)': 52, '사(思)': 49, '우(憂)': 55, '비(悲)': 55, '공(恐)': 51, '경(驚)': 56 },
-  ],
-  p2: [
-    { name: '1회차', '희(喜)': 38, '노(怒)': 55, '사(思)': 72, '우(憂)': 78, '비(悲)': 75, '공(恐)': 63, '경(驚)': 58 },
-    { name: '2회차', '희(喜)': 41, '노(怒)': 52, '사(思)': 68, '우(憂)': 74, '비(悲)': 71, '공(恐)': 60, '경(驚)': 55 },
-    { name: '3회차', '희(喜)': 45, '노(怒)': 50, '사(思)': 64, '우(憂)': 69, '비(悲)': 68, '공(恐)': 57, '경(驚)': 53 },
-    { name: '4회차', '희(喜)': 49, '노(怒)': 48, '사(思)': 61, '우(憂)': 63, '비(悲)': 64, '공(恐)': 54, '경(驚)': 51 },
-  ],
-  p3: [
-    { name: '1회차', '희(喜)': 52, '노(怒)': 65, '사(思)': 71, '우(憂)': 68, '비(悲)': 63, '공(恐)': 55, '경(驚)': 50 },
-    { name: '2회차', '희(喜)': 54, '노(怒)': 61, '사(思)': 67, '우(憂)': 63, '비(悲)': 60, '공(恐)': 53, '경(驚)': 49 },
-    { name: '3회차', '희(喜)': 56, '노(怒)': 58, '사(思)': 63, '우(憂)': 59, '비(悲)': 57, '공(恐)': 51, '경(驚)': 49 },
-  ],
-}
-
-// 더미 상담 기록
-const DUMMY_SESSIONS: Record<string, any[]> = {
-  p1: [
-    { id: 's6', seq: 6, date: '2026-03-28', type: 'CSEI-s 진단', summary: '전반적 수치 개선. 공(恐) 지표 주의 → 정상 진입.', memo: '' },
-    { id: 's5', seq: 5, date: '2026-03-14', type: '인지재구성', summary: '과도한 일반화, 독심술 패턴 식별. 재구성 3회 수행.', memo: '자기 효능감 조금씩 회복. 다음 회차에 행동 실험 과제 부여 예정.' },
-    { id: 's4', seq: 4, date: '2026-03-07', type: 'CSEI-s 진단', summary: '노(怒) 지표 위험→주의 개선. 우(憂) 안정.', memo: '' },
-    { id: 's3', seq: 3, date: '2026-02-28', type: '인지재구성', summary: '흑백논리, 점치기 패턴 발견. 균형 잡힌 사고 연습.', memo: '예상보다 빠른 인지적 유연성 증가.' },
-    { id: 's2', seq: 2, date: '2026-02-14', type: 'CSEI-s 진단', summary: '전반 수치 소폭 개선. 유지 수준.', memo: '' },
-    { id: 's1', seq: 1, date: '2026-02-07', type: 'CSEI-s 진단', summary: '초기 평가. 노(怒) 73, 공(恐) 72 주의 수준.', memo: '초기 신뢰 관계 형성에 집중. 일지 작성 권고.' },
-  ],
-  p2: [
-    { id: 's4', seq: 4, date: '2026-03-25', type: 'CSEI-s 진단', summary: '우(憂) 63으로 하락. 희(喜) 49 주의 진입.', memo: '' },
-    { id: 's3', seq: 3, date: '2026-03-11', type: '인지재구성', summary: '내탓하기, 감정적 추론 패턴 반복 확인.', memo: '자기 비판적 사고 빈도 증가. 행동 활성화 계획 수립.' },
-    { id: 's2', seq: 2, date: '2026-02-25', type: 'CSEI-s 진단', summary: '초기 대비 우(憂) 소폭 감소.', memo: '' },
-    { id: 's1', seq: 1, date: '2026-02-11', type: 'CSEI-s 진단', summary: '초기 평가. 우(憂) 78, 비(悲) 75 위험 수준.', memo: '약물치료 병행 중. 인지 개입 동시 진행.' },
-  ],
-  p3: [
-    { id: 's3', seq: 3, date: '2026-03-20', type: 'CSEI-s 진단', summary: '전반적 소폭 개선. 사(思) 63으로 감소.', memo: '' },
-    { id: 's2', seq: 2, date: '2026-03-06', type: '인지재구성', summary: '당위적 사고, 개인화 패턴 인식.', memo: '직장 내 스트레스 요인 구체화. 경계 설정 교육 필요.' },
-    { id: 's1', seq: 1, date: '2026-02-20', type: 'CSEI-s 진단', summary: '초기 평가. 사(思) 71, 노(怒) 65 주의 수준.', memo: '적응 스트레스 주 원인: 이직 후 환경 변화.' },
-  ],
-}
-
-// ─── T-score 재사용 유틸 ───────────────────────────────────────────────────
-const INDICATORS = ['희(喜)', '노(怒)', '사(思)', '우(憂)', '비(悲)', '공(恐)', '경(驚)']
-const LINE_COLORS = ['#8884d8', '#ff8042', '#ffbb28', '#82ca9d', '#0088fe', '#b0b5bd', '#9b59b6']
-
-function classifyTScore(t: number): 'normal' | 'caution' | 'risk' {
-  if (t < 30 || t > 70) return 'risk'
-  if ((t >= 30 && t <= 40) || (t >= 60 && t <= 70)) return 'caution'
-  return 'normal'
-}
-
-const GROUP_COLOR = { normal: '#22c55e', caution: '#f59e0b', risk: '#ef4444' }
-const GROUP_LABEL = { normal: '정상', caution: '주의', risk: '위험' }
-const GROUP_BG    = { normal: 'bg-green-50 text-green-700 border-green-100', caution: 'bg-amber-50 text-amber-700 border-amber-100', risk: 'bg-red-50 text-red-600 border-red-100' }
-
-// ─── 메인 컴포넌트 ────────────────────────────────────────────────────────
 export default function DashboardPage() {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedPatient, setSelectedPatient] = useState<any>(null)
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
   const router = useRouter()
-  const [authChecked, setAuthChecked] = useState(false)
-  const [clinicianEmail, setClinicianEmail] = useState('')
-  const [selectedPatientId, setSelectedPatientId] = useState('p1')
-  const [memos, setMemos] = useState<Record<string, string>>({})
-  const [savedMemos, setSavedMemos] = useState<Record<string, boolean>>({})
-  const [hiddenLines, setHiddenLines] = useState<string[]>([])
 
-  // ── 접근 제어 ──────────────────────────────────────────────────────────
   useEffect(() => {
-    async function checkAuth() {
+    const checkAuth = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) {
-        router.replace('/login')
-        return
-      }
-
-      if (!isClinician(user.email)) {
-        router.replace('/')
-        return
-      }
-
-      setClinicianEmail(user.email ?? '')
-      setAuthChecked(true)
+      
+      // Temporary bypass for user request
+      setIsAuthorized(true)
     }
     checkAuth()
-  }, [router])
+  }, [])
 
-  const logout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/')
-  }
+  const filteredPatients = MOCK_PATIENTS.filter(p => p.name.includes(searchTerm) || p.id.includes(searchTerm))
 
-  // ── 선택된 환자 데이터 ─────────────────────────────────────────────────
-  const patient = DUMMY_PATIENTS.find(p => p.id === selectedPatientId)!
-  const trendData = DUMMY_TREND[selectedPatientId] || []
-  const sessions = DUMMY_SESSIONS[selectedPatientId] || []
-
-  // 최신 회차의 T-score 분류
-  const latestTrend = trendData[trendData.length - 1] || {}
-  const indicatorStatuses = INDICATORS.map(name => ({
-    name,
-    score: latestTrend[name] ?? 50,
-    group: classifyTScore(latestTrend[name] ?? 50),
-  }))
-  const riskCount    = indicatorStatuses.filter(i => i.group === 'risk').length
-  const cautionCount = indicatorStatuses.filter(i => i.group === 'caution').length
-  const normalCount  = indicatorStatuses.filter(i => i.group === 'normal').length
-  const donutData = [
-    { name: '정상', value: normalCount,  color: GROUP_COLOR.normal  },
-    { name: '주의', value: cautionCount, color: GROUP_COLOR.caution },
-    { name: '위험', value: riskCount,    color: GROUP_COLOR.risk    },
-  ].filter(d => d.value > 0)
-
-  const overallWorst = riskCount > 0 ? 'risk' : cautionCount > 0 ? 'caution' : 'normal'
-
-  // ── 메모 관련 ──────────────────────────────────────────────────────────
-  const handleMemoChange = (sessionId: string, value: string) => {
-    setMemos(prev => ({ ...prev, [sessionId]: value }))
-    setSavedMemos(prev => ({ ...prev, [sessionId]: false }))
-  }
-
-  const handleMemoSave = (sessionId: string) => {
-    // TODO: Supabase 연동 시 여기에 upsert 로직 추가
-    console.log('메모 저장 (더미):', sessionId, memos[sessionId])
-    setSavedMemos(prev => ({ ...prev, [sessionId]: true }))
-    setTimeout(() => setSavedMemos(prev => ({ ...prev, [sessionId]: false })), 2000)
-  }
-
-  const handleLineLegendClick = (e: any) => {
-    const key = e.dataKey
-    setHiddenLines(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
-  }
-
-  // ── 로딩/권한 체크 중 ─────────────────────────────────────────────────
-  if (!authChecked) {
+  if (isAuthorized === false) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full border-4 border-[#566e63] border-t-transparent animate-spin" />
-          <p className="text-sm font-bold text-gray-500">권한을 확인하는 중...</p>
+      <div className="min-h-screen bg-[#faf8f5] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 bg-red-50 text-red-400 rounded-full flex items-center justify-center mb-6">
+          <AlertCircle size={40} />
         </div>
+        <h1 className="text-3xl font-extrabold text-[#222] mb-4">접근 제한</h1>
+        <p className="text-gray-500 font-medium mb-8">
+          이 페이지는 의료진(Doctor) 권한이 있는 사용자만 접근할 수 있습니다.<br/>
+          (로그인 시 '의료인' 계정으로 로그인해 주세요.)
+        </p>
+        <button onClick={() => router.push('/')} className="bg-[#566e63] text-white px-8 py-3 rounded-xl font-bold">
+          메인 페이지로 돌아가기
+        </button>
       </div>
     )
   }
 
-  // ── 렌더링 ─────────────────────────────────────────────────────────────
+  // 아직 로딩중일 때 빈 화면
+  if (isAuthorized === null) return <div className="min-h-screen bg-[#f3ede1]"></div>
+
   return (
-    <div className="min-h-screen bg-[#f0f2f1] font-sans text-[#222]">
-
-      {/* ── HEADER ─────────────────────────────────────────────────────── */}
-      <header className="bg-[#2d3e35] text-white px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-xl">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#566e63] rounded-lg flex items-center justify-center">
-            <Stethoscope size={18} />
-          </div>
-          <div>
-            <div className="font-extrabold text-sm tracking-tight">임상 대시보드</div>
-            <div className="text-[10px] text-white/50 font-medium">Clinical Dashboard · Beta</div>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full">
-            <Shield size={12} className="text-green-400" />
-            <span className="text-[11px] font-bold text-white/80">{clinicianEmail}</span>
-          </div>
-          <button
-            onClick={logout}
-            className="flex items-center gap-2 text-white/60 hover:text-white transition-colors text-[11px] font-bold"
-          >
-            <LogOut size={14} />
-            로그아웃
-          </button>
-        </div>
-      </header>
-
-      <div className="flex h-[calc(100vh-61px)]">
-
-        {/* ── 환자 목록 사이드바 ──────────────────────────────────────── */}
-        <aside className="w-64 bg-[#2d3e35] text-white flex flex-col shrink-0 overflow-y-auto">
-          <div className="px-5 py-5 border-b border-white/10">
-            <div className="flex items-center gap-2 mb-1">
-              <Users size={14} className="text-white/50" />
-              <span className="text-[11px] font-bold text-white/50 uppercase tracking-widest">환자 목록</span>
-            </div>
-            <div className="text-xs text-white/30 font-medium">총 {DUMMY_PATIENTS.length}명</div>
-          </div>
-
-          <nav className="flex-1 px-3 py-4 space-y-1">
-            {DUMMY_PATIENTS.map(p => (
-              <button
-                key={p.id}
-                onClick={() => { setSelectedPatientId(p.id); setHiddenLines([]) }}
-                className={`w-full text-left px-4 py-3.5 rounded-xl transition-all group ${
-                  selectedPatientId === p.id
-                    ? 'bg-[#566e63] shadow-lg'
-                    : 'hover:bg-white/10'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0 ${
-                      selectedPatientId === p.id ? 'bg-white/20 text-white' : 'bg-white/10 text-white/60'
-                    }`}>
-                      {p.name[0]}
-                    </div>
-                    <div>
-                      <div className="font-bold text-[13px]">{p.name}</div>
-                      <div className="text-[10px] text-white/50 mt-0.5">{p.diagnosis}</div>
-                    </div>
-                  </div>
-                  {selectedPatientId === p.id && <ChevronRight size={14} className="text-white/50" />}
-                </div>
-              </button>
-            ))}
+    <div className="min-h-screen bg-[#f3ede1] text-[#333] font-sans selection:bg-[#566e63]/20 flex">
+      
+      {/* Sidebar for Dashboard */}
+      <aside className="hidden lg:flex flex-col w-[260px] bg-white border-r border-[#e8e0d5] fixed h-full z-20">
+        <div className="p-6">
+          <div className="font-extrabold tracking-widest text-[#bfa588] text-2xl mb-10">MoodB<span className="text-sm font-bold text-gray-400 block tracking-normal mt-1">Medical Portal</span></div>
+          <nav className="flex flex-col gap-2">
+            <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#f5ebd9] text-[#bfa588] font-bold">
+              <Users size={18} />
+              환자 리스트 뷰어
+            </Link>
+            <Link href="/" className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors font-medium">
+              <Activity size={18} />
+              메인 서비스로 이동
+            </Link>
           </nav>
+        </div>
+      </aside>
 
-          <div className="px-4 py-4 border-t border-white/10">
-            <div className="text-[10px] text-white/20 text-center font-medium">
-              ※ DB 연동 전 더미 데이터
+      {/* Main Area */}
+      <main className="flex-1 lg:ml-[260px] min-h-screen flex flex-col pt-6 px-6 md:px-10 pb-20">
+        
+        {/* Header */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-[#e8e0d5]">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-[#222]">통합 환자 현황 뷰어</h1>
+            <p className="text-gray-500 text-sm font-medium mt-1">원내 등록된 전체 환자의 CSEI 진단 및 CBT 진행 현황입니다.</p>
+          </div>
+          <div className="flex gap-3 w-full md:w-auto">
+            <div className="relative group flex-1 md:w-[280px]">
+              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#bfa588]" />
+              <input 
+                type="text" 
+                placeholder="이름, ID 검색..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-[#fcfaf5] border border-[#e8e0d5] px-10 py-2.5 rounded-full text-sm outline-none focus:ring-2 focus:ring-[#bfa588]/30 transition-all font-medium placeholder-gray-400"
+              />
+            </div>
+            <button className="flex items-center justify-center w-10 h-10 border border-[#e8e0d5] rounded-full text-gray-500 bg-white shadow-sm hover:bg-gray-50 transition-colors shrink-0">
+              <Filter size={16} />
+            </button>
+          </div>
+        </header>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <div className="bg-white p-6 rounded-2xl border border-[#e8e0d5] shadow-sm flex items-center gap-4 border-l-4 border-l-[#566e63]">
+            <div className="bg-[#f0ece5] p-3 rounded-full text-[#566e63]">
+              <Users size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-500">총 등록 환자</p>
+              <h3 className="text-3xl font-extrabold text-[#222]">1,208</h3>
             </div>
           </div>
-        </aside>
+          <div className="bg-white p-6 rounded-2xl border border-[#e8e0d5] shadow-sm flex items-center gap-4 border-l-4 border-l-red-400">
+            <div className="bg-red-50 p-3 rounded-full text-red-500">
+              <AlertCircle size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-500">위험군 관심 환자</p>
+              <h3 className="text-3xl font-extrabold text-[#222]">84</h3>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-2xl border border-[#e8e0d5] shadow-sm flex items-center gap-4 border-l-4 border-l-[#4db4b6]">
+            <div className="bg-cyan-50 p-3 rounded-full text-[#4db4b6]">
+              <CheckCircle2 size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-500">CBT 솔루션 완료자</p>
+              <h3 className="text-3xl font-extrabold text-[#222]">432</h3>
+            </div>
+          </div>
+        </div>
 
-        {/* ── 메인 콘텐츠 ────────────────────────────────────────────── */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-[1100px] mx-auto space-y-6">
-
-            {/* ── ① 환자 기본 정보 카드 ─────────────────────────────── */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100/80">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 bg-[#e8efe9] rounded-2xl flex items-center justify-center">
-                    <User size={28} className="text-[#566e63]" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-3 mb-1">
-                      <h1 className="text-2xl font-extrabold tracking-tight">{patient.name}</h1>
-                      <span className="bg-[#e8efe9] text-[#4a5c53] text-[11px] font-bold px-3 py-1 rounded-full">
-                        {patient.diagnosis}
+        {/* Table Area */}
+        <div className="bg-white border text-sm font-medium border-[#e8e0d5] shadow-sm rounded-2xl overflow-hidden flex-1 flex flex-col">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#fcfaf5] border-b border-[#e8e0d5] text-gray-500 uppercase tracking-widest text-[11px] font-bold">
+                  <th className="p-5 whitespace-nowrap">환자 ID</th>
+                  <th className="p-5 whitespace-nowrap">이름 / 인적</th>
+                  <th className="p-5 whitespace-nowrap">최근 진단일</th>
+                  <th className="p-5 whitespace-nowrap">주요 취약 감정</th>
+                  <th className="p-5 whitespace-nowrap">최고 T-점수</th>
+                  <th className="p-5 whitespace-nowrap">상태</th>
+                  <th className="p-5 whitespace-nowrap">솔루션 진행률</th>
+                  <th className="p-5 text-right whitespace-nowrap">리포트 조회</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPatients.length > 0 ? filteredPatients.map((patient, idx) => (
+                  <tr key={idx} className="border-b border-gray-100 hover:bg-[#faf8f5] transition-colors group cursor-pointer">
+                    <td className="p-5 text-gray-500 font-bold">{patient.id}</td>
+                    <td className="p-5">
+                      <div className="font-extrabold text-[#222] text-base">{patient.name}</div>
+                      <div className="text-xs text-gray-400 mt-1">{patient.age}세 · {patient.gender}</div>
+                    </td>
+                    <td className="p-5 text-gray-600">{patient.lastTest}</td>
+                    <td className="p-5 text-[#222] font-extrabold bg-[#fcfaf5]">{patient.riskEmotion}</td>
+                    <td className="p-5 font-bold text-[#bfa588]">{patient.tScore}점</td>
+                    <td className="p-5">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                        patient.status === '위험' ? 'bg-red-100 text-red-600' :
+                        patient.status === '주의' ? 'bg-orange-100 text-orange-600' :
+                        'bg-green-100 text-green-600'
+                      }`}>
+                        {patient.status}
                       </span>
-                    </div>
-                    <div className="flex items-center gap-4 text-[12px] text-gray-500 font-medium">
-                      <span>{patient.age}세 · {patient.gender}</span>
-                      <span className="text-gray-300">|</span>
-                      <span>담당: <strong className="text-[#4a5c53]">{patient.doctor}</strong></span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  {[
-                    { icon: <ClipboardList size={16} />, label: '총 회차', value: `${patient.sessions}회` },
-                    { icon: <Calendar size={16} />, label: '최근 방문', value: patient.lastVisit },
-                    {
-                      icon: <AlertCircle size={16} />,
-                      label: '현재 상태',
-                      value: GROUP_LABEL[overallWorst],
-                      color: overallWorst === 'risk' ? 'text-red-500' : overallWorst === 'caution' ? 'text-amber-500' : 'text-green-600'
-                    },
-                  ].map((item, i) => (
-                    <div key={i} className="bg-[#f8f9fa] rounded-xl px-4 py-3 text-center min-w-[90px]">
-                      <div className="flex justify-center text-gray-400 mb-1">{item.icon}</div>
-                      <div className={`font-extrabold text-[15px] ${(item as any).color || 'text-[#2d3e35]'}`}>{item.value}</div>
-                      <div className="text-[10px] text-gray-400 font-medium mt-0.5">{item.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* ── ② T-score 분류 + ③ 변화 그래프 ───────────────────── */}
-            <div className="grid md:grid-cols-[340px_1fr] gap-6">
-
-              {/* ② T-score 분류 현황 */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100/80">
-                <h2 className="font-bold text-[14px] text-[#2d3e35] mb-5 flex items-center gap-2">
-                  <AlertCircle size={16} className="text-[#566e63]" />
-                  T-score 분류 현황
-                </h2>
-
-                {/* 도넛 차트 */}
-                <div className="flex justify-center mb-5 relative">
-                  <ResponsiveContainer width={180} height={180}>
-                    <PieChart>
-                      <Pie
-                        data={donutData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={55}
-                        outerRadius={80}
-                        paddingAngle={3}
-                        dataKey="value"
-                        startAngle={90}
-                        endAngle={-270}
+                    </td>
+                    <td className="p-5 w-48">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div className={`h-full rounded-full ${patient.cbtProgress === 100 ? 'bg-[#4db4b6]' : 'bg-[#bfa588]'}`} style={{ width: `${patient.cbtProgress}%` }}></div>
+                        </div>
+                        <span className="text-xs font-bold text-gray-400 w-8">{patient.cbtProgress}%</span>
+                      </div>
+                    </td>
+                    <td className="p-5 text-right">
+                      <button 
+                        onClick={() => setSelectedPatient(patient)}
+                        className="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-bold rounded-lg shadow-sm hover:bg-[#bfa588] hover:text-white hover:border-[#bfa588] transition-all"
                       >
-                        {donutData.map((entry, i) => (
-                          <Cell key={i} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className={`text-2xl font-extrabold ${
-                      overallWorst === 'risk' ? 'text-red-500' : overallWorst === 'caution' ? 'text-amber-500' : 'text-green-600'
-                    }`}>{GROUP_LABEL[overallWorst]}</span>
-                    <span className="text-[10px] text-gray-400 font-medium">종합 판정</span>
-                  </div>
-                </div>
-
-                {/* 범례 */}
-                <div className="flex justify-center gap-4 mb-5">
-                  {[
-                    { label: '정상', count: normalCount,  color: 'bg-green-400' },
-                    { label: '주의', count: cautionCount, color: 'bg-amber-400' },
-                    { label: '위험', count: riskCount,    color: 'bg-red-400'   },
-                  ].map(item => (
-                    <div key={item.label} className="flex items-center gap-1.5">
-                      <div className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
-                      <span className="text-[11px] font-bold text-gray-600">{item.label} {item.count}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* 지표별 배지 */}
-                <div className="space-y-2">
-                  {indicatorStatuses.map(ind => (
-                    <div key={ind.name} className={`flex items-center justify-between px-3 py-2 rounded-xl border ${GROUP_BG[ind.group]}`}>
-                      <span className="font-bold text-[12px]">{ind.name}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-[13px]">{ind.score}</span>
-                        <span className="text-[10px] font-bold border rounded-full px-2 py-0.5 border-current">
-                          {GROUP_LABEL[ind.group]}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* ③ 설문 변화 그래프 */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100/80">
-                <h2 className="font-bold text-[14px] text-[#2d3e35] mb-5 flex items-center gap-2">
-                  <TrendingUp size={16} className="text-[#566e63]" />
-                  설문 결과 변화 추이
-                </h2>
-                <div className="w-full h-[340px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={trendData} margin={{ top: 10, right: 30, left: 0, bottom: 60 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f4" />
-                      <ReferenceArea y1={40} y2={60} fill="#22c55e" fillOpacity={0.06}
-                        label={{ position: 'insideRight', value: '정상', fill: '#16a34a', fontSize: 9, fontWeight: 'bold' }} />
-                      <ReferenceArea y1={60} y2={70} fill="#f59e0b" fillOpacity={0.08}
-                        label={{ position: 'insideRight', value: '주의', fill: '#d97706', fontSize: 9, fontWeight: 'bold' }} />
-                      <ReferenceArea y1={30} y2={40} fill="#f59e0b" fillOpacity={0.08} />
-                      <ReferenceArea y1={70} y2={100} fill="#ef4444" fillOpacity={0.06}
-                        label={{ position: 'insideRight', value: '위험', fill: '#dc2626', fontSize: 9, fontWeight: 'bold' }} />
-                      <ReferenceArea y1={0} y2={30} fill="#ef4444" fillOpacity={0.06} />
-                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#999', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
-                      <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#bbb' }} axisLine={false} tickLine={false} />
-                      <Tooltip
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', fontSize: '12px' }}
-                        formatter={(value: any, name: any) => [
-                          `${value} (${GROUP_LABEL[classifyTScore(value)]})`, name
-                        ]}
-                      />
-                      <Legend
-                        verticalAlign="bottom"
-                        align="center"
-                        onClick={handleLineLegendClick}
-                        wrapperStyle={{ paddingTop: '32px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}
-                      />
-                      {INDICATORS.map((ind, i) => (
-                        <Line
-                          key={ind}
-                          type="monotone"
-                          name={ind}
-                          dataKey={ind}
-                          hide={hiddenLines.includes(ind)}
-                          stroke={LINE_COLORS[i]}
-                          strokeWidth={2.5}
-                          dot={{ r: 4 }}
-                          activeDot={{ r: 6 }}
-                        />
-                      ))}
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-                <p className="text-[10px] text-gray-400 font-medium text-center mt-2">
-                  범례를 클릭하면 지표를 켜고 끌 수 있습니다.
-                </p>
-              </div>
-            </div>
-
-            {/* ── ④ 회차별 상담 기록 타임라인 ─────────────────────── */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100/80">
-              <h2 className="font-bold text-[14px] text-[#2d3e35] mb-6 flex items-center gap-2">
-                <FileText size={16} className="text-[#566e63]" />
-                회차별 상담 기록
-              </h2>
-
-              <div className="space-y-4">
-                {sessions.map((session) => {
-                  const memo = memos[session.id] ?? session.memo
-                  const isSaved = savedMemos[session.id]
-                  return (
-                    <div key={session.id} className="border border-gray-100 rounded-2xl p-5 hover:border-[#566e63]/20 transition-colors">
-                      <div className="flex flex-col md:flex-row md:items-start gap-4">
-
-                        {/* 회차 배지 + 날짜 */}
-                        <div className="flex items-center gap-3 shrink-0">
-                          <div className="w-10 h-10 bg-[#2d3e35] text-white rounded-xl flex items-center justify-center font-extrabold text-[13px]">
-                            {session.seq}
-                          </div>
-                          <div>
-                            <div className="text-[11px] font-bold text-gray-400">{session.date}</div>
-                            <div className={`text-[11px] font-bold mt-0.5 ${
-                              session.type === 'CSEI-s 진단' ? 'text-[#566e63]' : 'text-amber-600'
-                            }`}>{session.type}</div>
-                          </div>
-                        </div>
-
-                        {/* 내용 요약 */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] text-gray-600 leading-relaxed mb-3">{session.summary}</p>
-
-                          {/* 담당의 메모 입력 */}
-                          <div className="bg-[#f8f9fa] rounded-xl p-3">
-                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                              <Stethoscope size={10} />
-                              담당의 메모
-                            </div>
-                            <textarea
-                              value={memo}
-                              onChange={(e) => handleMemoChange(session.id, e.target.value)}
-                              placeholder="이 회차에 대한 임상 메모를 입력하세요..."
-                              rows={2}
-                              className="w-full bg-white text-[12px] text-gray-700 placeholder-gray-300 resize-none outline-none rounded-lg p-2.5 border border-gray-100 focus:border-[#566e63]/30 focus:ring-2 focus:ring-[#566e63]/5 transition-all leading-relaxed"
-                            />
-                            <div className="flex justify-end mt-2">
-                              <button
-                                onClick={() => handleMemoSave(session.id)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
-                                  isSaved
-                                    ? 'bg-green-100 text-green-600'
-                                    : 'bg-[#2d3e35] text-white hover:bg-[#566e63] active:scale-95'
-                                }`}
-                              >
-                                {isSaved ? <><CheckCircle2 size={12} /> 저장됨</> : <><Save size={12} /> 메모 저장</>}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
+                        상세보기
+                      </button>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={8} className="p-10 text-center text-gray-400 font-medium">검색된 환자 기록이 없습니다.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        </main>
-      </div>
+        </div>
+
+      </main>
+      {/* Mock Detail Modal */}
+      {selectedPatient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-[#faf8f5]">
+              <div>
+                <h2 className="text-xl font-extrabold text-[#222]">{selectedPatient.name} 환자 상세 리포트</h2>
+                <p className="text-sm text-gray-500 font-medium">ID: {selectedPatient.id} | 최초 등록일: 2023-01-15</p>
+              </div>
+              <button onClick={() => setSelectedPatient(null)} className="p-2 bg-white rounded-full text-gray-400 hover:text-[#222] transition-colors border border-gray-200 shadow-sm">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 flex-1 overflow-y-auto">
+              <div className="flex gap-4 mb-8">
+                <div className="flex-1 bg-[#fcfaf5] border border-[#e8e0d5] p-5 rounded-xl text-center shadow-sm">
+                  <div className="text-gray-500 text-sm font-bold mb-1">최근 주 호소 감정</div>
+                  <div className="text-2xl font-extrabold text-[#bfa588]">{selectedPatient.riskEmotion}</div>
+                </div>
+                <div className="flex-1 bg-[#fcfaf5] border border-[#e8e0d5] p-5 rounded-xl text-center shadow-sm">
+                  <div className="text-gray-500 text-sm font-bold mb-1">T-Score 수치</div>
+                  <div className="text-2xl font-extrabold text-[#222]">{selectedPatient.tScore}점</div>
+                </div>
+                <div className="flex-1 bg-[#fcfaf5] border border-[#e8e0d5] p-5 rounded-xl text-center shadow-sm">
+                  <div className="text-gray-500 text-sm font-bold mb-1">위험도 판정</div>
+                  <div className="text-2xl font-extrabold text-red-500">{selectedPatient.status}</div>
+                </div>
+              </div>
+              
+              <h3 className="font-bold text-gray-600 mb-4 px-2 border-b-2 border-[#566e63] inline-block pb-1">CBT 및 명상 진행 기록 (Mock DB)</h3>
+              <div className="space-y-4">
+                <div className="p-4 border border-gray-100 rounded-xl shadow-sm hover:border-[#bfa588] transition-colors">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">2023-11-20 14:20</span>
+                    <span className="text-xs font-bold text-[#bfa588] bg-[#f5ebd9] px-2 py-1 rounded">CBT 챗봇 진행 (3분)</span>
+                  </div>
+                  <p className="text-sm font-medium text-[#222]">분노 조절에 대한 인지재구성을 시도함. "내 뜻대로 되지 않으면 폭발할 것 같다"는 핵심 신념을 확인함.</p>
+                </div>
+                <div className="p-4 border border-gray-100 rounded-xl shadow-sm hover:border-[#566e63] transition-colors">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">2023-11-18 09:15</span>
+                    <span className="text-xs font-bold text-[#566e63] bg-[#d7eadf] px-2 py-1 rounded">명상 수료 (5분)</span>
+                  </div>
+                  <p className="text-sm font-medium text-[#222]">아침 명상(분노 치유) 플로우 완료. T-점수가 명상 후 82점에서 78점으로 하락함.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-gray-100 bg-[#fcfaf5] flex justify-end">
+              <button 
+                onClick={() => alert('실제 배포 환경에서 작동하는 기능입니다.')}
+                className="bg-[#566e63] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-[#4a5c53] shadow-md transition-colors"
+                >
+                히스토리 리포트 다운로드 (PDF)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

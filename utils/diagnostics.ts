@@ -117,13 +117,13 @@ export const NORMS: Record<AgeGroup, Record<Gender, Record<EmotionFactor, NormDa
 
 // 한글 매핑
 export const FACTOR_NAMES: Record<EmotionFactor, string> = {
-  JOY: '희 (喜)',
-  ANGER: '노 (怒)',
-  THOUGHT: '사 (思)',
-  DEPRESSION: '우 (憂)',
-  SORROW: '비 (悲)',
-  FRIGHT: '공 (恐)',
-  FEAR: '경 (驚)',
+  JOY: '기쁨',
+  ANGER: '분노',
+  THOUGHT: '생각',
+  DEPRESSION: '우울',
+  SORROW: '슬픔',
+  FRIGHT: '두려움',
+  FEAR: '놀람',
   TOTAL: '전체 지표',
 };
 

@@ -3,6 +3,17 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  
+  /* MoodB Brand Colors */
+  --color-sage: #566e63;
+  --color-sage-deep: #4a5c53;
+  --color-sage-light: #e8efe9;
+  --color-sand: #bfa588;
+  --color-cream: #f5ebd9;
+  --color-paper: #fffdfa;
+  --color-alert: #e85d5d;
+  --color-calm: #4db4b6;
+  --color-gold: #d4a56a;
 }
 
 @theme inline {

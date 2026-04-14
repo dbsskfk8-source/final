@@ -61,6 +61,26 @@ export default function AuthForm() {
 
       {/* Auth Form (Email+Password) */}
       <form action={isLogin ? loginAction : signupAction} className="w-full flex flex-col gap-4">
+        {!isLogin && (
+          <div className="flex flex-col gap-2 mb-2">
+            <label className="text-sm text-gray-600 font-medium">가입 유형</label>
+            <div className="flex gap-2">
+              <label className="flex-1 cursor-pointer">
+                <input type="radio" name="role" value="general" defaultChecked className="peer sr-only" />
+                <div className="py-3 text-center border-2 border-gray-100 rounded-xl peer-checked:border-[#566e63] peer-checked:bg-[#566e63]/10 peer-checked:text-[#566e63] font-bold text-sm text-gray-400 transition-all">일반인</div>
+              </label>
+              <label className="flex-1 cursor-pointer">
+                <input type="radio" name="role" value="patient" className="peer sr-only" />
+                <div className="py-3 text-center border-2 border-gray-100 rounded-xl peer-checked:border-[#566e63] peer-checked:bg-[#566e63]/10 peer-checked:text-[#566e63] font-bold text-sm text-gray-400 transition-all">환자</div>
+              </label>
+              <label className="flex-1 cursor-pointer">
+                <input type="radio" name="role" value="doctor" className="peer sr-only" />
+                <div className="py-3 text-center border-2 border-gray-100 rounded-xl peer-checked:border-[#566e63] peer-checked:bg-[#566e63]/10 peer-checked:text-[#566e63] font-bold text-sm text-gray-400 transition-all">의료인</div>
+              </label>
+            </div>
+          </div>
+        )}
+
         {state?.error && (
           <div className="p-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm mb-2">
             {state.error}
@@ -73,7 +93,7 @@ export default function AuthForm() {
         )}
         
         <div className="flex flex-col gap-2">
-          <label className="text-sm text-gray-600 font-medium">이메일 주소</label>
+          <label className="text-base text-gray-600 font-medium">이메일 주소</label>
           <input 
             name="email"
             type="email" 
@@ -85,7 +105,7 @@ export default function AuthForm() {
 
         <div className="flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <label className="text-sm text-gray-600 font-medium">비밀번호</label>
+            <label className="text-base text-gray-600 font-medium">비밀번호</label>
             {isLogin && (
               <a href="#" className="text-xs text-gray-500 font-medium">비밀번호 찾기</a>
             )}
@@ -112,7 +132,7 @@ export default function AuthForm() {
         <SubmitButton isLogin={isLogin} />
       </form>
 
-      <div className="mt-8 text-sm text-gray-600 font-medium">
+      <div className="mt-8 text-base text-gray-600 font-medium">
         {isLogin ? "계정이 없으신가요? " : "이미 계정이 있으신가요? "}
         <button 
           onClick={() => setIsLogin(!isLogin)} 

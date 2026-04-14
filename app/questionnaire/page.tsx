@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
@@ -13,10 +13,12 @@ import {
   BookOpen,
   BarChart2,
   Calendar,
-  Info
+  Info,
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react'
+import { analyzeResults, Gender, AgeGroup } from '@/utils/diagnostics'
 
-// 28 CSEI-s Questions
 const QUESTIONS = [
   "내게 좋은 일이 생길 것 같다.",
   "나는 주변 사람들에게 화를 잘 낸다.",
@@ -48,66 +50,81 @@ const QUESTIONS = [
   "나는 작은 소리에도 잘 놀란다.",
 ]
 
-import { analyzeResults, Gender, AgeGroup } from '@/utils/diagnostics'
-
 export default function QuestionnairePage() {
   const router = useRouter()
+  // currentStep -2: Intro, -1: Info input, 0~27: questions
+  const [currentStep, setCurrentStep] = useState(-2)
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [gender, setGender] = useState<Gender | ''>('')
   const [ageGroup, setAgeGroup] = useState<AgeGroup | ''>('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  // Load from local storage
+  useEffect(() => {
+    const saved = localStorage.getItem('moodb_draft')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed.gender) setGender(parsed.gender)
+        if (parsed.ageGroup) setAgeGroup(parsed.ageGroup)
+        if (parsed.answers) setAnswers(parsed.answers)
+        if (parsed.currentStep !== undefined) setCurrentStep(parsed.currentStep)
+      } catch (e) {}
+    }
+  }, [])
 
-  const handleAnswer = (questionIndex: number, value: number) => {
-    setAnswers(prev => ({ ...prev, [questionIndex]: value }))
+  // Auto save
+  useEffect(() => {
+    localStorage.setItem('moodb_draft', JSON.stringify({ gender, ageGroup, answers, currentStep }))
+  }, [gender, ageGroup, answers, currentStep])
+
+  const handleNext = (manualAnswer?: number) => {
+    if (currentStep === -2) {
+      setCurrentStep(-1)
+    } else if (currentStep === -1) {
+      if (!gender || !ageGroup) {
+        alert('성별과 연령대를 먼저 선택해 주세요.')
+        return
+      }
+      setCurrentStep(0)
+    } else {
+      if (manualAnswer === undefined && !answers[currentStep]) {
+        alert('답변을 선택해 주세요.')
+        return
+      }
+      if (currentStep < QUESTIONS.length - 1) {
+        setCurrentStep(prev => prev + 1)
+      } else {
+        setIsSubmitting(true)
+        handleComplete(manualAnswer)
+      }
+    }
   }
 
-  const answeredCount = Object.keys(answers).length
-  const totalCount = QUESTIONS.length
-  const isComplete = answeredCount === totalCount
+  const handlePrev = () => {
+    if (currentStep > -2) setCurrentStep(prev => prev - 1)
+  }
 
-  const handleComplete = async () => {
-    if (!gender || !ageGroup) {
-      alert('성별과 연령대를 먼저 선택해 주세요.')
-      // 스크롤을 위로 이동
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      return
-    }
+  const handleAnswerChange = (val: number) => {
+    setAnswers(prev => ({ ...prev, [currentStep]: val }))
+    // Automatically proceed to the next step when selected to remove the bug
+    setTimeout(() => {
+      handleNext(val)
+    }, 150) // Slight delay for visual feedback
+  }
 
-    if (!isComplete) {
-      alert(`아직 응답하지 않은 문항이 있습니다. (${answeredCount}/${totalCount})`)
-      return
-    }
-
-    // 정밀 진단 엔진 호출 (T-score 기반)
-    const { factors, overall } = analyzeResults(answers, gender as Gender, ageGroup as AgeGroup)
-
-    console.log('--- 정밀 진단 결과 ---', { factors, overall })
+  const handleComplete = async (finalAnswerContext?: number) => {
+    const finalAnswers = { ...answers, ...(finalAnswerContext !== undefined ? { [currentStep]: finalAnswerContext } : {}) }
+    const { factors, overall } = analyzeResults(finalAnswers, gender as Gender, ageGroup as AgeGroup)
     
-    // 분석 요약 메시지 생성
-    const riskFactors = factors.filter(f => f.group === 'risk')
-    const cautionFactors = factors.filter(f => f.group === 'caution')
-    
-    let summary = `[종합 판정: ${overall.groupLabel} (T-점수: ${overall.tScore})]\n\n`
-    if (riskFactors.length > 0) {
-      summary += `⚠️ 위험 항목: ${riskFactors.map(f => f.name).join(', ')}\n`
-    }
-    if (cautionFactors.length > 0) {
-      summary += `⚡ 주의 항목: ${cautionFactors.map(f => f.name).join(', ')}\n`
-    }
-    if (riskFactors.length === 0 && cautionFactors.length === 0) {
-      summary += `✅ 모든 지표가 정상 범위 내에 있습니다.`
-    }
-
-    // DB 저장 데이터 규격화
     const dbScores = factors.map(f => ({
       subject: f.name,
-      A: f.tScore, // 차트에는 T-점수를 표시 (또는 기존 방식 유지 가능)
+      A: f.tScore,
       fullMark: 100,
       group: f.group,
       groupLabel: f.groupLabel,
       rawScore: f.rawScore
     }))
 
-    // DB 저장 시도
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -124,84 +141,72 @@ export default function QuestionnairePage() {
         created_at: new Date().toISOString()
       }])
       
-      if (error) {
-        console.error('DB Insert Error:', error)
-        alert('서버 저장에 실패했습니다. 결과가 기기에 임시 저장됩니다.')
-      } else {
+      if (!error) {
         saveToLocal = false
-        alert(`설문 분석이 완료되었습니다!\n\n${summary}\n\n결과 리포트가 계정에 안전하게 저장되었습니다.`)
       }
     }
 
-    if (saveToLocal) {
-      if (!user) {
-        alert(`설문 분석이 완료되었습니다!\n\n${summary}\n\n결과가 기기에 임시 저장되었습니다.\n로그인하면 데이터를 영구보존하고 기기 간 연동할 수 있습니다.`)
+    if (saveToLocal && typeof window !== 'undefined') {
+      const resultData = {
+        timestamp: new Date().toISOString(),
+        gender,
+        ageGroup,
+        scores: dbScores,
+        overallTScore: overall.tScore,
+        overallGroup: overall.group
       }
-      if (typeof window !== 'undefined') {
-        const resultData = {
-          timestamp: new Date().toISOString(),
-          gender,
-          ageGroup,
-          scores: dbScores,
-          overallTScore: overall.tScore,
-          overallGroup: overall.group
-        }
-        const existingResults = JSON.parse(localStorage.getItem('final_csei_results') || '[]')
-        const normalizedExisting = Array.isArray(existingResults) ? existingResults : (existingResults.scores ? [existingResults] : [])
-        localStorage.setItem('final_csei_results', JSON.stringify([resultData, ...normalizedExisting]))
-      }
+      const existingResults = JSON.parse(localStorage.getItem('final_csei_results') || '[]')
+      const normalizedExisting = Array.isArray(existingResults) ? existingResults : (existingResults.scores ? [existingResults] : [])
+      localStorage.setItem('final_csei_results', JSON.stringify([resultData, ...normalizedExisting]))
     }
     
-    // 완료 후 결과 요약/브릿지 페이지로 이동
+    // Clear draft
+    localStorage.removeItem('moodb_draft')
     router.push('/result')
   }
 
-  const handleSaveProgress = () => {
-    console.log('임시 저장 데이터:', { answers, gender, ageGroup })
-    alert('현재 응답한 내용이 브라우저에 임시 저장되었습니다.')
-  }
-
-  // 오늘 날짜 포맷팅
   const today = new Date().toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
   })
 
+  const progress = currentStep < 0 ? 0 : ((currentStep + 1) / QUESTIONS.length) * 100
+
   return (
-    <div className="min-h-screen flex bg-[#f5f6f4] text-[#333] font-sans selection:bg-[#566e63]/20">
+    <div className="min-h-screen flex bg-[#faf8f5] text-[#333] font-sans selection:bg-[#bfa588]/20">
       
       {/* Sidebar (Desktop) */}
-      <aside className="hidden lg:flex flex-col w-[260px] bg-[#f9faf9] border-r border-[#eaeced] fixed h-full z-20 overflow-y-auto">
+      <aside className="hidden lg:flex flex-col w-[260px] bg-[#fdfbf7] border-r border-[#e8e0d5] fixed h-full z-20 overflow-y-auto">
         <div className="p-8">
-          <Link href="/" className="font-extrabold text-[#4a5c53] text-lg block hover:opacity-80 transition-opacity">
-            파이널 서비스
+          <Link href="/" className="font-extrabold text-[#bfa588] text-3xl block hover:opacity-80 transition-opacity">
+            MoodB
           </Link>
-          <div className="text-[10px] uppercase font-bold text-[#828f88] tracking-widest mt-1">임상 진단 도구</div>
+          <div className="text-[10px] uppercase font-bold text-[#8c7b68] tracking-widest mt-1">임상 진단 도구</div>
         </div>
         
         <nav className="flex-1 mt-4">
           <ul className="space-y-1">
             <li>
-              <Link href="#" className="flex items-center gap-3 px-8 py-4 bg-white border-l-[3px] border-[#566e63] text-[#222] font-bold shadow-sm">
-                <ClipboardList size={20} className="text-[#566e63]" />
+              <Link href="#" className="flex items-center gap-3 px-8 py-4 bg-white border-l-[3px] border-[#bfa588] text-[#222] font-bold shadow-sm">
+                <ClipboardList size={20} className="text-[#bfa588]" />
                 설문 진행 (진단)
               </Link>
             </li>
             <li>
-              <Link href="#" className="flex items-center gap-3 px-8 py-4 text-gray-500 hover:text-[#222] hover:bg-[#f0f2f0] transition-colors font-medium border-l-[3px] border-transparent">
+              <Link href="#" className="flex items-center gap-3 px-8 py-4 text-gray-500 hover:text-[#222] hover:bg-[#f5ebd9] transition-colors font-medium border-l-[3px] border-transparent">
                 <Contact size={20} />
                 내 정보
               </Link>
             </li>
             <li>
-              <Link href="#" className="flex items-center gap-3 px-8 py-4 text-gray-500 hover:text-[#222] hover:bg-[#f0f2f0] transition-colors font-medium border-l-[3px] border-transparent">
+              <Link href="#" className="flex items-center gap-3 px-8 py-4 text-gray-500 hover:text-[#222] hover:bg-[#f5ebd9] transition-colors font-medium border-l-[3px] border-transparent">
                 <BookOpen size={20} />
                 진단 안내
               </Link>
             </li>
             <li>
-              <Link href="/my-situation" className="flex items-center gap-3 px-8 py-4 text-gray-500 hover:text-[#222] hover:bg-[#f0f2f0] transition-colors font-medium border-l-[3px] border-transparent">
+              <Link href="/my-situation" className="flex items-center gap-3 px-8 py-4 text-gray-500 hover:text-[#222] hover:bg-[#f5ebd9] transition-colors font-medium border-l-[3px] border-transparent">
                 <BarChart2 size={20} />
                 결과 리포트
               </Link>
@@ -211,230 +216,165 @@ export default function QuestionnairePage() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:ml-[260px] flex flex-col relative pb-[120px]">
+      <div className="flex-1 lg:ml-[260px] flex flex-col relative pb-[120px] min-h-screen">
         
         {/* Top Navbar */}
-        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-[#eaeced] px-6 lg:px-10 py-5 flex flex-col sm:flex-row gap-4 sm:gap-0 sm:items-center justify-between">
+        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-[#e8e0d5] px-6 lg:px-10 py-5 flex flex-col sm:flex-row gap-4 sm:gap-0 sm:items-center justify-between">
           <div className="flex items-center gap-6">
-            <h1 className="lg:hidden font-extrabold text-[#4a5c53] text-lg">파이널 서비스</h1>
-            
+            <h1 className="lg:hidden font-extrabold text-[#bfa588] text-3xl">MoodB</h1>
             <nav className="flex gap-4 md:gap-6 text-sm font-bold text-gray-500 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 whitespace-nowrap">
-               <span className="text-[#566e63] border-b-2 border-[#566e63] pb-1 cursor-default shrink-0">칠정 진단</span>
+               <span className="text-[#bfa588] border-b-2 border-[#bfa588] pb-1 cursor-default shrink-0">칠정 진단</span>
                <Link href="/select" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">인지재구성(Cure)</Link>
-               <Link href="/my-situation" className="hover:text-[#566e63] cursor-pointer transition-colors shrink-0 pt-0.5">마이페이지</Link>
+               <Link href="/my-situation" className="hover:text-[#bfa588] cursor-pointer transition-colors shrink-0 pt-0.5">마이페이지</Link>
                <Link href="/chat" className="hover:text-black cursor-pointer transition-colors shrink-0 pt-0.5">심리상담 챗봇</Link>
             </nav>
           </div>
           
           <div className="flex items-center gap-4 text-gray-500">
-             <button className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
+             <button className="w-10 h-10 rounded-full hover:bg-[#f5ebd9] flex items-center justify-center transition-colors">
                 <Bell size={18} />
              </button>
-             <button className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
+             <button className="w-10 h-10 rounded-full hover:bg-[#f5ebd9] flex items-center justify-center transition-colors">
                 <Settings size={18} />
              </button>
-             <div className="w-9 h-9 rounded-full bg-[#1b4e5b] overflow-hidden ml-2 ring-2 ring-white shadow-sm flex items-center justify-center text-white">
+             <div className="w-9 h-9 rounded-full bg-[#a68a6d] overflow-hidden ml-2 ring-2 ring-white shadow-sm flex items-center justify-center text-white">
                 <User size={18} />
              </div>
           </div>
         </header>
 
+        {/* Progress Bar */}
+        <div className="w-full h-1.5 bg-[#e8e0d5]">
+          <div 
+            className="h-full bg-[#bfa588] transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+
         {/* Content Body */}
-        <main className="px-6 lg:px-10 py-10 max-w-[1000px] w-full mx-auto animate-in fade-in duration-500">
+        <main className="flex-1 flex flex-col px-6 lg:px-10 py-10 max-w-[800px] w-full mx-auto justify-center">
           
-          {/* Patient / Session Info Cards */}
-          <div className="flex flex-col md:flex-row gap-6 mb-8 bg-white rounded-xl p-6 shadow-sm border border-[#eef0ef]">
-             <div className="flex-1 md:border-r border-gray-100 px-4 mb-4 md:mb-0">
-               <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1.5">진단 번호</div>
-               <div className="text-xl font-bold text-[#222]">2026-Guest</div>
-             </div>
-             <div className="flex-1 md:border-r border-gray-100 px-4 mb-4 md:mb-0">
-               <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1.5">사용자 정보</div>
-               <div className="text-xl font-bold text-[#222]">나의 현황</div>
-             </div>
-             <div className="flex-1 px-4">
-               <div className="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1.5">진단 일자</div>
-               <div className="flex items-center gap-2 text-[#4a5c53]">
-                 <Calendar size={18} />
-                 <span className="font-bold text-[#222]">{today}</span>
-               </div>
-             </div>
-          </div>
-
-          {/* Gender and Age Selection (New) */}
-          <div className="bg-[#f0f4f1] rounded-2xl p-6 mb-12 border border-[#dce6df] flex flex-col md:flex-row gap-8">
-            <div className="flex-1">
-              <label className="text-xs font-bold text-[#566e63] uppercase tracking-widest mb-3 block">성별 선택</label>
-              <div className="flex gap-3">
-                {([['male', '남성'], ['female', '여성']] as const).map(([val, label]) => (
-                  <button
-                    key={val}
-                    onClick={() => setGender(val)}
-                    className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${gender === val ? 'bg-[#566e63] text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                  >
-                    {label}
-                  </button>
-                ))}
+          {currentStep === -2 ? (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto w-full bg-white rounded-3xl p-8 shadow-sm border border-[#e8e0d5]">
+              <div className="mb-8">
+                <h2 className="text-3xl font-extrabold tracking-tight mb-4 text-[#222]">
+                  핵심칠정척도 단축형 (CSEI-s)
+                </h2>
+                <div className="w-12 h-1 bg-[#bfa588] rounded-full mb-6"></div>
+                <p className="text-[#8c7b68] text-base leading-relaxed font-medium mb-4">
+                  다음 문장들을 읽고 <strong className="text-[#a68a6d]">최근 일주일동안(오늘을 포함해서)</strong> 자신을 가장 잘 나타낸다고 생각하는 곳에 선택해 주십시오. 
+                </p>
+                <p className="text-[#8c7b68] text-base leading-relaxed font-medium">
+                  너무 오래 곰곰이 생각하기보다는 질문을 읽고 바로 떠오르는 첫인상으로 응답하시기 바랍니다.
+                </p>
+              </div>
+              <div className="bg-[#fcfaf5] rounded-2xl p-6 border border-[#f5ebd9]">
+                <h3 className="font-extrabold text-[#a68a6d] mb-2 flex items-center gap-2">
+                  <BookOpen size={18} /> MoodB 임상 진단 시스템 안내
+                </h3>
+                <p className="text-sm text-[#bfa588] leading-relaxed">
+                  본 진단은 28문항에 걸쳐 사용자의 '7가지 핵심 감정(기쁨, 분노, 우울, 생각, 슬픔, 두려움, 놀람)' 밸런스를 측정하여 다차원적인 심리/정서적 상태를 도출합니다. 진단 이후 맞춤형 인지재구성(CBT) 챗봇과 명상 솔루션을 제공받을 수 있습니다.
+                </p>
               </div>
             </div>
-            <div className="flex-1">
-              <label className="text-xs font-bold text-[#566e63] uppercase tracking-widest mb-3 block">연령대 선택</label>
-              <div className="grid grid-cols-4 gap-2">
-                {(['20s', '30s', '40s', '50s_plus'] as const).map((val) => (
-                  <button
-                    key={val}
-                    onClick={() => setAgeGroup(val)}
-                    className={`py-3 rounded-xl font-bold text-xs transition-all ${ageGroup === val ? 'bg-[#566e63] text-white shadow-md' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                  >
-                    {val === '50s_plus' ? '50대 이상' : val.replace('s', '대')}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Survey Header */}
-          <div className="mb-12 max-w-2xl">
-            <h2 className="text-3xl md:text-4xl font-extrabold mb-5 tracking-tight text-[#222]">
-              핵심칠정척도 단축형<br className="md:hidden" /> (CSEI-s)
-            </h2>
-            <p className="text-[#64716a] text-[15px] leading-relaxed font-medium">
-              다음 문장들을 읽고 <strong className="text-[#3c4a43]">최근 일주일동안(오늘을 포함해서)</strong> 자신을 가장 잘 나타낸다고 생각하는 곳에 선택해 주십시오. 너무 오래 곰곰이 생각하기보다는 질문을 읽고 바로 떠오르는 첫인상으로 응답하시기 바랍니다.
-            </p>
-          </div>
-
-          {/* Scale Legend Header */}
-          <div className="sticky top-[80px] z-10 bg-[#f5f6f4]/95 backdrop-blur py-5 flex items-end justify-between border-b 2 border-[#eaeced] mb-6">
-            <div className="text-[11px] font-bold text-gray-600 uppercase tracking-widest pl-4 hidden md:block">
-              감정 상태 지표
-            </div>
-            {/* The 5 labels */}
-            <div className="flex justify-between md:w-[350px] w-full text-center px-2">
-              <div className="flex flex-col items-center gap-2 flex-1">
-                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">전혀<br/>아니다</span>
-                <span className="text-[10px] font-bold text-gray-600">1</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 flex-1">
-                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">약간</span>
-                <span className="text-[10px] font-bold text-gray-600">2</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 flex-1">
-                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">웬만큼</span>
-                <span className="text-[10px] font-bold text-gray-600">3</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 flex-1">
-                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">꽤</span>
-                <span className="text-[10px] font-bold text-gray-600">4</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 flex-1">
-                <span className="text-[10px] md:text-xs font-bold text-[#566e63]">매우<br/>그렇다</span>
-                <span className="text-[10px] font-bold text-gray-600">5</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Questions List */}
-          <div className="flex flex-col gap-4 mb-10">
-            {QUESTIONS.map((q, qIndex) => {
-              const currentValue = answers[qIndex]
-              const qNumber = (qIndex + 1).toString().padStart(2, '0')
-              
-              return (
-                <div 
-                  key={qIndex} 
-                  className={`bg-white rounded-2xl p-6 shadow-sm border flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all duration-300
-                    ${currentValue ? 'border-[#a3b8ad] bg-[#fafcfa]' : 'border-transparent'}`}
-                >
-                  <div className="flex-1">
-                    <div className="text-[10px] font-bold text-gray-600 tracking-wider mb-2">문항 {qNumber}</div>
-                    <p className="font-bold text-[#222] text-base leading-relaxed break-keep">
-                      {q}
-                    </p>
+          ) : currentStep === -1 ? (
+             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-xl mx-auto w-full">
+                <div className="mb-10 text-center">
+                  <h2 className="text-3xl font-extrabold tracking-tight mb-4 text-[#222]">진단 준비</h2>
+                  <p className="text-gray-500 font-medium text-base leading-relaxed break-keep">
+                    정교한 분석을 위해 기기 연동에 사용할 최소한의 성별과 연령대 정보를 입력해 주세요.
+                  </p>
+                </div>
+                <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#e8e0d5]">
+                  <div className="mb-8">
+                    <label className="text-xs font-bold text-[#bfa588] uppercase tracking-widest mb-3 block">성별 선택</label>
+                    <div className="flex gap-3">
+                      {([['male', '남성'], ['female', '여성']] as const).map(([val, label]) => (
+                        <button
+                          key={val}
+                          onClick={() => setGender(val)}
+                          className={`flex-1 py-4 rounded-xl font-bold text-base transition-all ${gender === val ? 'bg-[#bfa588] text-white shadow-md' : 'bg-[#faf8f5] border border-[#e8e0d5] text-gray-600 hover:bg-[#f5ebd9]'}`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  
-                  {/* Radio Scale Row */}
-                  <div className="flex justify-between md:w-[350px] w-full px-2">
-                    {[1, 2, 3, 4, 5].map((val) => {
-                      const isSelected = currentValue === val
-                      return (
-                        <div key={val} className="flex-1 flex justify-center">
-                          <label className="relative cursor-pointer w-8 h-8 flex items-center justify-center group touch-manipulation">
-                            <input 
-                              type="radio" 
-                              name={`q-${qIndex}`} 
-                              value={val}
-                              checked={isSelected}
-                              onChange={() => handleAnswer(qIndex, val)}
-                              className="sr-only"
-                            />
-                            {/* Outer Circle */}
-                            <div className={`w-6 h-6 rounded-full border-2 transition-all 
-                               ${isSelected 
-                                ? 'border-[#566e63]' 
-                                : 'border-[#d0d3d5] group-hover:border-[#96a99e]'}`} 
-                            />
-                            {/* Inner Dot */}
-                            {isSelected && (
-                              <div className="absolute w-3 h-3 rounded-full bg-[#566e63] animate-in zoom-in-75 duration-200" />
-                            )}
-                          </label>
-                        </div>
-                      )
-                    })}
+                  <div>
+                    <label className="text-xs font-bold text-[#bfa588] uppercase tracking-widest mb-3 block">연령대 선택</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {(['20s', '30s', '40s', '50s_plus'] as const).map((val) => (
+                        <button
+                          key={val}
+                          onClick={() => setAgeGroup(val)}
+                          className={`py-4 rounded-xl font-bold text-base transition-all ${ageGroup === val ? 'bg-[#bfa588] text-white shadow-md' : 'bg-[#faf8f5] border border-[#e8e0d5] text-gray-600 hover:bg-[#f5ebd9]'}`}
+                        >
+                          {val === '50s_plus' ? '50대 이상' : val.replace('s', '대')}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              )
-            })}
-          </div>
+             </div>
+          ) : (
+             <div key={currentStep} className="animate-in fade-in slide-in-from-right-8 duration-300">
+                <div className="mb-12">
+                  <span className="text-sm font-bold text-[#bfa588] bg-[#f5ebd9] px-3 py-1 rounded-full inline-block mb-6 tracking-widest">
+                    문항 {currentStep + 1} / {QUESTIONS.length}
+                  </span>
+                  <h2 className="text-3xl md:text-5xl font-extrabold text-[#222] leading-tight break-keep">
+                    {QUESTIONS[currentStep]}
+                  </h2>
+                </div>
 
-          {/* Remaining Indicator (Only visible if not complete) */}
-          {!isComplete && (
-            <div className="border-t-2 border-dashed border-[#d0d3d5] pt-10 pb-6 flex flex-col items-center justify-center opacity-70">
-              <div className="flex gap-2 mb-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#a3b8ad]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#a3b8ad]" />
-                <span className="w-1.5 h-1.5 rounded-full bg-[#a3b8ad]" />
-              </div>
-              <p className="text-sm font-bold text-[#64716a]">
-                남은 응답 문항: {totalCount - answeredCount}개
-              </p>
-            </div>
+                <div className="flex flex-col gap-3">
+                  {[
+                    { val: 1, label: '전혀 아니다' },
+                    { val: 2, label: '약간 그렇다' },
+                    { val: 3, label: '웬만큼 그렇다' },
+                    { val: 4, label: '꽤 그렇다' },
+                    { val: 5, label: '매우 그렇다' }
+                  ].map((item) => {
+                    const isSelected = answers[currentStep] === item.val
+                    return (
+                      <button
+                        key={item.val}
+                        onClick={() => handleAnswerChange(item.val)}
+                        className={`w-full text-left px-8 py-5 rounded-2xl font-bold text-base flex items-center gap-2 transition-all border-2 ${
+                          isSelected ? 'border-[#bfa588] bg-[#fcfaf5] text-[#bfa588]' : 'border-transparent bg-white text-[#222] shadow-sm hover:border-[#bfa588]/50'
+                        }`}
+                      >
+                        <span className="inline-block w-8 font-extrabold text-gray-400">{item.val}</span>
+                        {item.label}
+                      </button>
+                    )
+                  })}
+                </div>
+             </div>
           )}
-          
-        </main>
-      </div>
 
-      {/* Sticky Bottom Footer */}
-      <div className={`fixed bottom-0 left-0 lg:left-[260px] right-0 bg-[#e7eae6] border-t border-[#d0d3d5] p-5 z-30 flex flex-col sm:flex-row items-center justify-between gap-4 transition-transform duration-500
-         transform translate-y-0 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]`}
-      >
-         <div className="flex items-center gap-3 text-sm font-medium text-[#64716a]">
-           <Info size={18} className="text-[#3b6b8b]" />
-           {isComplete 
-             ? <span className="text-[#566e63] font-bold">모든 문항에 응답하셨습니다. 제출 가능합니다.</span>
-             : <span>제출하기 전에 28개의 문항에 모두 응답해주세요. (<strong className="text-[#222]">{answeredCount}/{totalCount}</strong>)</span>
-           }
-         </div>
-         
-         <div className="flex items-center gap-3 w-full sm:w-auto">
+        </main>
+
+        {/* Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 lg:left-[260px] right-0 bg-[#f3ede1] border-t border-[#e8e0d5] p-5 z-30 flex items-center justify-between shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
            <button 
-             onClick={handleSaveProgress}
-             className="flex-1 sm:flex-none bg-[#f5f6f4] hover:bg-white text-[#4a5c53] font-bold px-6 py-3.5 rounded-xl border border-[#d0d3d5] transition-colors text-sm"
+             onClick={handlePrev}
+             disabled={currentStep === -2}
+             className={`flex items-center gap-2 font-bold px-6 py-3 rounded-xl transition-all ${currentStep === -2 ? 'opacity-30 cursor-not-allowed text-gray-500' : 'bg-white text-[#222] hover:bg-[#f5ebd9] shadow-sm'}`}
            >
-             임시 저장
+             <ArrowLeft size={18} />
+             이전
            </button>
+           
            <button 
-             onClick={handleComplete}
-             disabled={!isComplete}
-             className={`flex-1 sm:flex-none font-bold px-8 py-3.5 rounded-xl transition-all shadow-sm text-sm
-               ${isComplete 
-                 ? 'bg-[#4a5c53] hover:bg-[#3c4a43] text-white shadow-[#4a5c53]/20 hover:-translate-y-0.5' 
-                 : 'bg-[#b6c4bc] text-white/70 cursor-not-allowed border-transparent'
-               }`}
+             onClick={() => handleNext()}
+             disabled={isSubmitting}
+             className={`flex items-center gap-2 font-bold px-8 py-3 rounded-xl transition-all shadow-md ${isSubmitting ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-[#bfa588] hover:bg-[#ab8f70] text-white'}`}
            >
-             진단 완료하기
+             {isSubmitting ? '저장 중...' : currentStep === -2 ? '시작하기' : currentStep >= QUESTIONS.length - 1 ? '완료하기' : '다음'}
+             {!isSubmitting && currentStep < QUESTIONS.length - 1 && <ArrowRight size={18} />}
            </button>
-         </div>
+        </div>
       </div>
     </div>
   )

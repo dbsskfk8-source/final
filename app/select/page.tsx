@@ -9,7 +9,7 @@ export default function SelectPage() {
       
       {/* Navbar */}
       <nav className="px-6 md:px-10 py-6 flex justify-between items-center bg-transparent max-w-[1400px] mx-auto w-full">
-        <Link href="/" className="font-extrabold text-xl tracking-tight text-[#4a5c53]">파이널 서비스</Link>
+        <Link href="/" className="font-extrabold text-3xl tracking-tight text-[#4a5c53]">MoodB</Link>
         <div className="hidden md:flex gap-12 font-medium text-sm text-gray-500">
           <Link href="/select" className="text-black border-b-2 border-black pb-1">치유 여정(Cure)</Link>
           <Link href="/my-situation" className="hover:text-black hover:border-b-2 hover:border-black transition-all pb-1">마이페이지</Link>
@@ -25,35 +25,30 @@ export default function SelectPage() {
         
         {/* Header Title Section */}
         <div className="text-center mb-16 fade-in">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight text-[#222]">
-            치유 방법을 <span className="italic font-serif text-[#566e63]">찾아드립니다.</span>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight text-[#222] break-keep">
+            진단부터 치유까지, <br className="md:hidden" />
+            나의 마음 관리를 <span className="font-black text-[#566e63] underline decoration-4 underline-offset-8 decoration-[#566e63]/30">시작해 보세요.</span>
           </h1>
-          <p className="text-gray-500 font-medium md:text-lg max-w-2xl mx-auto leading-relaxed">
-            현재 내 감정 상태에 맞는 치료적 접근 방식을 진단해 드립니다.
+          <p className="text-gray-500 font-medium md:text-lg max-w-2xl mx-auto leading-relaxed break-keep">
+            감정의 크기 측정부터 나에게 가장 최적화된 명상과 인지재구성 솔루션까지, 이어지는 원스톱 치유 프로세스를 직접 경험합니다.
           </p>
         </div>
 
         {/* Assessment Banner Section (Moved Up) */}
         <div className="bg-[#f0ece5] rounded-[40px] p-8 md:p-16 flex flex-col md:flex-row items-center gap-10 overflow-hidden relative fade-in slide-in-bottom mb-10">
           <div className="md:w-[55%] relative z-10">
-            <h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight">치료를 시작합니다.</h2>
+            <h2 className="text-3xl md:text-5xl font-extrabold mb-6 tracking-tight">나의 MoodB 측정하기</h2>
             <p className="text-sm md:text-base text-gray-500 font-medium leading-relaxed mb-10 max-w-md">
-              모든 여정은 특별합니다. 2분 만에 끝나는 "상태 진단"을 통해 현재 나의 감정적 필요에 가장 알맞은 치료적 접근 방식을 추천받아 보세요.
+              모든 감정에는 크기가 있습니다. 2분 만에 끝나는 감정 주파수(데시벨) 정밀 진단을 통해 현재 나의 감정적 크기와 파동에 가장 알맞은 맞춤형 접근 방식을 추천받아 보세요.
             </p>
-            <Link href="/questionnaire" className="bg-[#333] hover:bg-black text-white px-8 py-4 rounded-full font-bold inline-flex items-center w-fit gap-3 transition-colors shadow-xl shadow-black/10">
+            <Link href="/questionnaire" className="bg-[#566e63] hover:bg-[#4a5c53] text-white px-8 py-4 rounded-full font-bold inline-flex items-center w-fit gap-3 transition-colors shadow-xl shadow-black/10">
               오늘의 마음 진단하기 <FileQuestion size={18} />
             </Link>
           </div>
           
           <div className="md:w-[45%] relative z-10 flex justify-center w-full mt-10 md:mt-0">
-             <div className="w-full max-w-[350px] aspect-square rounded-[40px] bg-gradient-to-br from-[#4db4b6] to-[#127a7c] flex items-center justify-center shadow-2xl relative overflow-hidden">
-                <div className="w-[85%] h-[85%] border-4 border-white/30 rounded-2xl relative flex items-center justify-center">
-                  <div className="w-12 h-12 rounded-full border-2 border-white/50 flex items-center justify-center">
-                     <Sparkles size={16} className="text-white/80" />
-                  </div>
-                </div>
-                <div className="absolute bottom-6 left-6 w-12 h-4 bg-white/20 rounded-sm" />
-                <div className="absolute bottom-6 right-8 w-10 h-8 bg-white/30 rounded-t-md shrink-0" />
+             <div className="w-full max-w-[350px] aspect-square rounded-[40px] flex items-center justify-center shadow-2xl relative overflow-hidden bg-[#faf8f5] group">
+                <img src="/emotion_analysis.png" alt="Emotion Analysis Representation" className="absolute inset-0 w-full h-full object-cover mix-blend-multiply group-hover:scale-105 transition-transform duration-700" />
              </div>
           </div>
         </div>
@@ -61,102 +56,47 @@ export default function SelectPage() {
         {/* Methods Grid Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
           
-          {/* Card 1 (Large, span 2 columns): CBT */}
-          <Link href="/cure" className="md:col-span-2 bg-[#d7eadf] hover:bg-[#cde4d6] transition-colors rounded-[40px] p-10 md:p-12 relative flex flex-col justify-between group h-full min-h-[350px] fade-in slide-in-bottom">
+          {/* Card 1: Mindfulness (Large, span 2 columns) */}
+          <Link href="/meditation/peace" className="md:col-span-2 bg-[#f2f1ef] hover:bg-[#e8e7e5] transition-colors rounded-[40px] p-10 md:p-12 relative flex flex-col justify-between group h-full min-h-[350px] fade-in slide-in-bottom">
             <div>
-              <div className="w-12 h-12 rounded-full bg-white/50 flex items-center justify-center mb-6">
-                <BrainCircuit size={24} className="text-[#4a5c53]" />
+              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-6 shadow-sm">
+                <Sparkles size={24} className="text-[#3b6b8b]" />
               </div>
-              <h2 className="text-3xl font-extrabold mb-4 text-[#222]">CBT (인지행동치료)</h2>
-              <p className="text-[#4a5c53] font-medium leading-relaxed max-w-sm mb-8">
-                도움이 되지 않는 사고 패턴을 식별하고 도전하여 감정적 반응을 변화시키는 인지 재구성 도구입니다.
+              <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-[#222] tracking-tight">마음챙김 명상</h2>
+              <p className="text-gray-600 md:text-lg font-medium leading-relaxed max-w-md mb-8">
+                현재에 머무르고 판단하지 않는 알아차림을 기릅니다. 불안이나 스트레스가 심할 때 중심을 잡는 데 도움을 주어, 즉각적인 평온을 되찾아줍니다.
               </p>
             </div>
             
-            <div className="flex items-center gap-2 font-bold text-[#222] group-hover:gap-4 transition-all">
-              인지 재구성 시작하기 <ArrowRight size={18} />
+            <div className="flex items-center gap-2 font-bold text-[#3b6b8b] group-hover:gap-4 transition-all z-10 text-lg">
+              명상 솔루션 시작하기 <ArrowRight size={20} />
             </div>
 
             {/* Abstract Graphic */}
-            <div className="hidden sm:block absolute top-8 right-8">
-               <div className="w-24 h-24 bg-[#a3b8ad]/30 rounded-[30px] flex items-center justify-center rotate-12 group-hover:rotate-45 transition-transform duration-700">
-                  <BrainCircuit size={48} className="text-[#a3b8ad]" />
+            <div className="hidden sm:flex absolute right-0 bottom-0 top-0 w-1/3 min-w-[200px] items-center justify-end overflow-hidden rounded-r-[40px]">
+               <div className="w-full h-full bg-gradient-to-l from-[#d0d3d8]/60 to-transparent relative flex items-end justify-center pb-0 group-hover:from-[#d0d3d8] transition-colors duration-700">
+                 <div className="w-32 h-40 bg-white/20 rounded-t-full relative z-10 backdrop-blur-md border-t border-l border-r border-white/50 translate-y-4 group-hover:translate-y-0 transition-transform duration-700" />
+                 <div className="absolute top-1/4 left-1/4 w-24 h-24 bg-white/50 blur-2xl rounded-full" />
+                 <div className="absolute bottom-4 right-1/4 w-32 h-32 bg-white/60 blur-3xl rounded-full" />
                </div>
             </div>
           </Link>
 
-          {/* Card 2: Mindfulness */}
-          <div className="bg-[#f2f1ef] rounded-[40px] p-10 md:p-12 flex flex-col justify-between group hover:shadow-lg hover:-translate-y-1 transition-all fade-in slide-in-bottom delay-100 cursor-not-allowed">
+          {/* Card 2: CBT (Normal, span 1 column) */}
+          <Link href="/cure" className="md:col-span-1 bg-[#d7eadf] hover:bg-[#cde4d6] transition-colors rounded-[40px] p-8 md:p-10 flex flex-col justify-between group h-full min-h-[350px] fade-in slide-in-bottom delay-100">
             <div>
-              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mb-6">
-                <Sparkles size={20} className="text-[#3b6b8b]" />
+              <div className="w-12 h-12 rounded-full bg-white/50 flex items-center justify-center mb-6 shadow-sm">
+                <BrainCircuit size={20} className="text-[#4a5c53]" />
               </div>
-              <h2 className="text-2xl font-extrabold mb-3 text-[#222]">마음챙김 명상</h2>
-              <p className="text-gray-500 text-sm font-medium leading-relaxed">
-                현재에 머무르고 판단하지 않는 알아차림을 기릅니다. 불안이나 스트레스가 심할 때 중심을 잡는 데 도움을 줍니다.
+              <h2 className="text-2xl md:text-3xl font-extrabold mb-3 text-[#222] tracking-tight">CBT <span className="block text-xl font-bold mt-1 text-[#4a5c53]">(인지행동치료)</span></h2>
+              <p className="text-[#4a5c53] text-base font-medium leading-relaxed mb-6 opacity-90">
+                왜곡된 사고 패턴을 식별하고 감정적 반응을 능동적으로 변화시킵니다.
               </p>
             </div>
-            
-            {/* Minimal Placeholder graphic */}
-            <div className="mt-8 h-24 w-full bg-[#d0d3d8] rounded-2xl relative overflow-hidden flex items-end justify-center">
-              <div className="w-16 h-20 bg-[#222] rounded-t-full relative z-10" />
-              <div className="absolute top-4 left-4 w-12 h-12 bg-white/20 blur-xl rounded-full" />
-              <div className="absolute top-4 right-4 w-12 h-12 bg-white/20 blur-xl rounded-full" />
+            <div className="text-base font-bold text-[#222] flex items-center justify-between group-hover:text-[#4a5c53] transition-colors mt-auto w-full border-t border-[#4a5c53]/20 pt-6">
+              인지 재구성하기 <ArrowRight size={18} className="transform group-hover:translate-x-1 transition-transform" />
             </div>
-          </div>
-
-          {/* Card 3: ACT */}
-          <div className="bg-[#fcecdb] rounded-[40px] p-10 md:p-12 flex flex-col justify-between group hover:shadow-lg hover:-translate-y-1 transition-all fade-in slide-in-bottom delay-200 cursor-not-allowed">
-            <div>
-              <div className="mb-6 text-[#bd8f67]">
-                <Infinity size={32} strokeWidth={1.5} />
-              </div>
-              <h2 className="text-2xl font-extrabold mb-3 text-[#222]">ACT (수용전념치료)</h2>
-              <p className="text-[#bd8f67] text-sm font-medium leading-relaxed mb-8">
-                통제할 수 없는 것을 부드럽게 받아들이고 내 삶을 풍요롭게 하는 행동과 가치에 전념하는 법을 배웁니다.
-              </p>
-            </div>
-            <div className="self-end w-10 h-10 rounded-full bg-[#bd8f67] text-white flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity">
-              <span className="text-xl leading-none font-light">+</span>
-            </div>
-          </div>
-
-          {/* Card 4: DBT */}
-          <div className="bg-white rounded-[40px] p-10 md:p-12 border border-gray-100 flex flex-col justify-between group hover:shadow-lg hover:-translate-y-1 transition-all fade-in slide-in-bottom delay-300 cursor-not-allowed">
-            <div>
-              <div className="mb-6 text-[#4a5c53]">
-                <Scale size={28} />
-              </div>
-              <h2 className="text-2xl font-extrabold mb-3 text-[#222]">DBT (변증법적 행동치료)</h2>
-              <p className="text-gray-500 text-sm font-medium leading-relaxed mb-6">
-                감정 조절, 고통 감내, 그리고 대인 관계 효율성 기술을 집중적으로 훈련하여 정서적 균형을 찾습니다.
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex -space-x-2">
-                <div className="w-6 h-6 rounded-full bg-[#badce3]" />
-                <div className="w-6 h-6 rounded-full bg-[#d7eadf]" />
-                <div className="w-6 h-6 rounded-full bg-[#fcecdb]" />
-              </div>
-              <span className="text-[10px] font-bold text-gray-600 tracking-wider">전문가 가이드 제공</span>
-            </div>
-          </div>
-
-          {/* Card 5: Somatic */}
-          <div className="bg-[#fafaf7] rounded-[40px] p-10 md:p-12 flex flex-col justify-between group hover:shadow-lg hover:-translate-y-1 transition-all fade-in slide-in-bottom delay-400 cursor-not-allowed">
-            <div>
-              <div className="mb-6 text-[#3b6b8b]">
-                <PersonStanding size={28} />
-              </div>
-              <h2 className="text-2xl font-extrabold mb-3 text-[#222]">신체 중심 치료 (Somatic)</h2>
-              <p className="text-gray-500 text-sm font-medium leading-relaxed mb-8">
-                신체 감각을 추적하여 갇힌 물리적 긴장을 풀고 신경계에 저장된 트라우마를 부드럽게 치유합니다.
-              </p>
-            </div>
-            <div className="text-sm font-medium italic text-gray-600">
-              "몸은 모든 것을 기억합니다."
-            </div>
-          </div>
+          </Link>
 
         </div>
 
@@ -166,8 +106,8 @@ export default function SelectPage() {
       {/* Footer */}
       <footer className="border-t border-gray-100 px-6 md:px-10 py-12 flex flex-col md:flex-row justify-between items-center gap-6 mt-10">
         <div>
-          <div className="font-extrabold text-sm mb-1 text-[#4a5c53]">파이널 서비스</div>
-          <div className="text-[10px] text-gray-600">© 2024 파이널 서비스. 마음의 안식처.</div>
+          <div className="font-extrabold text-base mb-1 text-[#4a5c53]">MoodB</div>
+          <div className="text-xs text-gray-600">© 2024 MoodB. 마음의 안식처.</div>
         </div>
         <div className="flex gap-10 text-[10px] font-bold text-gray-600 uppercase tracking-widest">
           <Link href="#" className="hover:text-black transition-colors">소개</Link>

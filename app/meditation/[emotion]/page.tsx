@@ -1,9 +1,16 @@
 'use client'
 
-import { useEffect, useState, use } from 'react'
+import { useEffect, useState, use, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Play, Pause, RotateCcw, Brain, MessageCircle, Heart, Fingerprint, Activity, Wind, Sparkles } from 'lucide-react'
+import { ArrowLeft, Play, Pause, RotateCcw, Brain, MessageCircle, Heart, Fingerprint, Activity, Wind, Sparkles, Volume2, FileText, Settings, Type, Download } from 'lucide-react'
+import { getScriptForMeditation } from '@/utils/meditationScripts'
+
+const VOICE_OPTIONS = [
+  { id: 'female1', name: '여성 1 (기본 안정)', file: '리소스 명상리딩.m4a' },
+  { id: 'female2', name: '여성 2 (중단전 집중)', file: '중단전 마음챙김 명상 리딩.m4a' },
+  { id: 'male1', name: '남성 1 (신체 감각)', file: '신체감각명상.m4a' },
+]
 
 // 아이콘 매핑용 Smile 폴백
 const Smile = ({ className }: { className?: string }) => (
@@ -13,70 +20,63 @@ const Smile = ({ className }: { className?: string }) => (
 // 감정별 메타데이터 매핑
 const MEDITATION_MAP: Record<string, any> = {
   '기쁨': {
-    target: '희(喜)',
-    principle: '공승희 (恐勝喜)',
+    target: '들뜬 마음(기쁨)',
     name: '호흡명상',
-    description: '과도하게 들뜬 기운(喜)을 차분한 두려움(恐)의 원리로 눌러주어, 심장의 화기를 가라앉히는 호흡 훈련입니다.',
+    description: '과도하게 들뜬 기운을 차분하게 눌러주어, 마음의 화기를 가라앉히는 숨고르기 명상 훈련입니다.',
     color: 'from-pink-400 to-rose-300',
     bgColor: 'bg-rose-50',
     icon: Wind,
     cbt: false
   },
   '분노': {
-    target: '노(怒)',
-    principle: '비승노 (悲勝怒)',
+    target: '치밀어오르는 화(분노)',
     name: '리소스명상',
-    description: '위로 치밀어 오르는 화(怒)를 차분한 감동과 슬픔(悲)의 원리로 다독여 간의 기운을 다스리는 리소스 명상입니다.',
+    description: '위로 솟구치는 화를 차분한 감동의 에너지로 다독여 흥분된 기운을 부드럽게 다스리는 리소스 명상입니다.',
     color: 'from-orange-500 to-amber-400',
     bgColor: 'bg-orange-50',
     icon: Sparkles,
     cbt: false
   },
   '생각': {
-    target: '사(思)',
-    principle: '노승사 (怒勝思)',
+    target: '끊임없는 잡념(생각)',
     name: '신체감각명상',
-    description: '끊임없이 맴도는 잡념(思)을 강한 결단력(怒)의 원리로 쳐내고, 현재 내 몸의 감각으로 주의를 돌리는 훈련입니다.',
+    description: '머릿속을 맴도는 수많은 잡념들을 멈추고, 현재 내 몸에서 느껴지는 감각으로 온전히 주의를 돌리는 훈련입니다.',
     color: 'from-blue-400 to-cyan-300',
     bgColor: 'bg-blue-50',
     icon: Fingerprint,
     cbt: false
   },
   '우울': {
-    target: '우(憂)',
-    principle: '희승우 (喜勝憂)',
+    target: '가라앉은 마음(우울)',
     name: '희희명상',
-    description: '가라앉고 막힌 기운(憂)을 기쁨(喜)의 에너지를 통해 위로 끌어올려 폐의 호흡을 열어주는 긍정 훈련입니다.',
+    description: '가라앉고 답답하게 막힌 기운을 긍정의 에너지를 통해 위로 조심스럽게 끌어올려주는 밝은 훈련입니다.',
     color: 'from-gray-500 to-slate-400',
     bgColor: 'bg-slate-50',
     icon: Smile,
     cbt: false
   },
   '슬픔': {
-    target: '비(悲)',
-    principle: '희승비 (喜勝悲)',
+    target: '무기력한 마음(슬픔)',
     name: '중단전명상',
-    description: '전신이 무기력해지는 슬픔(悲)을 가슴 중심부(중단전)의 기쁨(喜)과 연결하여 따뜻한 에너지를 채우는 훈련입니다.',
+    description: '온몸이 무기력해지는 슬픔을 가슴 중심부의 따뜻한 호흡과 연결하여 스스로를 다독이며 에너지를 채우는 훈련입니다.',
     color: 'from-stone-500 to-zinc-400',
     bgColor: 'bg-stone-50',
     icon: Heart,
     cbt: false
   },
   '두려움': {
-    target: '공(恐)',
-    principle: '사승공 (思勝恐)',
+    target: '불안과 공포(두려움)',
     name: '하단전명상',
-    description: '깊은 곳에서 올라오는 공포(恐)를 이성적인 집중(思)의 원리로 통제하고, 하단전에 단단한 뿌리를 내리는 훈련입니다.',
+    description: '마음 깊은 곳에서 올라오는 막연한 두려움을 통제하고, 흔들리지 않는 단단한 뿌리를 내리는 안정화 훈련입니다.',
     color: 'from-purple-600 to-indigo-500',
     bgColor: 'bg-indigo-50',
     icon: Activity,
     cbt: true
   },
   '놀람': {
-    target: '경(驚)',
-    principle: '사승공 (思勝恐)',
+    target: '흩어진 기운(놀람)',
     name: '신체감각명상',
-    description: '갑작스레 흩어진 기운(驚)을 이성적인 인지(思)를 통해 다시 몸 안으로 거두어들여 심장을 안정시키는 훈련입니다.',
+    description: '갑작스레 놀라서 흩어진 마음의 기운을 다시 몸 안으로 거두어들여 심장을 차분히 안정시키는 훈련입니다.',
     color: 'from-violet-500 to-fuchsia-400',
     bgColor: 'bg-fuchsia-50',
     icon: Fingerprint,
@@ -109,41 +109,90 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   const Icon = data.icon || Brain
 
   const [isPlaying, setIsPlaying] = useState(false)
-  const [progress, setProgress] = useState(0)
+  const [currentTimeSec, setCurrentTimeSec] = useState(0)
+  const [durationSec, setDurationSec] = useState(300)
 
-  // 가상의 타이머 로직 (프로토타입용 및 완료 이력 저장)
+  // Studio States
+  const [activeTab, setActiveTab] = useState<'script' | 'audio' | 'subtitle' | 'export'>('audio')
+  const [selectedVoice, setSelectedVoice] = useState('female1')
+  const [voiceVolume, setVoiceVolume] = useState(100)
+  const [bgmVolume, setBgmVolume] = useState(30)
+  const [showSubtitle, setShowSubtitle] = useState(true)
+  
+  const voiceRef = useRef<HTMLAudioElement>(null)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  // Youtube BGM 제어 (postMessage API)
+  useEffect(() => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      if (isPlaying) {
+        iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*')
+      } else {
+        iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*')
+      }
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [bgmVolume] }), '*')
+    }
+  }, [isPlaying, bgmVolume])
+
+  // 보이스 오디오 제어
+  useEffect(() => {
+    if (voiceRef.current) {
+      voiceRef.current.volume = voiceVolume / 100
+      if (isPlaying) {
+        voiceRef.current.play().catch(e => console.warn('Audio play restricted:', e))
+      } else {
+        voiceRef.current.pause()
+      }
+    }
+  }, [isPlaying, voiceVolume, selectedVoice])
+
+  // 오디오 메타데이터 로드 시 전체 길이 업데이트
+  const handleAudioLoaded = () => {
+    if (voiceRef.current && voiceRef.current.duration !== Infinity && !isNaN(voiceRef.current.duration)) {
+      setDurationSec(voiceRef.current.duration)
+    }
+  }
+
+  // 현재 명상 기호에 맞는 실제 스크립트 도출
+  const activeScripts = getScriptForMeditation(data.name)
+  const currentScript = activeScripts.slice().reverse().find(s => currentTimeSec >= s.time)?.text || ""
+
+  // 타이머 로직 (재생 동기화)
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isPlaying) {
       interval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 100) {
+        if (voiceRef.current) {
+          const current = voiceRef.current.currentTime
+          setCurrentTimeSec(current)
+          
+          if (current >= durationSec - 1 || voiceRef.current.ended) {
             setIsPlaying(false)
-            
-            // ⭐️ 명상을 100% 완료했을 때 완료 이력을 로컬 스토리지에 저장
             try {
               const doneLog = JSON.parse(localStorage.getItem('completed_meditations') || '{}')
-              doneLog[rawEmotion] = Date.now() // '경(놀람)' 등 URL에서 받은 원본 문자열을 키로 저장
+              doneLog[rawEmotion] = Date.now() 
               localStorage.setItem('completed_meditations', JSON.stringify(doneLog))
-              console.log('명상 완료 기록됨:', rawEmotion)
             } catch (e) {
               console.error('완료 이력 저장 실패', e)
             }
-            
-            return 100
           }
-          return prev + 0.5
-        })
-      }, 50) // 10초 명상 데모
+        }
+      }, 500) 
     }
     return () => clearInterval(interval)
-  }, [isPlaying, rawEmotion])
+  }, [isPlaying, durationSec, rawEmotion])
 
   const togglePlay = () => setIsPlaying(!isPlaying)
   const resetPlay = () => {
     setIsPlaying(false)
-    setProgress(0)
+    setCurrentTimeSec(0)
+    if (voiceRef.current) voiceRef.current.currentTime = 0
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [0, true] }), '*')
+    }
   }
+
+  const progressPercent = (currentTimeSec / durationSec) * 100
 
   return (
     <div className={`min-h-screen ${data.bgColor} text-[#333] font-sans selection:bg-black/10 flex flex-col`}>
@@ -152,71 +201,207 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
         <button onClick={() => router.back()} className="flex items-center gap-2 font-bold text-gray-500 hover:text-black transition-colors">
           <ArrowLeft size={20} /> 돌아가기
         </button>
-        <div className="font-extrabold tracking-widest text-[#222]">
-          FINAL SERVICE
+        <div className="font-extrabold tracking-widest text-[#222] text-xl">
+          MoodB
         </div>
         <div className="w-24"></div> {/* 여백 밸런스 */}
       </header>
 
-      {/* 메인 콘텐츠 영역 (CBT 팝업이 활성화될 경우 하단 여백 대폭 추가하여 가림 방지) */}
-      <main className={`flex-1 flex flex-col items-center justify-center p-6 md:p-12 max-w-4xl mx-auto w-full relative z-10 ${data.cbt ? 'pb-40 md:pb-32' : 'pb-12'}`}>
+      {/* 메인 스튜디오 구조 (가로 2분할) */}
+      <main className={`flex-1 w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 p-6 lg:p-10 relative z-10 ${data.cbt ? 'pb-40' : 'pb-12'}`}>
         
-        {/* 설명 헤더 */}
-        <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-sm text-sm font-bold text-gray-600 mb-6">
-            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-            한방 심리 훈련소
+        {/* 숨김 오디오 / Iframe */}
+        <audio 
+          ref={voiceRef} 
+          src={`/audio/${VOICE_OPTIONS.find(v => v.id === selectedVoice)?.file}`} 
+          onLoadedMetadata={handleAudioLoaded}
+          className="hidden" 
+        />
+        <iframe 
+          ref={iframeRef}
+          src="https://www.youtube.com/embed/EsL7TErAQKc?enablejsapi=1&autoplay=0&loop=1&playlist=EsL7TErAQKc" 
+          allow="autoplay"
+          className="hidden"
+        />
+
+        {/* 1. 좌측: 명상 플레이어 영역 */}
+        <div className="flex-1 bg-white/80 backdrop-blur-md rounded-[40px] shadow-2xl border border-white p-8 flex flex-col items-center justify-center relative overflow-hidden">
+          
+          <div className="absolute top-8 left-8 inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-sm text-xs font-bold text-gray-600">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            스튜디오 믹싱 모드
           </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tighter text-[#222] mb-4">
+
+          <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tighter text-[#222] mt-10 mb-4 text-center">
             {data.name}
           </h1>
-          <p className="text-gray-500 md:text-lg font-medium max-w-lg mx-auto leading-relaxed">
-            "{data.principle}" 원리에 따라, {data.target} 감정을 다스립니다. <br className="hidden md:block" /> {data.description}
-          </p>
-        </div>
 
-        {/* 인터랙티브 명상 서클 (핵심 UI) */}
-        <div className="relative w-[280px] h-[280px] md:w-[360px] md:h-[360px] flex items-center justify-center mb-12 animate-in fade-in zoom-in-95 duration-1000 delay-200">
-          {/* 바깥쪽 숨쉬는 애니메이션 원형 */}
-          <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${data.color} opacity-20 blur-xl ${isPlaying ? 'animate-ping' : ''}`} style={{ animationDuration: '4s' }}></div>
-          <div className={`absolute inset-4 rounded-full bg-gradient-to-br ${data.color} opacity-30 blur-md ${isPlaying ? 'animate-pulse' : ''}`} style={{ animationDuration: '3s' }}></div>
-          
-          {/* 안쪽 실제 인터페이스 */}
-          <div className="relative z-10 bg-white/80 backdrop-blur-md border border-white/50 w-[240px] h-[240px] md:w-[300px] md:h-[300px] rounded-full shadow-[0_20px_40px_-5px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center">
-             <Icon size={48} className={`mb-6 opacity-30 ${isPlaying ? 'animate-bounce' : ''}`} style={{ animationDuration: '2s' }} />
-             
-             <div className="text-4xl font-extrabold text-[#222]">
-                {Math.floor(progress)}<span className="text-lg opacity-50">%</span>
-             </div>
-             
-             {/* 상태 텍스트 */}
-             <div className="mt-2 text-xs font-bold tracking-widest text-gray-400 uppercase">
-                {isPlaying ? '숨을 깊게 들이마시세요' : '명상을 시작하려면 터치'}
-             </div>
+          {/* 인터랙티브 명상 서클 */}
+          <div className="relative w-[240px] h-[240px] md:w-[320px] md:h-[320px] flex items-center justify-center my-8">
+            <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${data.color} opacity-20 blur-2xl ${isPlaying ? 'animate-ping' : ''}`} style={{ animationDuration: '4s' }}></div>
+            <div className={`absolute inset-4 rounded-full bg-gradient-to-br ${data.color} opacity-40 blur-lg ${isPlaying ? 'animate-pulse' : ''}`} style={{ animationDuration: '3s' }}></div>
+            
+            <div className="relative z-10 bg-white border. border-white/50 w-[200px] h-[200px] md:w-[260px] md:h-[260px] rounded-full shadow-lg flex flex-col items-center justify-center space-y-2">
+               <Icon size={40} className={`opacity-40 text-[#566e63] ${isPlaying ? 'animate-bounce' : ''}`} style={{ animationDuration: '2s' }} />
+               <div className="text-3xl font-extrabold text-[#222]">
+                  {Math.min(100, progressPercent).toFixed(0)}<span className="text-lg opacity-50">%</span>
+               </div>
+               <div className="font-black tracking-widest text-[#566e63]">
+                  {isPlaying ? `${Math.floor(currentTimeSec / 60)}:${String(Math.floor(currentTimeSec % 60)).padStart(2, '0')}` : 'READY'}
+               </div>
+            </div>
+            
+            {/* 프로그레스 바 */}
+            <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
+              <circle cx="50%" cy="50%" r="48%" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="8" />
+              <circle cx="50%" cy="50%" r="48%" fill="none" stroke="currentColor" strokeWidth="8" className="text-black/20 transition-all duration-500 linear" strokeDasharray="301.59%" strokeDashoffset={`${301.59 - (Math.min(100, progressPercent) / 100) * 301.59}%`} />
+            </svg>
           </div>
-          
-          {/* 원형 프로그레스 바 (가상) */}
-          <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
-            <circle cx="50%" cy="50%" r="48%" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="6" />
-            <circle cx="50%" cy="50%" r="48%" fill="none" stroke="currentColor" strokeWidth="6" className="text-black/20 transition-all duration-100" strokeDasharray="301.59%" strokeDashoffset={`${301.59 - (progress / 100) * 301.59}%`} />
-          </svg>
+
+          {/* 자막 구역 */}
+          {showSubtitle && (
+            <div className="h-20 flex items-center justify-center text-center w-full px-4 mb-8">
+              <p className="text-lg md:text-xl font-bold bg-white/50 px-6 py-2 rounded-2xl text-[#444] break-keep transition-all duration-700">
+                {currentScript || "..."}
+              </p>
+            </div>
+          )}
+
+          {/* 컨트롤 패널 */}
+          <div className="flex items-center gap-6 mt-auto">
+            <button onClick={resetPlay} className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:text-black hover:bg-white shadow-sm hover:shadow-md transition-all active:scale-95">
+              <RotateCcw size={22} />
+            </button>
+            <button onClick={togglePlay} className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-xl transition-all hover:scale-105 active:scale-95 ${isPlaying ? 'bg-gray-800' : 'bg-gradient-to-br ' + data.color}`}>
+              {isPlaying ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
+            </button>
+            <button onClick={() => router.push('/')} className="w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center text-red-400 hover:text-red-500 hover:bg-white shadow-sm hover:shadow-md transition-all active:scale-95 font-bold text-[10px] tracking-widest break-keep">
+              종료
+            </button>
+          </div>
         </div>
 
-        {/* 컨트롤 패널 */}
-        <div className="flex items-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
-          <button onClick={resetPlay} className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-gray-400 hover:text-black shadow-sm transition-all hover:scale-105 active:scale-95">
-            <RotateCcw size={24} />
-          </button>
-          
-          <button onClick={togglePlay} className={`w-20 h-20 rounded-full flex items-center justify-center text-white shadow-xl transition-all hover:scale-105 active:scale-95 ${isPlaying ? 'bg-gray-800' : 'bg-gradient-to-br ' + data.color}`}>
-            {isPlaying ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
-          </button>
-        </div>
+        {/* 2. 우측: 기능 제어 탭 (Studio Tools) */}
+        <div className="lg:w-[400px] flex flex-col bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-xl">
+          {/* Tab Headers */}
+          <div className="flex border-b border-gray-100 bg-[#faf8f5]">
+            <button onClick={() => setActiveTab('audio')} className={`flex-1 py-5 text-sm font-bold transition-colors ${activeTab === 'audio' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
+               <Settings size={18} className="mx-auto mb-1" /> 오디오
+            </button>
+            <button onClick={() => setActiveTab('script')} className={`flex-1 py-5 text-sm font-bold transition-colors ${activeTab === 'script' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
+               <FileText size={18} className="mx-auto mb-1" /> 스크립트
+            </button>
+            <button onClick={() => setActiveTab('subtitle')} className={`flex-1 py-5 text-sm font-bold transition-colors ${activeTab === 'subtitle' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
+               <Type size={18} className="mx-auto mb-1" /> 자막
+            </button>
+            <button onClick={() => setActiveTab('export')} className={`flex-1 py-5 text-sm font-bold transition-colors ${activeTab === 'export' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
+               <Download size={18} className="mx-auto mb-1" /> 내보내기
+            </button>
+          </div>
 
+          {/* Tab Contents */}
+          <div className="p-8 flex-1 overflow-y-auto bg-white">
+            
+            {activeTab === 'audio' && (
+              <div className="space-y-8 animate-in fade-in duration-300">
+                <div>
+                  <h3 className="font-extrabold text-[#222] mb-4 text-lg">리딩 보이스 (AI/성우 대체)</h3>
+                  <div className="flex flex-col gap-3">
+                    {VOICE_OPTIONS.map(voice => (
+                      <label key={voice.id} className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedVoice === voice.id ? 'border-[#566e63] bg-[#566e63]/5' : 'border-gray-100 hover:border-gray-300'}`}>
+                        <div className="flex items-center gap-3">
+                          <input type="radio" name="voice" className="hidden" checked={selectedVoice === voice.id} onChange={() => setSelectedVoice(voice.id)} />
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedVoice === voice.id ? 'border-[#566e63]' : 'border-gray-300'}`}>
+                            {selectedVoice === voice.id && <div className="w-2.5 h-2.5 rounded-full bg-[#566e63]"></div>}
+                          </div>
+                          <span className="font-bold text-gray-700">{voice.name}</span>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-extrabold text-[#222] mb-4 flex items-center gap-2">
+                    <Volume2 size={18} /> 오디오 믹서 (스마트 호흡 매칭)
+                  </h3>
+                  <div className="space-y-6 bg-[#faf8f5] p-5 rounded-2xl border border-gray-100">
+                    <div>
+                      <div className="flex justify-between text-sm font-bold text-gray-600 mb-2">
+                        <span>보이스 볼륨</span>
+                        <span>{voiceVolume}%</span>
+                      </div>
+                      <input type="range" min="0" max="100" value={voiceVolume} onChange={(e) => setVoiceVolume(Number(e.target.value))} className="w-full accent-[#566e63]" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm font-bold text-gray-600 mb-2">
+                        <span>자연 배경소리 (BGM)</span>
+                        <span>{bgmVolume}%</span>
+                      </div>
+                      <input type="range" min="0" max="100" value={bgmVolume} onChange={(e) => setBgmVolume(Number(e.target.value))} className="w-full accent-blue-400" />
+                      <p className="text-xs text-gray-400 mt-2 font-medium">BGM은 Youtube 소스를 자동으로 사용합니다.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'script' && (
+              <div className="animate-in fade-in duration-300">
+                <h3 className="font-extrabold text-[#222] mb-4 text-lg">심리학적 템플릿 스크립트</h3>
+                <div className="space-y-4">
+                  {activeScripts.map((line, idx) => (
+                    <div key={idx} className={`p-4 rounded-xl text-sm leading-relaxed font-medium transition-colors ${currentTimeSec >= line.time ? 'bg-[#566e63]/10 text-[#222] font-bold border border-[#566e63]/20' : 'text-gray-400'}`}>
+                      {line.text}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'subtitle' && (
+              <div className="animate-in fade-in duration-300 space-y-6">
+                <h3 className="font-extrabold text-[#222] mb-4 text-lg">디스플레이 및 자막</h3>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                  <span className="font-bold text-gray-700">명상 중 자막 표시</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" checked={showSubtitle} onChange={(e) => setShowSubtitle(e.target.checked)} />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#566e63]"></div>
+                  </label>
+                </div>
+                <div className="p-4 border border-gray-100 rounded-2xl">
+                  <h4 className="text-sm font-bold text-gray-500 mb-3">미리보기 서체 세팅</h4>
+                  <div className="flex gap-2">
+                    <button className="flex-1 py-2 rounded-lg bg-gray-100 font-serif font-bold hover:bg-gray-200">나눔명조</button>
+                    <button className="flex-1 py-2 rounded-lg bg-[#566e63] text-white font-sans font-bold">기본고딕</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'export' && (
+              <div className="animate-in fade-in duration-300 text-center py-6 space-y-6">
+                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                   <Download size={32} />
+                </div>
+                <h3 className="font-extrabold text-[#222] text-xl">멀티 플랫폼 인코딩</h3>
+                <p className="text-gray-500 font-medium text-sm">현재 작성된 믹싱 설정(스크립트, BGM, 자막)으로 하나의 영상 파일을 생성합니다.</p>
+                <div className="grid grid-cols-2 gap-3 mt-6">
+                  <button onClick={() => alert('인코딩 프로세스 (Mock)')} className="p-4 border border-gray-200 rounded-2xl hover:border-[#566e63] hover:text-[#566e63] transition-colors font-bold flex flex-col items-center gap-2">
+                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">16:9</span> 유튜브용
+                  </button>
+                  <button onClick={() => alert('인코딩 프로세스 (Mock)')} className="p-4 border border-gray-200 rounded-2xl hover:border-[#566e63] hover:text-[#566e63] transition-colors font-bold flex flex-col items-center gap-2">
+                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">9:16</span> 쇼츠 / 릴스용
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </main>
 
       {/* CBT / 심층 처방 연계 버튼 (공, 경 감정일 때만 활성화) */}
-      {data.cbt && (
+      {data.cbt && currentTimeSec < durationSec && (
         <div className="fixed bottom-0 left-0 w-full p-4 md:p-8 animate-in fade-in slide-in-from-bottom-full duration-1000 delay-700 z-20">
           <div className="max-w-2xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl border border-gray-200/50 p-6 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="text-center sm:text-left">
@@ -230,6 +415,30 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
               <MessageCircle size={18} />
               CBT 챗봇 입장
             </Link>
+          </div>
+        </div>
+      )}
+
+      {/* 명상 완료 시 다시 검사 플로우 */}
+      {currentTimeSec >= durationSec && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#faf8f5]/95 backdrop-blur-sm animate-in fade-in duration-1000 p-4">
+          <div className="max-w-md w-full bg-white rounded-[32px] border border-[#d7eadf] p-8 md:p-10 shadow-2xl flex flex-col items-center text-center">
+            <div className="w-20 h-20 bg-[#f5ebd9] rounded-full flex items-center justify-center mb-6 text-[#bfa588] shadow-inner">
+               <Heart size={40} className="animate-pulse" />
+            </div>
+            <h3 className="text-2xl font-extrabold text-[#222] mb-3">명상을 무사히 마쳤습니다.</h3>
+            <p className="text-gray-500 font-medium leading-relaxed mb-8 break-keep">
+              짧은 휴식으로도 마음의 크기는 달라집니다.<br className="hidden md:block" />나의 감정 크기를 다시 측정하여 이전 진단 결과와 어떻게 달라졌는지 비교해 보세요.
+            </p>
+            
+            <Link href="/questionnaire" className="w-full bg-[#566e63] text-white font-bold py-4 rounded-xl hover:bg-[#4a5c53] shadow-lg transition-transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 mb-4">
+              <Activity size={20} />
+              나의 감정 크기 다시 확인하기
+            </Link>
+            
+            <button onClick={() => router.push('/')} className="text-sm font-bold text-gray-400 hover:text-gray-600 underline underline-offset-4">
+              나중에 하기
+            </button>
           </div>
         </div>
       )}

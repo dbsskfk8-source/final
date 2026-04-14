@@ -180,7 +180,7 @@ export default function CurePage() {
 
       {/* Nav */}
       <nav className="px-6 md:px-10 py-6 flex justify-between items-center bg-transparent">
-        <Link href="/" className="font-extrabold text-xl text-[#4a5c53]">파이널 서비스</Link>
+        <Link href="/" className="font-extrabold text-3xl tracking-tight text-[#4a5c53]">MoodB</Link>
         <div className="hidden md:flex gap-10 text-sm font-medium text-gray-600">
           <Link href="/select" className="text-black border-b-2 border-black pb-1">치유 여정(Cure)</Link>
           <Link href="/my-situation" className="hover:text-black">마이페이지</Link>
@@ -437,8 +437,8 @@ export default function CurePage() {
       {/* Footer */}
       <footer className="border-t border-gray-100 mt-20 px-6 md:px-10 py-12 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-gray-600 font-medium">
         <div>
-          <div className="font-extrabold text-sm text-[#4a5c53] mb-1">파이널 서비스</div>
-          <div>© 2024 파이널 서비스. 마음의 안식처.</div>
+          <div className="font-extrabold text-sm text-[#4a5c53] mb-1">MoodB</div>
+          <div>© 2024 MoodB. 마음의 안식처.</div>
         </div>
         <div className="flex gap-10 uppercase tracking-widest font-bold">
           <Link href="#" className="hover:text-black transition-colors">소개</Link>

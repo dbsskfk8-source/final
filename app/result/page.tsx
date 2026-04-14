@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
-  ResponsiveContainer, ReferenceArea
+  ResponsiveContainer, ReferenceArea,
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts'
 import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle, LogOut, TrendingUp, LayoutGrid, Calendar, User, Bell, Settings, Activity, BrainCircuit, HeartPulse, ChevronRight, CheckCircle2 } from 'lucide-react'
 
@@ -136,9 +137,9 @@ function ResultContent() {
     <div className="min-h-screen bg-[#fcfdfc] font-sans text-[#333] pb-24">
       {/* ── HEADER ─────────────────────────────────────────────────────── */}
       <header className="px-6 md:px-10 py-6 flex justify-between items-center max-w-[1400px] mx-auto border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
-        <Link href="/" className="font-extrabold text-xl tracking-tight text-[#4a5c53] flex items-center gap-2">
-          <BrainCircuit size={24} />
-          파이널 서비스
+        <Link href="/" className="font-extrabold text-3xl tracking-tight text-[#4a5c53] flex items-center gap-2">
+          <BrainCircuit size={28} />
+          MoodB
         </Link>
         <nav className="hidden md:flex gap-10 font-bold text-[11px] text-gray-500 uppercase tracking-widest">
           <Link href="/" className="hover:text-black transition-colors">홈</Link>
@@ -170,7 +171,7 @@ function ResultContent() {
                 key={idx} 
                 className={`flex flex-col items-center justify-center p-1.5 sm:p-3 rounded-xl sm:rounded-2xl border ${GROUP_COLOR[score.group]} transition-all`}
               >
-                <span className="text-[10px] sm:text-xs font-bold tracking-widest text-current/60 mb-1 sm:mb-2 truncate max-w-full">
+                <span className="text-base font-bold tracking-widest text-current/60 mb-1 sm:mb-2 truncate max-w-full">
                   {score.subject.replace(/[^가-힣]/g, '')} {/* 한자 제외 한글만 */}
                 </span>
                 <span className="text-base sm:text-2xl font-extrabold mb-1">{score.A}</span>
@@ -182,13 +183,50 @@ function ResultContent() {
           </div>
         </div>
 
+        {/* ── 섹션 1.5: 레이더 차트 (상세 프로파일) ────────── */}
+        <div className="mb-12 animate-in fade-in slide-in-from-bottom-8 duration-500 delay-150">
+          <div className="bg-white p-8 md:p-12 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center">
+            <div className="text-center mb-8 w-full flex flex-col md:flex-row justify-between items-center">
+              <div className="text-left">
+                <h2 className="text-2xl font-extrabold text-[#222]">칠정(七情) 프로파일</h2>
+                <p className="text-sm font-medium text-gray-500 mt-2">당신의 마음을 구성하는 7가지 요소</p>
+              </div>
+            </div>
+            <div className="w-full max-w-lg h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={scores}>
+                  <PolarGrid stroke="#e5e7eb" strokeDasharray="3 3" />
+                  <PolarAngleAxis 
+                    dataKey="subject" 
+                    tick={{ fill: '#4b5563', fontSize: 16, fontWeight: 'bold' }} 
+                  />
+                  <PolarRadiusAxis 
+                    angle={90} 
+                    domain={[0, 100]} 
+                    tick={false} 
+                    axisLine={false} 
+                  />
+                  <Radar
+                    name="감정 지수"
+                    dataKey="A"
+                    stroke="#566e63"
+                    strokeWidth={2}
+                    fill="#566e63"
+                    fillOpacity={0.3}
+                  />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
         {/* ── 섹션 ② & ③: 시각화 차트 및 핵심 진단 리포트 (좌우 분할) ────── */}
         <div className="grid md:grid-cols-5 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-500 delay-200">
           
           {/* 차트 영역 (좌측 3열) */}
           <div className="md:col-span-3 bg-white p-6 md:p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col justify-center">
-            <h3 className="text-sm font-bold text-gray-500 mb-6 flex items-center gap-2">
-              <Activity size={18} /> 감정 지수 프로파일 (Line Chart)
+            <h3 className="text-xl font-bold text-gray-700 mb-6 flex items-center gap-2">
+              <Activity size={24} /> 감정 지수 프로파일 (Line Chart)
             </h3>
             <div className="w-full h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
@@ -204,13 +242,13 @@ function ResultContent() {
 
                   <XAxis 
                     dataKey="subject" 
-                    tick={{ fontSize: 11, fill: '#666', fontWeight: 'bold' }} 
+                    tick={{ fontSize: 16, fill: '#666', fontWeight: 'bold' }} 
                     axisLine={false} 
                     tickLine={false} 
                   />
                   <YAxis 
                     domain={[0, 100]} 
-                    tick={{ fontSize: 10, fill: '#999' }} 
+                    tick={{ fontSize: 16, fill: '#666', fontWeight: 'bold' }} 
                     axisLine={false} 
                     tickLine={false} 
                   />
