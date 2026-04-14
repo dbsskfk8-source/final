@@ -6,11 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, Play, Pause, RotateCcw, Brain, MessageCircle, Heart, Fingerprint, Activity, Wind, Sparkles, Volume2, FileText, Settings, Type, Download } from 'lucide-react'
 import { getScriptForMeditation } from '@/utils/meditationScripts'
 
-const VOICE_OPTIONS = [
-  { id: 'female1', name: '여성 1 (기본 안정)', file: '리소스 명상리딩.m4a' },
-  { id: 'female2', name: '여성 2 (중단전 집중)', file: '중단전 마음챙김 명상 리딩.m4a' },
-  { id: 'male1', name: '남성 1 (신체 감각)', file: '신체감각명상.m4a' },
-]
+import { getScriptForMeditation } from '@/utils/meditationScripts'
 
 // 아이콘 매핑용 Smile 폴백
 const Smile = ({ className }: { className?: string }) => (
@@ -109,18 +105,21 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   const Icon = data.icon || Brain
 
   const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTimeSec, setCurrentTimeSec] = useState(0)
-  const [durationSec, setDurationSec] = useState(300)
+
+  // TTS & Playlist States
+  const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0)
+  const [isSpeaking, setIsSpeaking] = useState(false)
 
   // Studio States
   const [activeTab, setActiveTab] = useState<'script' | 'audio' | 'subtitle' | 'export'>('audio')
-  const [selectedVoice, setSelectedVoice] = useState('female1')
+  const [speechRate, setSpeechRate] = useState(0.8)
+  const [pauseBetween, setPauseBetween] = useState(7)
   const [voiceVolume, setVoiceVolume] = useState(100)
   const [bgmVolume, setBgmVolume] = useState(30)
   const [showSubtitle, setShowSubtitle] = useState(true)
   
-  const voiceRef = useRef<HTMLAudioElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Youtube BGM 제어 (postMessage API)
   useEffect(() => {
@@ -134,65 +133,85 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
     }
   }, [isPlaying, bgmVolume])
 
-  // 보이스 오디오 제어
-  useEffect(() => {
-    if (voiceRef.current) {
-      voiceRef.current.volume = voiceVolume / 100
-      if (isPlaying) {
-        voiceRef.current.play().catch(e => console.warn('Audio play restricted:', e))
-      } else {
-        voiceRef.current.pause()
-      }
-    }
-  }, [isPlaying, voiceVolume, selectedVoice])
+  // 현재 명상 기호에 맞는 실제 스크립트 도출
+  const activeScripts = getScriptForMeditation(data.name)
+  const currentScript = activeScripts[currentSegmentIndex]?.text || ""
 
-  // 오디오 메타데이터 로드 시 전체 길이 업데이트
-  const handleAudioLoaded = () => {
-    if (voiceRef.current && voiceRef.current.duration !== Infinity && !isNaN(voiceRef.current.duration)) {
-      setDurationSec(voiceRef.current.duration)
+  // TTS 재생 코어 로직
+  const speakSegment = (index: number) => {
+    if (index >= activeScripts.length) {
+      setIsPlaying(false)
+      try {
+        const doneLog = JSON.parse(localStorage.getItem('completed_meditations') || '{}')
+        doneLog[rawEmotion] = Date.now() 
+        localStorage.setItem('completed_meditations', JSON.stringify(doneLog))
+      } catch (e) {
+        console.error('완료 이력 저장 실패', e)
+      }
+      return
+    }
+    
+    setCurrentSegmentIndex(index)
+    setIsSpeaking(true)
+    
+    const utterance = new SpeechSynthesisUtterance(activeScripts[index].text)
+    utterance.lang = 'ko-KR'
+    utterance.rate = speechRate
+    utterance.pitch = 1.0
+    utterance.volume = voiceVolume / 100
+    
+    utterance.onend = () => {
+      setIsSpeaking(false)
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      timeoutRef.current = setTimeout(() => {
+        setIsPlaying(prev => {
+          if (prev) {
+            speakSegment(index + 1)
+          }
+          return prev
+        })
+      }, pauseBetween * 1000)
+    }
+    
+    window.speechSynthesis.speak(utterance)
+  }
+
+  const togglePlay = () => {
+    if (isPlaying) {
+      window.speechSynthesis.pause()
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      setIsPlaying(false)
+    } else {
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume()
+      } else {
+        window.speechSynthesis.cancel()
+        speakSegment(currentSegmentIndex)
+      }
+      setIsPlaying(true)
     }
   }
 
-  // 현재 명상 기호에 맞는 실제 스크립트 도출
-  const activeScripts = getScriptForMeditation(data.name)
-  const currentScript = activeScripts.slice().reverse().find(s => currentTimeSec >= s.time)?.text || ""
-
-  // 타이머 로직 (재생 동기화)
-  useEffect(() => {
-    let interval: NodeJS.Timeout
-    if (isPlaying) {
-      interval = setInterval(() => {
-        if (voiceRef.current) {
-          const current = voiceRef.current.currentTime
-          setCurrentTimeSec(current)
-          
-          if (current >= durationSec - 1 || voiceRef.current.ended) {
-            setIsPlaying(false)
-            try {
-              const doneLog = JSON.parse(localStorage.getItem('completed_meditations') || '{}')
-              doneLog[rawEmotion] = Date.now() 
-              localStorage.setItem('completed_meditations', JSON.stringify(doneLog))
-            } catch (e) {
-              console.error('완료 이력 저장 실패', e)
-            }
-          }
-        }
-      }, 500) 
-    }
-    return () => clearInterval(interval)
-  }, [isPlaying, durationSec, rawEmotion])
-
-  const togglePlay = () => setIsPlaying(!isPlaying)
   const resetPlay = () => {
+    window.speechSynthesis.cancel()
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
     setIsPlaying(false)
-    setCurrentTimeSec(0)
-    if (voiceRef.current) voiceRef.current.currentTime = 0
+    setCurrentSegmentIndex(0)
+    setIsSpeaking(false)
     if (iframeRef.current && iframeRef.current.contentWindow) {
       iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [0, true] }), '*')
     }
   }
 
-  const progressPercent = (currentTimeSec / durationSec) * 100
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel()
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [])
+
+  const progressPercent = ((currentSegmentIndex) / (activeScripts.length || 1)) * 100
 
   return (
     <div className={`min-h-screen ${data.bgColor} text-[#333] font-sans selection:bg-black/10 flex flex-col`}>
@@ -210,13 +229,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
       {/* 메인 스튜디오 구조 (가로 2분할) */}
       <main className={`flex-1 w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 p-6 lg:p-10 relative z-10 ${data.cbt ? 'pb-40' : 'pb-12'}`}>
         
-        {/* 숨김 오디오 / Iframe */}
-        <audio 
-          ref={voiceRef} 
-          src={`/audio/${VOICE_OPTIONS.find(v => v.id === selectedVoice)?.file}`} 
-          onLoadedMetadata={handleAudioLoaded}
-          className="hidden" 
-        />
+        {/* 숨김 Iframe */}
         <iframe 
           ref={iframeRef}
           src="https://www.youtube.com/embed/EsL7TErAQKc?enablejsapi=1&autoplay=0&loop=1&playlist=EsL7TErAQKc" 
@@ -247,7 +260,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
                   {Math.min(100, progressPercent).toFixed(0)}<span className="text-lg opacity-50">%</span>
                </div>
                <div className="font-black tracking-widest text-[#566e63]">
-                  {isPlaying ? `${Math.floor(currentTimeSec / 60)}:${String(Math.floor(currentTimeSec % 60)).padStart(2, '0')}` : 'READY'}
+                  {isPlaying ? `STEP ${currentSegmentIndex + 1}` : 'READY'}
                </div>
             </div>
             
@@ -305,19 +318,22 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
             {activeTab === 'audio' && (
               <div className="space-y-8 animate-in fade-in duration-300">
                 <div>
-                  <h3 className="font-extrabold text-[#222] mb-4 text-lg">리딩 보이스 (AI/성우 대체)</h3>
-                  <div className="flex flex-col gap-3">
-                    {VOICE_OPTIONS.map(voice => (
-                      <label key={voice.id} className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedVoice === voice.id ? 'border-[#566e63] bg-[#566e63]/5' : 'border-gray-100 hover:border-gray-300'}`}>
-                        <div className="flex items-center gap-3">
-                          <input type="radio" name="voice" className="hidden" checked={selectedVoice === voice.id} onChange={() => setSelectedVoice(voice.id)} />
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedVoice === voice.id ? 'border-[#566e63]' : 'border-gray-300'}`}>
-                            {selectedVoice === voice.id && <div className="w-2.5 h-2.5 rounded-full bg-[#566e63]"></div>}
-                          </div>
-                          <span className="font-bold text-gray-700">{voice.name}</span>
-                        </div>
-                      </label>
-                    ))}
+                  <h3 className="font-extrabold text-[#222] mb-4 text-lg">리딩 설정 (내장 음성)</h3>
+                  <div className="space-y-6 bg-[#faf8f5] p-5 rounded-2xl border border-gray-100">
+                    <div>
+                      <div className="flex justify-between text-sm font-bold text-gray-600 mb-2">
+                        <span>읽기 속도</span>
+                        <span>{speechRate.toFixed(2)}x</span>
+                      </div>
+                      <input type="range" min="0.5" max="1.5" step="0.05" value={speechRate} onChange={(e) => setSpeechRate(Number(e.target.value))} className="w-full accent-[#566e63]" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-sm font-bold text-gray-600 mb-2">
+                        <span>문장 간 쉬는 시간 (호흡)</span>
+                        <span>{pauseBetween}초</span>
+                      </div>
+                      <input type="range" min="1" max="15" step="1" value={pauseBetween} onChange={(e) => setPauseBetween(Number(e.target.value))} className="w-full accent-[#566e63]" />
+                    </div>
                   </div>
                 </div>
 
