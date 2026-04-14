@@ -398,8 +398,6 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
                         ))}
                       </select>
                     </div>
-                      <input type="range" min="1" max="15" step="1" value={pauseBetween} onChange={(e) => setPauseBetween(Number(e.target.value))} className="w-full accent-[#566e63]" />
-                    </div>
                   </div>
                 </div>
 
