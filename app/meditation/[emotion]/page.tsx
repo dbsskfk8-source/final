@@ -64,10 +64,10 @@ const MEDITATION_MAP: Record<string, any> = {
     icon: Heart,
     cbt: false
   },
-  '두려움': {
-    target: '불안과 공포(두려움)',
+  '공포': {
+    target: '불안과 공포',
     name: '하단전명상',
-    description: '마음 깊은 곳에서 올라오는 막연한 두려움을 통제하고, 흔들리지 않는 단단한 뿌리를 내리는 안정화 훈련입니다.',
+    description: '마음 깊은 곳에서 올라오는 막연한 공포를 통제하고, 흔들리지 않는 단단한 뿌리를 내리는 안정화 훈련입니다.',
     color: 'from-purple-600 to-indigo-500',
     bgColor: 'bg-indigo-50',
     icon: Activity,
@@ -96,7 +96,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
     '생각': ['사', '생각', '思'],
     '우울': ['우', '우울', '憂'],
     '슬픔': ['비', '슬픔', '悲'],
-    '두려움': ['공', '두려움', '恐'],
+    '공포': ['공', '공포', '恐'],
     '놀람': ['경', '놀람', '驚']
   }
 

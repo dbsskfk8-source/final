@@ -122,7 +122,7 @@ export const FACTOR_NAMES: Record<EmotionFactor, string> = {
   THOUGHT: '생각',
   DEPRESSION: '우울',
   SORROW: '슬픔',
-  FRIGHT: '두려움',
+  FRIGHT: '공포',
   FEAR: '놀람',
   TOTAL: '전체 지표',
 };

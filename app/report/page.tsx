@@ -117,9 +117,9 @@ function ReportContent() {
       case 'SORROW':
         return group === 'risk' ? "극심한 비(悲)는 기를 소모시켜 폐를 상하게 하며 전신의 무기력증을 초래합니다." : "슬픔으로 인해 에너지가 소진되고 있습니다. 충분한 휴식과 따뜻한 차로 몸을 달래주세요.";
       case 'FRIGHT':
-        return group === 'risk' ? "갑작스러운 경(驚)은 기를 흐트러뜨려 심장과 담력을 상하게 하며 불안장애로 이어질 수 있습니다." : "자율신경계가 다소 예민해져 있습니다. 안정적인 환경에서 규칙적인 생활을 권장합니다.";
+        return group === 'risk' ? "만성적인 공(恐)은 기를 아래로 가라앉혀 신장을 상하게 하고 만성 피로를 유발합니다." : "공포와 불안이 내재되어 있습니다. 작은 목표를 달성하며 자신감을 회복하는 과정이 필요합니다.";
       case 'FEAR':
-        return group === 'risk' ? "만성적인 공(恐)은 기를 아래로 가라앉혀 신장을 상하게 하고 만성 피로를 유발합니다." : "두려움과 불안이 내재되어 있습니다. 작은 목표를 달성하며 자신감을 회복하는 과정이 필요합니다.";
+        return group === 'risk' ? "갑작스러운 경(驚)은 기를 흐트러뜨려 심장과 담력을 상하게 하며 불안장애로 이어질 수 있습니다." : "자율신경계가 다소 예민해져 있습니다. 안정적인 환경에서 규칙적인 생활을 권장합니다.";
       default:
         return "";
     }
@@ -161,10 +161,10 @@ function ReportContent() {
           
           {/* HEADER SECTION (Paper/Chart style) */}
           <div className="border-b-4 border-[#222] pb-8 mb-10 text-center relative mt-10 sm:mt-0">
-            <div className="absolute top-0 left-0 bg-[#f0ece5] text-[#566e63] px-3 py-1 font-bold text-[10px] tracking-widest uppercase mb-4 sm:mb-0">
+            <div className="absolute top-[-10px] left-0 bg-[#f0ece5] text-[#566e63] px-3 py-1 font-bold text-[10px] tracking-widest uppercase mb-4 sm:mb-0">
               CONFIDENTIAL
             </div>
-            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tighter text-[#222] mb-4 mt-8 sm:mt-0">심리 진단 심층 리포트</h1>
+            <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tighter text-[#222] mb-4 mt-12 sm:mt-0">심리 진단 심층 리포트</h1>
             <p className="text-gray-500 font-medium flex items-center justify-center gap-2 text-sm sm:text-base">
               <span className="font-serif italic tracking-wider">Clinical Seven Emotions Evaluation Report</span>
             </p>
@@ -230,8 +230,8 @@ function ReportContent() {
                   else if (scoreName.includes('생각')) factorKey = 'THOUGHT'
                   else if (scoreName.includes('우울')) factorKey = 'DEPRESSION'
                   else if (scoreName.includes('슬픔')) factorKey = 'SORROW'
-                  else if (scoreName.includes('놀람')) factorKey = 'FRIGHT'
-                  else if (scoreName.includes('두려움')) factorKey = 'FEAR'
+                  else if (scoreName.includes('놀람')) factorKey = 'FEAR'
+                  else if (scoreName.includes('공포')) factorKey = 'FRIGHT'
                 }
 
                 return (

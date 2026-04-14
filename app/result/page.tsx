@@ -114,6 +114,11 @@ function ResultContent() {
   }
 
   const { scores } = result
+  const chartData = scores.map(s => ({
+    ...s,
+    min: 40,
+    max: 60
+  }))
   const attentionRequired = scores.filter(s => s.group !== 'normal')
 
   // 감정별 맞춤형 코멘트 
@@ -194,11 +199,11 @@ function ResultContent() {
             </div>
             <div className="w-full max-w-lg h-[350px] md:h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="60%" data={scores}>
+                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
                   <PolarGrid stroke="#e5e7eb" strokeDasharray="3 3" />
                   <PolarAngleAxis 
                     dataKey="subject" 
-                    tick={{ fill: '#4b5563', fontSize: 16, fontWeight: 'bold' }} 
+                    tick={{ fill: '#4a5c53', fontSize: 14, fontWeight: 'bold' }} 
                   />
                   <PolarRadiusAxis 
                     angle={90} 
@@ -206,13 +211,49 @@ function ResultContent() {
                     tick={false} 
                     axisLine={false} 
                   />
+                  
+                  {/* 가이드 영역 (정상 범위: 40~60) */}
                   <Radar
-                    name="감정 지수"
-                    dataKey="A"
+                    name="정상 범위"
+                    dataKey="max"
                     stroke="#566e63"
-                    strokeWidth={2}
+                    strokeWidth={1}
+                    strokeDasharray="4 4"
                     fill="#566e63"
-                    fillOpacity={0.3}
+                    fillOpacity={0.15}
+                    isAnimationActive={false}
+                  />
+
+                  <Radar
+                    name="나의 상태"
+                    dataKey="A"
+                    stroke="#4a5c53"
+                    strokeWidth={2.5}
+                    fill="#566e63"
+                    fillOpacity={0.4}
+                  />
+
+                  <RechartsTooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        if (!data.subject) return null;
+                        return (
+                          <div className="bg-white/95 backdrop-blur-sm p-4 rounded-2xl shadow-xl border border-gray-100 animate-in zoom-in-95 duration-200 text-left">
+                            <p className="text-sm font-bold text-gray-600 mb-1 tracking-widest uppercase">{data.subject}</p>
+                            <div className="flex items-baseline gap-2 mb-2">
+                              <span className="text-2xl font-extrabold text-[#4a5c53]">{data.A}</span>
+                              <span className="text-sm font-bold text-[#566e63]">T-score</span>
+                            </div>
+                            <div className="pt-2 border-t border-gray-50 flex flex-col gap-1">
+                              <p className="text-sm font-bold text-gray-500">원점수: <span className="text-[#222]">{data.rawScore}점</span></p>
+                              <p className="text-sm font-bold text-gray-500">상태: <span className={data.group === 'risk' ? 'text-red-500' : data.group === 'caution' ? 'text-amber-500' : 'text-green-600'}>{data.groupLabel}</span></p>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
                 </RadarChart>
               </ResponsiveContainer>

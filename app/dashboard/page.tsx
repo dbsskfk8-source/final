@@ -10,7 +10,7 @@ import { createClient } from '@/utils/supabase/client'
 const MOCK_PATIENTS = [
   { id: 'PT-10023', name: '김하늘', age: 28, gender: '여성', lastTest: '2023-11-20', riskEmotion: '분노', tScore: 78, status: '위험', cbtProgress: 40 },
   { id: 'PT-10045', name: '이바다', age: 34, gender: '남성', lastTest: '2023-11-19', riskEmotion: '우울', tScore: 65, status: '주의', cbtProgress: 80 },
-  { id: 'PT-10046', name: '박태양', age: 41, gender: '남성', lastTest: '2023-11-18', riskEmotion: '두려움', tScore: 82, status: '위험', cbtProgress: 20 },
+  { id: 'PT-10046', name: '박태양', age: 41, gender: '남성', lastTest: '2023-11-18', riskEmotion: '공포', tScore: 82, status: '위험', cbtProgress: 20 },
   { id: 'PT-10051', name: '최별빛', age: 25, gender: '여성', lastTest: '2023-11-15', riskEmotion: '슬픔', tScore: 59, status: '정상', cbtProgress: 100 },
   { id: 'PT-10088', name: '정우주', age: 52, gender: '여성', lastTest: '2023-11-10', riskEmotion: '생각', tScore: 71, status: '위험', cbtProgress: 0 },
 ]

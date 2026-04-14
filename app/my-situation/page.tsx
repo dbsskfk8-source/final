@@ -281,7 +281,7 @@ export default function MySituationPage() {
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {attentionEmotions.map((emotion: any, idx: number) => {
-                          const isFearFright = emotion.subject.includes('공') || emotion.subject.includes('두려움') || emotion.subject.includes('경') || emotion.subject.includes('놀람');
+                          const isFearFright = emotion.subject.includes('공') || emotion.subject.includes('공포') || emotion.subject.includes('두려움') || emotion.subject.includes('경') || emotion.subject.includes('놀람');
                           const isRisk = emotion.group === 'risk';
                           
                           return (
@@ -350,6 +350,28 @@ export default function MySituationPage() {
               </div>
             </div>
             
+            <div className="grid grid-cols-7 gap-1.5 md:gap-4 mb-10">
+              {radar.map((item: any, idx) => {
+                const group = item.group || 'normal'
+                const groupLabel = item.groupLabel || '정상군'
+                const bgColor = group === 'risk' ? 'bg-red-50' : group === 'caution' ? 'bg-yellow-50' : 'bg-[#f0ece5]'
+                const textColor = group === 'risk' ? 'text-red-600' : group === 'caution' ? 'text-amber-600' : 'text-[#4a5c53]'
+                const borderColor = group === 'risk' ? 'border-red-100' : group === 'caution' ? 'border-yellow-100' : 'border-white/50'
+
+                return (
+                  <div key={idx} className={`${bgColor} rounded-xl sm:rounded-3xl py-2 sm:py-4 px-1 sm:px-6 text-center border ${borderColor} shadow-sm transition-all hover:scale-105`}>
+                    <div className={`text-base sm:text-2xl font-extrabold ${textColor}`}>{item.A}</div>
+                    <div className="text-sm sm:text-base font-bold text-gray-600 tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 uppercase truncate">
+                      {item.subject.replace(/[^가-힣]/g, '')}
+                    </div>
+                    <div className={`mt-1.5 px-3 py-1 rounded-full text-sm font-bold ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                       {groupLabel}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
             <div className="w-full h-[400px] md:h-[500px]">
               <ResponsiveContainer width="100%" height="100%">
                 {viewMode === 'radar' ? (
@@ -427,27 +449,6 @@ export default function MySituationPage() {
               </ResponsiveContainer>
             </div>
 
-            <div className="grid grid-cols-7 gap-1.5 md:gap-4 mt-10">
-              {radar.map((item: any, idx) => {
-                const group = item.group || 'normal'
-                const groupLabel = item.groupLabel || '정상군'
-                const bgColor = group === 'risk' ? 'bg-red-50' : group === 'caution' ? 'bg-yellow-50' : 'bg-[#f0ece5]'
-                const textColor = group === 'risk' ? 'text-red-600' : group === 'caution' ? 'text-amber-600' : 'text-[#4a5c53]'
-                const borderColor = group === 'risk' ? 'border-red-100' : group === 'caution' ? 'border-yellow-100' : 'border-white/50'
-
-                return (
-                  <div key={idx} className={`${bgColor} rounded-xl sm:rounded-3xl py-2 sm:py-4 px-1 sm:px-6 text-center border ${borderColor} shadow-sm transition-all hover:scale-105`}>
-                    <div className={`text-base sm:text-2xl font-extrabold ${textColor}`}>{item.A}</div>
-                    <div className="text-sm sm:text-base font-bold text-gray-600 tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 uppercase truncate">
-                      {item.subject.replace(/[^가-힣]/g, '')}
-                    </div>
-                    <div className={`mt-1.5 px-3 py-1 rounded-full text-sm font-bold ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
-                       {groupLabel}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
           </div>
         </div>
 
