@@ -303,8 +303,8 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
           className="hidden"
         />
 
-        {/* 1. 좌측: 명상 플레이어 영역 */}
-        <div className="flex-1 bg-white/80 backdrop-blur-md rounded-[40px] shadow-2xl border border-white p-8 flex flex-col items-center justify-center relative overflow-hidden">
+        {/* 1. 좌측: 명상 플레이어 영역 (PC에서 스크롤 시 고정됨) */}
+        <div className="lg:sticky lg:top-10 lg:self-start flex-1 bg-white/80 backdrop-blur-md rounded-[40px] shadow-2xl border border-white p-8 flex flex-col items-center justify-center relative overflow-hidden">
           
           <div className="absolute top-8 left-8 inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-sm text-xs font-bold text-gray-600">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
