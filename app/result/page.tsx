@@ -102,10 +102,19 @@ function ResultContent() {
     return '현재 전체적인 감정 상태가 안정적이며 매우 평온합니다.'
   }
 
+  const getEasyEmotion = (name: string) => {
+    const map: Record<string, string> = {
+      '희': '기쁨', '노': '분노', '사': '고민', '우': '근심', '비': '슬픔', '공': '두려움', '경': '놀람',
+      '희 (喜)': '기쁨', '노 (怒)': '분노', '사 (思)': '고민', '우 (憂)': '근심', '비 (悲)': '슬픔', '공 (恐)': '두려움', '경 (驚)': '놀람'
+    }
+    const clean = name.replace(/[^가-힣]/g, '')
+    return map[clean] || map[name] || clean
+  }
+
   const radarData = scores.map(s => {
     const preScore = preResult?.scores.find(ps => ps.subject === s.subject)
     return {
-      subject: s.subject.replace(/[^가-힣]/g, ''),
+      subject: getEasyEmotion(s.subject),
       A: s.A, 
       B: preScore ? preScore.A : null, 
       mean: 50
@@ -124,7 +133,7 @@ function ResultContent() {
             const diff = preScore ? score.A - preScore.A : null
             return (
               <div key={idx} className={`p-4 rounded-3xl border-2 ${GROUP_COLOR[score.group]} transition-all hover:scale-105`}>
-                <div className="text-[16px] font-black mb-2">{score.subject.replace(/[^가-힣]/g, '')}</div>
+                <div className="text-[16px] font-black mb-2">{getEasyEmotion(score.subject)}</div>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-3xl font-black">{score.A}</span>
                   <span className="text-xs text-gray-400">dB</span>

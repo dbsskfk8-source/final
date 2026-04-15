@@ -53,13 +53,13 @@ interface UserProfile {
 }
 
 const DEFAULT_RADAR: RadarItem[] = [
-  { subject: '희 (喜)', A: 84, fullMark: 100 },
-  { subject: '노 (怒)', A: 75, fullMark: 100 },
-  { subject: '사 (思)', A: 62, fullMark: 100 },
-  { subject: '우 (憂)', A: 41, fullMark: 100 },
-  { subject: '비 (悲)', A: 70, fullMark: 100 },
-  { subject: '공 (恐)', A: 65, fullMark: 100 },
-  { subject: '경 (驚)', A: 80, fullMark: 100 },
+  { subject: '기쁨', A: 84, fullMark: 100 },
+  { subject: '분노', A: 75, fullMark: 100 },
+  { subject: '고민', A: 62, fullMark: 100 },
+  { subject: '근심', A: 41, fullMark: 100 },
+  { subject: '슬픔', A: 70, fullMark: 100 },
+  { subject: '두려움', A: 65, fullMark: 100 },
+  { subject: '놀람', A: 80, fullMark: 100 },
 ]
 
 export default function MySituationPage() {

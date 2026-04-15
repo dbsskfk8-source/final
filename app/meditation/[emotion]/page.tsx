@@ -22,65 +22,51 @@ const MEDITATION_MAP: Record<string, any> = {
   '기쁨': {
     target: '들뜬 마음(기쁨)',
     name: '호흡명상',
-    description: '과도하게 들뜬 기운을 차분하게 눌러주어, 마음의 화기를 가라앉히는 숨고르기 명상 훈련입니다.',
+    description: '과도하게 들뜬 기운을 가라앉히고 마음의 평온을 되찾는 명상입니다.',
     color: 'from-pink-400 to-rose-300',
-    bgColor: 'bg-rose-50',
-    icon: Wind,
-    cbt: false
+    icon: Wind
   },
   '분노': {
-    target: '치밀어오르는 화(분노)',
+    target: '솟구치는 화(분노)',
     name: '리소스명상',
-    description: '위로 솟구치는 화를 차분한 감동의 에너지로 다독여 흥분된 기운을 부드럽게 다스리는 리소스 명상입니다.',
+    description: '치밀어 오르는 화를 다스리고 흥분된 마음을 다독이는 명상입니다.',
     color: 'from-orange-500 to-amber-400',
-    bgColor: 'bg-orange-50',
-    icon: Sparkles,
-    cbt: false
+    icon: Sparkles
   },
-  '생각': {
-    target: '끊임없는 잡념(생각)',
+  '고민': {
+    target: '끊임없는 생각(고민)',
     name: '신체감각명상',
-    description: '머릿속을 맴도는 수많은 잡념들을 멈추고, 현재 내 몸에서 느껴지는 감각으로 온전히 주의를 돌리는 훈련입니다.',
+    description: '머릿속 잡념을 멈추고 현재 내 몸의 감각에 집중하는 훈련입니다.',
     color: 'from-blue-400 to-cyan-300',
-    bgColor: 'bg-blue-50',
-    icon: Fingerprint,
-    cbt: false
+    icon: Fingerprint
   },
-  '우울': {
-    target: '가라앉은 마음(우울)',
+  '근심': {
+    target: '가라앉은 마음(근심)',
     name: '희희명상',
-    description: '가라앉고 답답하게 막힌 기운을 긍정의 에너지를 통해 위로 조심스럽게 끌어올려주는 밝은 훈련입니다.',
+    description: '답답하게 막힌 기운을 긍정의 에너지를 통해 밝게 끌어올려 주는 훈련입니다.',
     color: 'from-gray-500 to-slate-400',
-    bgColor: 'bg-slate-50',
-    icon: Smile,
-    cbt: false
+    icon: Smile
   },
   '슬픔': {
-    target: '무기력한 마음(슬픔)',
+    target: '위축된 마음(슬픔)',
     name: '중단전명상',
-    description: '온몸이 무기력해지는 슬픔을 가슴 중심부의 따뜻한 호흡과 연결하여 스스로를 다독이며 에너지를 채우는 훈련입니다.',
+    description: '슬픔으로 무기력해진 마음을 따뜻한 호흡으로 위로하고 에너지를 채우는 훈련입니다.',
     color: 'from-stone-500 to-zinc-400',
-    bgColor: 'bg-stone-50',
-    icon: Heart,
-    cbt: false
+    icon: Heart
   },
-  '공포': {
-    target: '불안과 공포',
+  '두려움': {
+    target: '불안한 마음(두려움)',
     name: '하단전명상',
-    description: '마음 깊은 곳에서 올라오는 막연한 공포를 통제하고, 흔들리지 않는 단단한 뿌리를 내리는 안정화 훈련입니다.',
+    description: '막연한 두려움을 내려놓고 흔들리지 않는 안정감을 찾는 훈련입니다.',
     color: 'from-purple-600 to-indigo-500',
-    bgColor: 'bg-indigo-50',
-    icon: Activity,
-    cbt: true
+    icon: Activity
   },
   '놀람': {
-    target: '흩어진 기운(놀람)',
+    target: '당황한 마음(놀람)',
     name: '신체감각명상',
-    description: '갑작스레 놀라서 흩어진 마음의 기운을 다시 몸 안으로 거두어들여 심장을 차분히 안정시키는 훈련입니다.',
+    description: '갑작스러운 충격으로 흩어진 마음을 가라앉히고 안정을 되찾는 훈련입니다.',
     color: 'from-violet-500 to-fuchsia-400',
-    bgColor: 'bg-fuchsia-50',
-    icon: Fingerprint,
-    cbt: true
+    icon: Fingerprint
   }
 }
 
@@ -91,13 +77,13 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   
   // 다양한 포맷('경(놀람)', '경 (驚)', '놀람')에 방어적으로 대응하는 매칭 딕셔너리
   const MATCH_KEYS: Record<string, string[]> = {
-    '기쁨': ['희', '기쁨', '喜'],
-    '분노': ['노', '분노', '怒'],
-    '생각': ['사', '생각', '思'],
-    '우울': ['우', '우울', '憂'],
-    '슬픔': ['비', '슬픔', '悲'],
-    '공포': ['공', '공포', '恐'],
-    '놀람': ['경', '놀람', '驚']
+    '기쁨': ['기쁨', '희', '喜'],
+    '분노': ['분노', '화', '노', '怒'],
+    '고민': ['고민', '생각', '사', '思'],
+    '근심': ['근심', '걱정', '우', '憂'],
+    '슬픔': ['슬픔', '비', '悲'],
+    '두려움': ['두려움', '공포', '공', '恐'],
+    '놀람': ['놀람', '당황', '경', '驚']
   }
 
   let rawEmotion = decodeURIComponent(resolvedParams.emotion)

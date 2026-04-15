@@ -119,10 +119,10 @@ export const NORMS: Record<AgeGroup, Record<Gender, Record<EmotionFactor, NormDa
 export const FACTOR_NAMES: Record<EmotionFactor, string> = {
   JOY: '기쁨',
   ANGER: '분노',
-  THOUGHT: '생각',
-  DEPRESSION: '우울',
+  THOUGHT: '고민',
+  DEPRESSION: '근심',
   SORROW: '슬픔',
-  FRIGHT: '공포',
+  FRIGHT: '두려움',
   FEAR: '놀람',
   TOTAL: '전체 지표',
 };
