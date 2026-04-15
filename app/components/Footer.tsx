@@ -24,9 +24,9 @@ export default function Footer() {
             <Link href="/dashboard" className="hover:text-black transition-colors">관리자 뷰어</Link>
           </div>
           <div className="flex flex-col gap-4 col-span-2 sm:col-auto">
-            <Link href="#" className="hover:text-black transition-colors">개인정보처리방침</Link>
-            <Link href="#" className="hover:text-black transition-colors">이용약관</Link>
-            <Link href="#" className="hover:text-black transition-colors">문의하기</Link>
+            <Link href="/privacy" className="hover:text-black transition-colors">개인정보처리방침</Link>
+            <Link href="/privacy" className="hover:text-black transition-colors">이용약관</Link>
+            <Link href="/contact" className="hover:text-black transition-colors">문의하기</Link>
           </div>
         </nav>
 

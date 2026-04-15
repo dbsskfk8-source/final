@@ -17,14 +17,15 @@ export default function Navbar() {
   const [user, setUser] = useState<any>(null)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
+    setIsMounted(true)
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
-      // 관리자 여부: user_metadata.role이 'doctor' 또는 'admin'
       const role = user?.user_metadata?.role
       setIsAdmin(role === 'doctor' || role === 'admin')
     }
@@ -57,10 +58,12 @@ export default function Navbar() {
     ? [...baseNavLinks, { name: '관리자 뷰어', href: '/dashboard', highlight: true }]
     : baseNavLinks
 
+  if (!isMounted) return <div className="h-20" />;
+
   return (
     <header 
       className={`fixed top-0 w-full z-[100] transition-all duration-300 px-6 md:px-10 py-4 md:py-6 ${
-        isScrolled ? 'bg-white/80 backdrop-blur-lg shadow-sm' : 'bg-transparent'
+        isScrolled ? 'bg-white/80 backdrop-blur-lg shadow-sm font-medium' : 'bg-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto flex justify-between items-center text-gray-500">

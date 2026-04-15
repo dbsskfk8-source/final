@@ -84,6 +84,12 @@ function QuestionnaireContent() {
     }
   }
 
+  const handlePrev = () => {
+    if (currentStep > -2) {
+      setCurrentStep(prev => prev - 1)
+    }
+  }
+
   const handleComplete = async (finalAnswer?: number) => {
     const finalAnswers = { ...answers, ...(finalAnswer !== undefined ? { [currentStep]: finalAnswer } : {}) }
     const { factors, overall } = analyzeResults(finalAnswers, gender as Gender, ageGroup as AgeGroup)
