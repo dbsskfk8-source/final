@@ -276,11 +276,13 @@ function MySituationContent() {
                           strokeWidth={4}
                           dot={(props: any) => {
                              const { cx, cy, payload } = props;
-                             const color = EMOTION_COLORS[payload.name] || '#566e63';
+                             // 데이터의 이름에서 공백을 제거하여 매핑 (ex: '기쁨 ' -> '기쁨')
+                             const cleanName = payload.name.trim();
+                             const color = EMOTION_COLORS[cleanName] || '#566e63';
                              return (
-                                <g key={`dot-${payload.name}`}>
-                                   <circle cx={cx} cy={cy} r={8} fill={color} stroke="white" strokeWidth={3} shadow="0 4px 6px rgba(0,0,0,0.1)" />
-                                   <text x={cx} y={cy - 15} textAnchor="middle" fontSize="10" fontWeight="bold" fill={color}>{payload.score}</text>
+                                <g key={`dot-${cleanName}`}>
+                                   <circle cx={cx} cy={cy} r={8} fill={color} stroke="white" strokeWidth={3} />
+                                   <text x={cx} y={cy - 18} textAnchor="middle" fontSize="10" fontWeight="900" fill={color}>{payload.score}</text>
                                 </g>
                              );
                           }}
