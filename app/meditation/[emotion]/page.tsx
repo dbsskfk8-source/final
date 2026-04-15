@@ -185,20 +185,20 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
     return () => clearInterval(interval)
   }, [isPlaying, activeScripts.length])
 
-  // 문장 트리거 감지
+  // 문장 트리거 감지 (발화 중 중복 호출 방지)
   useEffect(() => {
     if (!isPlaying) return
+    if (isSpeaking) return // 현재 발화 중이면 새 발화 시작 안 함
     
     const script = activeScripts[currentSegmentIndex]
     if (script && elapsedTime >= script.time) {
       speakSegment(currentSegmentIndex)
       setCurrentSegmentIndex(prev => prev + 1)
     }
-  }, [elapsedTime, isPlaying, currentSegmentIndex, activeScripts])
+  }, [elapsedTime, isPlaying, currentSegmentIndex, activeScripts, isSpeaking])
 
   const speakSegment = (index: number) => {
     if (index >= activeScripts.length) return
-    setIsSpeaking(true)
     const script = activeScripts[index]
     const utterance = new SpeechSynthesisUtterance(script.text)
     utterance.lang = 'ko-KR'
@@ -220,15 +220,18 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
       if (selectedVoice) utterance.voice = selectedVoice
     }
 
-    utterance.onstart = () => setCurrentDisplayScript(script.text)
+    // 자막: onstart 이벤트를 기다리지 않고 즉시 표시 (브라우저 호환성)
+    setCurrentDisplayScript(script.text)
+    setIsSpeaking(true)
+
     utterance.onend = () => {
        setIsSpeaking(false)
-       const nextScript = activeScripts[index + 1]
-       if (nextScript && nextScript.time - (script.endTime || script.time) > 2) {
-          // 다음 문장까지 2초 이상 남으면 가이드 메시지 (선택 사항)
-       }
+    }
+    utterance.onerror = () => {
+       setIsSpeaking(false)
     }
 
+    window.speechSynthesis.cancel() // 이전 발화 확실히 종료 후 새 발화 시작
     window.speechSynthesis.speak(utterance)
   }
 
