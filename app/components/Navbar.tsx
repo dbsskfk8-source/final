@@ -26,8 +26,15 @@ export default function Navbar() {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
-      const role = user?.user_metadata?.role
-      setIsAdmin(role === 'doctor' || role === 'admin')
+      if (user) {
+        // 1. Metadata 확인
+        const metaRole = user?.user_metadata?.role
+        // 2. DB 정보 확인
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+        const dbRole = profile?.role
+        
+        setIsAdmin(metaRole === 'doctor' || metaRole === 'admin' || dbRole === 'doctor' || dbRole === 'admin')
+      }
     }
     getUser()
 
