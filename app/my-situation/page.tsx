@@ -79,7 +79,7 @@ export default function MySituationPage() {
   const [chartWidth, setChartWidth] = useState(500)
   const router = useRouter()
 
-    // 창 크기에 따라 차트 너비 동적 설정 (ResponsiveContainer 버그 우회)
+  useEffect(() => {
     const updateWidth = () => setChartWidth(Math.min(window.innerWidth - 80, 800))
     updateWidth()
     window.addEventListener('resize', updateWidth)
