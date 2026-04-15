@@ -18,7 +18,8 @@ export default async function HomePage() {
   const isDoctor = user?.user_metadata?.role === 'doctor'
 
   return (
-    <div className="min-h-screen bg-[#f      <main className="pt-20 md:pt-32 pb-12 md:pb-20">
+    <div className="min-h-screen bg-[#fffdfa] text-[#333]">
+      <main className="pt-20 md:pt-32 pb-12 md:pb-20">
         {/* Hero Section */}
         <section className="px-6 md:px-10 lg:px-20 grid md:grid-cols-2 gap-8 md:gap-20 items-center mb-16 md:mb-32">
           <div className="max-w-xl animate-in fade-in slide-in-from-left-8 duration-1000">
