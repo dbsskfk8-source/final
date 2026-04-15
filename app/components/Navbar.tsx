@@ -28,10 +28,10 @@ export default function Navbar() {
       setUser(user)
       if (user) {
         // 1. Metadata 확인
-        const metaRole = user?.user_metadata?.role
+        const metaRole = (user?.user_metadata?.role || '').toLowerCase()
         // 2. DB 정보 확인
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-        const dbRole = profile?.role
+        const dbRole = (profile?.role || '').toLowerCase()
         
         setIsAdmin(metaRole === 'doctor' || metaRole === 'admin' || dbRole === 'doctor' || dbRole === 'admin')
       }

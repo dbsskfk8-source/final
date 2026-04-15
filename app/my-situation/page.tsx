@@ -120,7 +120,8 @@ function MySituationContent() {
     score: Math.round(r.overallTScore)
   }))
 
-  const isAdmin = profile?.role === 'doctor' || profile?.role === 'admin'
+  const userRole = (profile?.role || '').toLowerCase()
+  const isAdmin = userRole === 'doctor' || userRole === 'admin'
 
   return (
     <div className="min-h-screen bg-[#faf8f5] text-[#333]">
