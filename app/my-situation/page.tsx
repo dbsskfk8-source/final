@@ -686,7 +686,11 @@ export default function MySituationPage() {
                 <p className="text-xs text-gray-600 leading-relaxed mb-8 line-clamp-3">{log.summary}</p>
                 <div className="flex justify-between items-center mt-auto border-t border-gray-50 pt-5">
                   <div className="flex gap-2">
-                    {log.tags.map((tag: string, idx: number) => (<span key={idx} className={`px-2.5 py-1 rounded-lg text-[9px] font-bold transition-colors ${log.isAssessment ? 'bg-[#f0ece5] text-[#4a5c53]' : 'bg-[#e8efe9] text-[#566e63]'}`}>#{tag}</span>))}
+                    {log.tags.map((tag: string, idx: number) => (
+                      <span key={idx} className={`px-2.5 py-1 rounded-lg text-[9px] font-bold transition-colors ${log.isAssessment ? 'bg-[#f0ece5] text-[#4a5c53]' : 'bg-[#e8efe9] text-[#566e63]'}`}>
+                        #{tag}
+                      </span>
+                    ))}
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-[10px] font-bold flex items-center gap-1 text-gray-600 group-hover:text-[#566e63] transition-colors">
@@ -697,8 +701,11 @@ export default function MySituationPage() {
               </div>
             ))}
           </div>
-          <div className="flex justify-center">
-            <button className="bg-white border border-gray-100 shadow-sm hover:bg-[#f0ece5] text-[#4a5c53] font-bold text-sm px-10 py-3.5 rounded-full transition-all active:scale-95">이전 기록 더 불러오기</button>
+
+          <div className="flex justify-center mt-12">
+            <button className="bg-white border border-gray-100 shadow-sm hover:bg-[#f0ece5] text-[#4a5c53] font-bold text-sm px-10 py-3.5 rounded-full transition-all active:scale-95">
+              이전 기록 더 불러오기
+            </button>
           </div>
         </div>
       </main>
