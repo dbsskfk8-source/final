@@ -254,9 +254,9 @@ function MySituationContent() {
 
               <div className="h-[380px] w-full">
                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={lineData}>
+                    <LineChart data={lineData} margin={{ left: 30, right: 30, top: 20, bottom: 20 }}>
                        <CartesianGrid strokeDasharray="5 5" vertical={false} stroke="#f1f5f9" />
-                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: '900', fill: '#64748b'}} />
+                       <XAxis dataKey="name" axisLine={false} tickLine={false} interval={0} tick={{fontSize: 12, fontWeight: '900', fill: '#64748b'}} />
                        <YAxis hide domain={[0, 100]} />
                        <Tooltip contentStyle={{borderRadius: '20px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.05)', fontWeight: 'bold'}} />
                        <Line type="monotone" dataKey="score" stroke="#566e63" strokeWidth={6} dot={{r: 8, fill: '#566e63', stroke: 'white', strokeWidth: 4}} activeDot={{r: 10, shadow: '0 0 10px rgba(0,0,0,0.2)'}} animationDuration={1500} />
