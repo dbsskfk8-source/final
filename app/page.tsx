@@ -74,7 +74,7 @@ export default async function HomePage() {
                  
                  <div className="absolute inset-8 md:inset-12 border border-[#bfa588]/30 rounded-[40px] flex flex-col items-center justify-center p-8 md:p-12 text-center backdrop-blur-[2px]">
                     <span className="text-[#bfa588] text-[10px] font-black tracking-[0.3em] uppercase mb-8 block opacity-60">MoodB Philosophy</span>
-                    <p className="text-[#8c7457] font-serif italic text-2xl md:text-3xl leading-relaxed mb-8 drop-shadow-sm">
+                    <p className="text-[#8c7457] font-serif italic text-2xl md:text-3xl leading-[1.4] mb-8 drop-shadow-sm whitespace-nowrap">
                       "감정은 흐르는 물과 같아서,<br/>가두지 않고 마주할 때<br/>비로소 평온해집니다."
                     </p>
                     <div className="w-12 h-[1px] bg-[#bfa588]/40 mb-8"></div>
@@ -103,19 +103,19 @@ export default async function HomePage() {
                 오늘 당신의 마음을 들여다보세요.
               </p>
 
-              <div className="space-y-10 mb-14">
+              <div className="space-y-12 mb-14">
                  {[
                     { t: '마음 진단', d: '7가지 감정 설문과 AI 분석으로 현재 나의 마음 상태를 정확히 확인합니다.' },
                     { t: '치유와 훈련', d: '개인별 지표에 꼭 필요한 맞춤 명상과 인지재구성 훈련으로 마음을 다스립니다.' },
                     { t: '평온한 회복', d: '정기적인 체크와 이력 관리를 통해 어제보다 더 성숙한 내일을 맞이합니다.' }
                  ].map((item, i) => (
-                    <div key={i} className="flex gap-6 group">
-                       <div className="w-10 h-10 rounded-2xl bg-[#f0f4f1] group-hover:bg-[#566e63] flex-shrink-0 flex items-center justify-center text-[#566e63] group-hover:text-white text-sm font-black transition-all duration-300 shadow-sm border border-[#e8efe9]">
+                    <div key={i} className="flex gap-8 group">
+                       <div className="w-12 h-12 rounded-2xl bg-[#f0f4f1] group-hover:bg-[#566e63] flex-shrink-0 flex items-center justify-center text-[#566e63] group-hover:text-white text-base font-black transition-all duration-300 shadow-sm border border-[#e8efe9]">
                           0{i+1}
                        </div>
                        <div>
-                          <p className="text-lg font-black text-[#222] mb-2 group-hover:text-[#566e63] transition-colors">{item.t}</p>
-                          <p className="text-[15px] text-gray-500 font-medium leading-relaxed">{item.d}</p>
+                          <p className="text-xl md:text-2xl font-black text-[#222] mb-2 group-hover:text-[#566e63] transition-colors">{item.t}</p>
+                          <p className="text-base md:text-lg text-gray-500 font-medium leading-relaxed">{item.d}</p>
                        </div>
                     </div>
                  ))}
