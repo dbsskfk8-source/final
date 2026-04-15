@@ -75,7 +75,7 @@ export default async function HomePage() {
                  <div className="absolute inset-8 md:inset-12 border border-[#bfa588]/30 rounded-[40px] flex flex-col items-center justify-center p-8 md:p-12 text-center backdrop-blur-[2px]">
                     <span className="text-[#bfa588] text-[10px] font-black tracking-[0.3em] uppercase mb-8 block opacity-60">MoodB Philosophy</span>
                     <p className="text-[#8c7457] font-serif italic text-2xl md:text-3xl leading-relaxed mb-8 drop-shadow-sm">
-                      "감정은 흐르는 물과 같아서, <br/>가두지 않고 마주할 때 <br/>비로소 평온해집니다."
+                      "감정은 흐르는 물과 같아서,<br/>가두지 않고 마주할 때<br/>비로소 평온해집니다."
                     </p>
                     <div className="w-12 h-[1px] bg-[#bfa588]/40 mb-8"></div>
                     <img src="/moodb-logo.svg" alt="MoodB Logo" className="w-24 opacity-30 grayscale" />
@@ -90,17 +90,17 @@ export default async function HomePage() {
            <div className="order-1 md:order-2">
               <span className="text-[#566e63] font-black text-xs tracking-[0.3em] uppercase mb-6 block">Our Approach</span>
               <h2 className="text-4xl md:text-6xl font-black text-[#222] mb-10 leading-[1.1] tracking-tighter">
-                보이지 않는 마음을 <br/>
+                내 마음의 <br/>
                 <span className="text-[#566e63] relative">
-                  지표로 마주하다
+                  감정 지수 알아보기
                   <svg className="absolute -bottom-2 left-0 w-full" height="8" viewBox="0 0 100 8" preserveAspectRatio="none">
                     <path d="M0 7C30 7 70 7 100 2" stroke="#566e63" strokeWidth="4" fill="none" strokeLinecap="round" />
                   </svg>
                 </span>
               </h2>
               <p className="text-xl md:text-2xl text-gray-500 font-medium mb-12 leading-relaxed break-keep">
-                MoodB는 단순한 심리 검사를 넘어, 당신의 목소리와 응답에서 추출된 데이터로 감정의 주파수를 맞춰갑니다. <br/>
-                오늘 당신이 느낀 'dB'는 어떤 의미일까요?
+                MoodB는 마음의 7가지 감정의 크기를 보여줍니다.<br/>
+                오늘 당신의 마음을 들여다보세요.
               </p>
 
               <div className="space-y-10 mb-14">
