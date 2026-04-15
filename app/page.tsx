@@ -131,8 +131,6 @@ export default async function HomePage() {
               </div>
            </div>
         </section>
-
-        {/* Nature Interactive Section */}
         <NatureCanvas />
       </main>
 
