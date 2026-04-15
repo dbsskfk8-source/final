@@ -115,9 +115,10 @@ function MySituationContent() {
     { subject: '놀람', A: 10, fullMark: 100 }
   ]
 
-  const lineData = [...results].reverse().map(r => ({
-    date: new Date(r.timestamp).toLocaleDateString().slice(5),
-    score: Math.round(r.overallTScore)
+  // 우측 라인 그래프도 동일하게 7가지 감정 데이터를 사용하도록 변경
+  const lineData = radarData.map(item => ({
+    name: item.subject,
+    score: item.A
   }))
 
   const userRole = (profile?.role || '').toLowerCase()
@@ -255,7 +256,7 @@ function MySituationContent() {
                  <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={lineData}>
                        <CartesianGrid strokeDasharray="5 5" vertical={false} stroke="#f1f5f9" />
-                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 11, fontWeight: 'bold', fill: '#94a3b8'}} />
+                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: '900', fill: '#64748b'}} />
                        <YAxis hide domain={[0, 100]} />
                        <Tooltip contentStyle={{borderRadius: '20px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.05)', fontWeight: 'bold'}} />
                        <Line type="monotone" dataKey="score" stroke="#566e63" strokeWidth={6} dot={{r: 8, fill: '#566e63', stroke: 'white', strokeWidth: 4}} activeDot={{r: 10, shadow: '0 0 10px rgba(0,0,0,0.2)'}} animationDuration={1500} />
