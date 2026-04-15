@@ -6,10 +6,17 @@ import { Menu, X, User, LogOut, ChevronRight } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 
+interface NavLink {
+  name: string
+  href: string
+  highlight?: boolean
+}
+
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -17,6 +24,9 @@ export default function Navbar() {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
+      // 관리자 여부: user_metadata.role이 'doctor' 또는 'admin'
+      const role = user?.user_metadata?.role
+      setIsAdmin(role === 'doctor' || role === 'admin')
     }
     getUser()
 
@@ -34,13 +44,18 @@ export default function Navbar() {
     router.push('/')
   }
 
-  const navLinks = [
+  // 일반 링크 순서: 소개 → 심리상담 챗봇 → Cure → 마이페이지
+  const baseNavLinks: NavLink[] = [
     { name: 'MoodB 소개', href: '/about' },
+    { name: '심리상담 챗봇', href: '/chat' },
     { name: '인지재구성(Cure)', href: '/select' },
     { name: '마이페이지', href: '/my-situation' },
-    { name: '심리상담 챗봇', href: '/chat' },
-    { name: '관리자 뷰어', href: '/dashboard', highlight: true },
   ]
+
+  // 관리자에게만 추가로 표시
+  const navLinks: NavLink[] = isAdmin
+    ? [...baseNavLinks, { name: '관리자 뷰어', href: '/dashboard', highlight: true }]
+    : baseNavLinks
 
   return (
     <header 

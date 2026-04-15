@@ -29,6 +29,8 @@ interface ResultData {
   scores: EmotionScore[]
   overallTScore: number
   overallGroup: 'normal' | 'caution' | 'risk'
+  isPostMeditation?: boolean
+  relatedPreTimestamp?: string
 }
 
 const GROUP_COLOR: Record<string, string> = {
@@ -115,6 +117,7 @@ function ResultContent() {
 
   const { scores } = result
   const attentionRequired = scores.filter(s => s.group !== 'normal')
+  const isPost = result.isPostMeditation === true
 
   const getEmotionComment = (score: EmotionScore) => {
     if (score.group === 'risk') return `'${score.subject}' 감정이 위험 수준입니다. 각별한 관리와 주의가 필요합니다.`
@@ -136,14 +139,19 @@ function ResultContent() {
     return {
       subject: s.subject.replace(/[^가-힣]/g, ''),
       fullSubject: s.subject,
-      A: s.A, 
-      B: preScore ? preScore.A : null, 
-      mean: 50, 
+      // A = 사후(현재), B = 사전(Pre)
+      A: s.A,
+      B: preScore ? preScore.A : null,
+      mean: 50,
       groupLabel: s.groupLabel,
       group: s.group,
       preGroupLabel: preScore?.groupLabel
     }
   })
+
+  // 사전/사후 색상: 사전=초록, 사후=붉은색
+  const PRE_COLOR = '#22c55e'   // 사전 초록
+  const POST_COLOR = '#ef4444'  // 사후 붉은색
 
   const CustomRadarTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -163,8 +171,8 @@ function ResultContent() {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 bg-gray-100 rounded-lg text-sm font-bold text-gray-500">dB</span>
                 <div className="text-3xl font-black text-[#222]">{data.A}</div>
+                <span className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-black text-gray-400">dB</span>
               </div>
             </div>
 
@@ -175,8 +183,8 @@ function ResultContent() {
                   <span className="text-xs font-bold text-gray-500">{data.preGroupLabel}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                   <span className="px-2 py-0.5 bg-[#f5ebd9] rounded-md text-[10px] font-bold text-[#bfa588]">dB</span>
-                   <div className="text-xl font-bold text-[#bfa588]">{data.B}</div>
+                   <div className="text-xl font-bold text-[#22c55e]">{data.B}</div>
+                   <span className="px-2 py-0.5 bg-green-50 rounded-md text-[10px] font-bold text-green-600">dB</span>
                 </div>
               </div>
             )}
@@ -199,8 +207,44 @@ function ResultContent() {
     return null
   }
 
+  // 이전 진단 목록: 사전/사후를 쌍으로 묶기
+  const buildSessionPairs = () => {
+    const pairs: { pre: ResultData; post?: ResultData; preId: string }[] = []
+    const used = new Set<string>()
+
+    allResults.forEach(rec => {
+      const recId = rec.id ? `csei-${rec.id}` : rec.timestamp
+      if (used.has(recId)) return
+
+      if (rec.isPostMeditation) return // 사후는 별도 처리
+
+      // 사전 찾기
+      const matchingPost = allResults.find(r =>
+        r.isPostMeditation && r.relatedPreTimestamp === rec.timestamp
+      )
+
+      const postId = matchingPost ? (matchingPost.id ? `csei-${matchingPost.id}` : matchingPost.timestamp) : undefined
+
+      used.add(recId)
+      if (postId) used.add(postId)
+
+      pairs.push({ pre: rec, post: matchingPost, preId: recId })
+    })
+
+    // 고아 사후(연결된 사전 없는)도 단독으로 추가
+    allResults.forEach(rec => {
+      const recId = rec.id ? `csei-${rec.id}` : rec.timestamp
+      if (!used.has(recId)) {
+        pairs.push({ pre: rec, preId: recId })
+        used.add(recId)
+      }
+    })
+
+    return pairs
+  }
+
   return (
-    <div className="min-h-screen bg-[#fcfdfc] font-sans text-[#333] pb-24">
+    <div className="min-h-screen bg-[#fcfdfc] text-[#333] pb-24">
       <Navbar />
 
       <main className="max-w-[1200px] mx-auto px-6 pt-10">
@@ -209,32 +253,51 @@ function ResultContent() {
             RESULT SUMMARY
           </span>
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#222]">
-            {preResult ? '명상 효과 분석 리포트' : '나의 감정 진단 요약'}
+            {isPost ? '명상 효과 분석 리포트' : '나의 감정 진단 요약'}
           </h1>
         </div>
 
+        {/* ① 감정 점수 카드 - 개선: 글자 16pt+, dB 숫자 뒤, 분류 글자 크게 */}
         <div className="mb-12 animate-in fade-in slide-in-from-bottom-6 duration-500 delay-100">
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 md:gap-4">
-            {scores.map((score, idx) => (
-              <div 
-                key={idx} 
-                className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${GROUP_COLOR[score.group]} transition-all`}
-              >
-                <span className="text-lg font-extrabold tracking-tight text-[#566e63] mb-2 truncate max-w-full">
-                  {score.subject.replace(/[^가-힣]/g, '') || score.subject}
-                </span>
-                <div className="flex items-center gap-1.5 mb-2">
-                   <span className="px-1.5 py-0.5 bg-white/50 rounded text-[10px] font-black text-gray-400">dB</span>
-                   <span className="text-3xl font-black">{score.A}</span>
+            {scores.map((score, idx) => {
+              // 사후일 때 이전(사전) 점수를 구해 변화량 표시
+              const preScore = preResult?.scores.find(ps => ps.subject === score.subject)
+              const diff = preScore ? score.A - preScore.A : null
+              return (
+                <div 
+                  key={idx} 
+                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${GROUP_COLOR[score.group]} transition-all`}
+                >
+                  {/* 감정 단어 16pt */}
+                  <span className="text-[16px] font-extrabold tracking-tight text-[#333] mb-2 truncate max-w-full">
+                    {score.subject.replace(/[^가-힣]/g, '') || score.subject}
+                  </span>
+                  {/* 숫자 + dB (숫자 뒤에 dB) */}
+                  <div className="flex items-baseline gap-1 mb-2">
+                    <span className="text-3xl font-black">{score.A}</span>
+                    <span className="text-[11px] font-black text-gray-500">dB</span>
+                  </div>
+                  {/* 사후일 때 사전 점수 + 변화량 */}
+                  {preScore && diff !== null && (
+                    <div className="flex items-baseline gap-1 mb-1">
+                      <span className="text-xs text-gray-400 font-bold">전: {preScore.A}</span>
+                      <span className={`text-xs font-black ${diff < 0 ? 'text-green-600' : diff > 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                        {diff > 0 ? `+${diff}` : diff}
+                      </span>
+                    </div>
+                  )}
+                  {/* 분류 표시 12pt */}
+                  <div className={`text-[12px] font-black px-2 py-0.5 rounded-full bg-white/60 ${GROUP_TEXT_COLOR[score.group]} whitespace-nowrap`}>
+                    {score.groupLabel}
+                  </div>
                 </div>
-                <div className={`text-[10px] font-black px-2 py-0.5 rounded-full bg-white/60 ${GROUP_TEXT_COLOR[score.group]} whitespace-nowrap`}>
-                  {score.groupLabel}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
+        {/* ② 레이더 차트 - 사전=초록, 사후=붉은색 */}
         <div className="mb-12 animate-in fade-in slide-in-from-bottom-8 duration-500 delay-150">
           <div className="bg-white p-8 md:p-12 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center">
             <div className="text-center mb-8 w-full flex flex-col md:flex-row justify-between items-center">
@@ -247,12 +310,12 @@ function ResultContent() {
               {preResult && (
                 <div className="flex gap-4 mt-4 md:mt-0">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-[#f87171] opacity-50"></div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">사전(Pre)</span>
+                    <div className="w-3 h-3 rounded-full" style={{ background: PRE_COLOR, opacity: 0.7 }}></div>
+                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">사전(PRE) - 초록</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-[#566e63]"></div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">사후(Post)</span>
+                    <div className="w-3 h-3 rounded-full" style={{ background: POST_COLOR }}></div>
+                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">사후(POST) - 붉은색</span>
                   </div>
                 </div>
               )}
@@ -283,24 +346,26 @@ function ResultContent() {
                     fillOpacity={0}
                   />
 
+                  {/* 사전: 초록색 점선 */}
                   {preResult && (
                     <Radar
-                      name="사전 점수"
+                      name="사전 점수(Pre)"
                       dataKey="B"
-                      stroke="#f87171"
+                      stroke={PRE_COLOR}
                       strokeWidth={2}
-                      strokeOpacity={0.5}
-                      fill="#f87171"
+                      strokeOpacity={0.7}
+                      fill={PRE_COLOR}
                       fillOpacity={0.1}
                     />
                   )}
 
+                  {/* 사후(현재): 붉은색 실선 */}
                   <Radar
-                    name={preResult ? "사후 점수" : "감정 지수"}
+                    name={preResult ? "사후 점수(Post)" : "감정 지수"}
                     dataKey="A"
-                    stroke="#566e63"
+                    stroke={isPost ? POST_COLOR : '#566e63'}
                     strokeWidth={preResult ? 3 : 2}
-                    fill="#566e63"
+                    fill={isPost ? POST_COLOR : '#566e63'}
                     fillOpacity={0.15}
                     isAnimationActive={false}
                   />
@@ -310,6 +375,7 @@ function ResultContent() {
           </div>
         </div>
 
+        {/* ③ 라인 차트 + 현 상태 요약 */}
         <div className="grid md:grid-cols-5 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-500 delay-200">
           <div className="md:col-span-3 bg-white p-6 md:p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col justify-center">
             <h3 className="text-xl font-bold text-gray-700 mb-6 flex items-center gap-2">
@@ -327,13 +393,13 @@ function ResultContent() {
 
                   <XAxis 
                     dataKey="subject" 
-                    tick={{ fontSize: 14, fill: '#666', fontWeight: 'bold' }} 
+                    tick={{ fontSize: 14, fill: '#333', fontWeight: 'bold' }} 
                     axisLine={false} 
                     tickLine={false} 
                   />
                   <YAxis 
                     domain={[0, 100]} 
-                    tick={{ fontSize: 14, fill: '#999' }} 
+                    tick={{ fontSize: 14, fill: '#555' }} 
                     axisLine={false} 
                     tickLine={false} 
                     label={{ value: 'dB', angle: -90, position: 'insideLeft', fill: '#999', fontSize: 12 }}
@@ -345,12 +411,26 @@ function ResultContent() {
                       props.payload.groupLabel
                     ]}
                   />
+                  {/* 사전 라인: 초록 점선 */}
+                  {preResult && (
+                    <Line
+                      type="monotone"
+                      dataKey={(entry) => preResult.scores.find(s => s.subject === (entry as any).subject)?.A ?? null}
+                      name="사전(Pre)"
+                      stroke={PRE_COLOR}
+                      strokeWidth={2}
+                      strokeDasharray="5 3"
+                      dot={{ r: 4, fill: PRE_COLOR }}
+                    />
+                  )}
+                  {/* 사후(현재) 라인 */}
                   <Line 
                     type="monotone" 
                     dataKey="A" 
-                    stroke="#566e63" 
+                    name={preResult ? "사후(Post)" : "감정 지수"}
+                    stroke={isPost ? POST_COLOR : '#566e63'} 
                     strokeWidth={3} 
-                    dot={{ r: 5, fill: '#566e63', strokeWidth: 2, stroke: '#fff' }} 
+                    dot={{ r: 5, fill: isPost ? POST_COLOR : '#566e63', strokeWidth: 2, stroke: '#fff' }} 
                     activeDot={{ r: 8 }} 
                   />
                 </LineChart>
@@ -388,101 +468,113 @@ function ResultContent() {
           </div>
         </div>
 
-        <div className="mb-20 animate-in fade-in slide-in-from-bottom-10 duration-500 delay-300">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-2xl md:text-3xl font-extrabold mb-4 tracking-tight text-[#222]">
-              어떤 감정을 먼저 다룰까요?
-            </h2>
-            <p className="text-gray-500 font-medium text-sm">
-              방금 검사에서 집중 관리가 필요하다고 판정된 감정들입니다. 심리 치료를 선택하고 마음의 짐을 가볍게 내려놓으세요.
-            </p>
-          </div>
-
-          {attentionRequired.length > 0 ? (
-            <div className="flex flex-wrap justify-center gap-6">
-              {attentionRequired.map((score, idx) => (
-                <Link 
-                  href={`/meditation/${encodeURIComponent(score.subject)}`} 
-                  key={idx}
-                  className="w-full sm:w-[280px] bg-white border-2 border-[#eaeced] hover:border-[#566e63] rounded-[24px] p-8 text-center group hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center"
-                >
-                  <div className={`w-full py-4 rounded-2xl flex items-center justify-center font-black text-xl mb-4 ${GROUP_COLOR[score.group]}`}>
-                    {score.subject}
-                  </div>
-                  <h3 className="text-lg font-extrabold text-[#222] mb-2">{score.subject}</h3>
-                  <div className={`text-xs font-bold mb-6 ${GROUP_TEXT_COLOR[score.group]}`}>{score.groupLabel} 상태</div>
-                  
-                  <div className="w-full py-3 bg-[#f9faf9] group-hover:bg-[#566e63] group-hover:text-white rounded-xl font-bold text-sm text-gray-500 transition-colors flex items-center justify-center gap-2">
-                    치유 시작하기 <ArrowRight size={14} />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-[#f0f9f3] border border-[#d1e8da] rounded-[32px] p-10 md:p-14 text-center max-w-3xl mx-auto flex flex-col items-center">
-              <div className="w-16 h-16 bg-[#e3f4ea] rounded-full flex items-center justify-center mb-6">
-                <Smile size={32} className="text-[#2fa65a]" />
-              </div>
-              <h3 className="text-2xl font-extrabold text-[#222] mb-4">
-                현재는 치유가 <span className="text-[#2fa65a]">가장 급한 감정</span>이 없어요
-              </h3>
-              <p className="text-gray-600 font-medium mb-8 max-w-md leading-relaxed">
-                모든 감정 지표가 안정권입니다. 치유를 서두르기보다 오늘의 평안함을 유지하기 위한 가벼운 마음챙김 명상이나 산책을 추천합니다.
+        {/* ④ 어떤 감정을 먼저 다룰까요? - 사후 설문결과에서 숨김 */}
+        {!isPost && (
+          <div className="mb-20 animate-in fade-in slide-in-from-bottom-10 duration-500 delay-300">
+            <div className="text-center max-w-2xl mx-auto mb-10">
+              <h2 className="text-2xl md:text-3xl font-extrabold mb-4 tracking-tight text-[#222]">
+                어떤 감정을 먼저 다룰까요?
+              </h2>
+              <p className="text-gray-500 font-medium text-sm">
+                방금 검사에서 집중 관리가 필요하다고 판정된 감정들입니다. 심리 치료를 선택하고 마음의 짐을 가볍게 내려놓으세요.
               </p>
-              <Link href="/select" className="inline-flex items-center gap-2 bg-[#2fa65a] text-white px-8 py-3.5 rounded-full font-bold shadow-lg hover:bg-[#258748] transition-colors">
-                <HeartPulse size={18} /> 추천 프로그램 둘러보기
-              </Link>
             </div>
-          )}
-        </div>
 
-        {allResults.length > 1 && (
-          <div className="mb-20 pt-10 border-t border-gray-200 animate-in fade-in slide-in-from-bottom-8 duration-500 delay-500">
-            <h3 className="text-xl font-extrabold text-[#222] mb-6 flex items-center gap-2">
-              <Calendar size={20} className="text-[#566e63]" />
-              나의 이전 진단 목록
-            </h3>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {allResults.map((rec, idx) => {
-                const recId = rec.id ? `csei-${rec.id}` : rec.timestamp;
-                const isCurrent = recId === resultId;
-                const d = new Date(rec.timestamp);
-                const displayDate = d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: 'numeric' });
-                
-                return (
+            {attentionRequired.length > 0 ? (
+              <div className="flex flex-wrap justify-center gap-6">
+                {attentionRequired.map((score, idx) => (
                   <Link 
-                    key={idx} 
-                    href={isCurrent ? '#' : `/result?id=${recId}`}
-                    className={`
-                      flex flex-col p-4 rounded-2xl border transition-all text-left
-                      ${isCurrent 
-                        ? 'bg-[#566e63] border-[#566e63] text-white shadow-md' 
-                        : 'bg-white border-gray-200 hover:border-[#566e63] hover:shadow-sm group text-[#333] cursor-pointer'
-                      }
-                    `}
+                    href={`/meditation/${encodeURIComponent(score.subject)}`} 
+                    key={idx}
+                    className="w-full sm:w-[280px] bg-white border-2 border-[#eaeced] hover:border-[#566e63] rounded-[24px] p-8 text-center group hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center"
                   >
-                    <div className="flex justify-between items-center mb-2">
-                      <span className={`text-[10px] font-bold tracking-widest ${isCurrent ? 'text-white/80' : 'text-gray-400'}`}>
-                        {displayDate}
-                      </span>
-                      {isCurrent && <CheckCircle2 size={14} className="text-white" />}
+                    <div className={`w-full py-4 rounded-2xl flex items-center justify-center font-black text-xl mb-4 ${GROUP_COLOR[score.group]}`}>
+                      {score.subject}
                     </div>
-                    <div className={`font-extrabold text-sm mb-1 ${isCurrent ? 'text-white' : 'text-[#222]'}`}>
-                      {rec.overallGroup === 'risk' ? '위험' : rec.overallGroup === 'caution' ? '주의' : '안정'} 단계
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${isCurrent ? 'bg-white/20 text-white' : 'bg-[#e8efe9] text-[#566e63]'}`}>dB</span>
-                      <div className={`text-xs font-medium ${isCurrent ? 'text-white/80' : 'text-gray-500'}`}>
-                        {Math.round(rec.overallTScore)}
-                      </div>
+                    <h3 className="text-lg font-extrabold text-[#222] mb-2">{score.subject}</h3>
+                    <div className={`text-[12px] font-black mb-6 ${GROUP_TEXT_COLOR[score.group]}`}>{score.groupLabel} 상태</div>
+                    
+                    <div className="w-full py-3 bg-[#f9faf9] group-hover:bg-[#566e63] group-hover:text-white rounded-xl font-bold text-sm text-gray-500 transition-colors flex items-center justify-center gap-2">
+                      치유 시작하기 <ArrowRight size={14} />
                     </div>
                   </Link>
-                )
-              })}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-[#f0f9f3] border border-[#d1e8da] rounded-[32px] p-10 md:p-14 text-center max-w-3xl mx-auto flex flex-col items-center">
+                <div className="w-16 h-16 bg-[#e3f4ea] rounded-full flex items-center justify-center mb-6">
+                  <Smile size={32} className="text-[#2fa65a]" />
+                </div>
+                <h3 className="text-2xl font-extrabold text-[#222] mb-4">
+                  현재는 치유가 <span className="text-[#2fa65a]">가장 급한 감정</span>이 없어요
+                </h3>
+                <p className="text-gray-600 font-medium mb-8 max-w-md leading-relaxed">
+                  모든 감정 지표가 안정권입니다. 치유를 서두르기보다 오늘의 평안함을 유지하기 위한 가벼운 마음챙김 명상이나 산책을 추천합니다.
+                </p>
+                <Link href="/select" className="inline-flex items-center gap-2 bg-[#2fa65a] text-white px-8 py-3.5 rounded-full font-bold shadow-lg hover:bg-[#258748] transition-colors">
+                  <HeartPulse size={18} /> 추천 프로그램 둘러보기
+                </Link>
+              </div>
+            )}
           </div>
         )}
+
+        {/* ⑤ 이전 진단 목록: 사전/사후 쌍으로 표시 */}
+        {allResults.length > 1 && (() => {
+          const pairs = buildSessionPairs()
+          return (
+            <div className="mb-20 pt-10 border-t border-gray-200 animate-in fade-in slide-in-from-bottom-8 duration-500 delay-500">
+              <h3 className="text-xl font-extrabold text-[#222] mb-6 flex items-center gap-2">
+                <Calendar size={20} className="text-[#566e63]" />
+                나의 이전 진단 목록
+              </h3>
+              
+              <div className="flex flex-col gap-4">
+                {pairs.map((pair, idx) => {
+                  const preId = pair.preId
+                  const postId = pair.post ? (pair.post.id ? `csei-${pair.post.id}` : pair.post.timestamp) : null
+                  const d = new Date(pair.pre.timestamp)
+                  const displayDate = d.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', year: 'numeric' })
+                  const isCurrentPre = preId === resultId
+                  const isCurrentPost = postId === resultId
+
+                  return (
+                    <div key={idx} className={`rounded-2xl border p-4 flex flex-col sm:flex-row gap-3 transition-all ${isCurrentPre || isCurrentPost ? 'border-[#566e63] bg-[#f0f4f1]' : 'border-gray-200 bg-white hover:border-[#566e63] hover:shadow-sm'}`}>
+                      <div className="flex-1">
+                        <div className="text-[11px] font-bold text-gray-400 mb-1">{displayDate}</div>
+                        {/* 사전 */}
+                        <Link href={isCurrentPre ? '#' : `/result?id=${preId}`}
+                          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl font-bold text-sm mr-2 ${isCurrentPre ? 'bg-[#22c55e] text-white' : 'bg-green-50 text-green-700 hover:bg-green-100'}`}
+                        >
+                          <span>🟢 사전 진단</span>
+                          <span className="text-xs opacity-70">{pair.pre.overallGroup === 'risk' ? '위험' : pair.pre.overallGroup === 'caution' ? '주의' : '안정'} · {Math.round(pair.pre.overallTScore)}dB</span>
+                          {isCurrentPre && <CheckCircle2 size={14} />}
+                        </Link>
+                        {/* 사후 */}
+                        {pair.post ? (
+                          <Link href={isCurrentPost ? '#' : `/result?id=${postId}`}
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl font-bold text-sm ${isCurrentPost ? 'bg-[#ef4444] text-white' : 'bg-red-50 text-red-700 hover:bg-red-100'}`}
+                          >
+                            <span>🔴 사후 진단</span>
+                            <span className="text-xs opacity-70">{pair.post.overallGroup === 'risk' ? '위험' : pair.post.overallGroup === 'caution' ? '주의' : '안정'} · {Math.round(pair.post.overallTScore)}dB</span>
+                            {isCurrentPost && <CheckCircle2 size={14} />}
+                          </Link>
+                        ) : (
+                          <Link href={`/questionnaire?mode=post&emotion=all`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-sm bg-gray-100 text-gray-500 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+                          >
+                            <span>⚪ 사후 진단 미완료</span>
+                            <ArrowRight size={12} />
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
       </main>
       <Footer />
     </div>

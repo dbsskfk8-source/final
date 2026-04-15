@@ -18,7 +18,7 @@ import {
   Legend,
   ReferenceArea
 } from 'recharts'
-import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle, LogOut, TrendingUp, LayoutGrid, Calendar, User, Bell, Settings, Activity, Brain, Heart, Fingerprint, Wind } from 'lucide-react'
+import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle, LogOut, TrendingUp, LayoutGrid, Calendar, User, Bell, Settings, Activity, Brain, Heart, Fingerprint, Wind, Save, Edit2, ChevronRight, Play } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import Navbar from '../components/Navbar'
@@ -44,6 +44,14 @@ interface HistoryLog {
   isAssessment?: boolean
 }
 
+interface UserProfile {
+  nickname: string
+  full_name: string
+  gender: string
+  birthdate: string
+  phone: string
+}
+
 const DEFAULT_RADAR: RadarItem[] = [
   { subject: '희 (喜)', A: 84, fullMark: 100 },
   { subject: '노 (怒)', A: 75, fullMark: 100 },
@@ -62,7 +70,30 @@ export default function MySituationPage() {
   const [viewMode, setViewMode] = useState<'radar' | 'line'>('radar')
   const [isGuest, setIsGuest] = useState(true)
   const [hiddenSeries, setHiddenSeries] = useState<string[]>([])
+  const [profile, setProfile] = useState<UserProfile>({ nickname: '', full_name: '', gender: '', birthdate: '', phone: '' })
+  const [editingProfile, setEditingProfile] = useState(false)
+  const [savingProfile, setSavingProfile] = useState(false)
+  const [displayName, setDisplayName] = useState('')
+  const [resumeMeditation, setResumeMeditation] = useState<{ emotion: string; progress: number } | null>(null)
+  const [chartWidth, setChartWidth] = useState(500)
   const router = useRouter()
+
+  useEffect(() => {
+    // 이전 명상 이어서 하기 정보 로드
+    try {
+      const saved = localStorage.getItem('meditation_resume')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (parsed && parsed.emotion) setResumeMeditation(parsed)
+      }
+    } catch (e) {}
+
+    // 창 크기에 따라 차트 너비 동적 설정 (ResponsiveContainer 버그 우회)
+    const updateWidth = () => setChartWidth(Math.min(window.innerWidth - 80, 800))
+    updateWidth()
+    window.addEventListener('resize', updateWidth)
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
 
   useEffect(() => {
     async function loadData() {
@@ -71,6 +102,26 @@ export default function MySituationPage() {
 
       if (user) {
         setIsGuest(false)
+
+        // 프로필 로드
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('nickname, full_name, gender, birthdate, phone')
+          .eq('id', user.id)
+          .single()
+        if (profileData) {
+          setProfile({
+            nickname: profileData.nickname || '',
+            full_name: profileData.full_name || '',
+            gender: profileData.gender || '',
+            birthdate: profileData.birthdate || '',
+            phone: profileData.phone || '',
+          })
+          setDisplayName(profileData.nickname || profileData.full_name || user.email || '')
+        } else {
+          setDisplayName(user.email || '')
+        }
+
         const localCsei = localStorage.getItem('final_csei_results')
         const localCure = localStorage.getItem('final_cure_history')
         if (localCsei || localCure) {
@@ -143,6 +194,7 @@ export default function MySituationPage() {
 
       } else {
         setIsGuest(true)
+        setDisplayName('게스트')
         if (typeof window !== 'undefined') {
           const localCseiStr = localStorage.getItem('final_csei_results')
           const localCsei = localCseiStr ? JSON.parse(localCseiStr) : []
@@ -163,6 +215,38 @@ export default function MySituationPage() {
     }
     loadData()
   }, [])
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        nickname: profile.nickname,
+        full_name: profile.full_name,
+        gender: profile.gender,
+        birthdate: profile.birthdate,
+        phone: profile.phone,
+        updated_at: new Date().toISOString()
+      })
+      setDisplayName(profile.nickname || profile.full_name || displayName)
+      setEditingProfile(false)
+    } catch (e) {
+      console.error('프로필 저장 실패', e)
+    } finally {
+      setSavingProfile(false)
+    }
+  }
+
+  // 생년월일로 나이 자동 계산
+  const calcAge = (birthdate: string) => {
+    if (!birthdate) return ''
+    const birth = new Date(birthdate)
+    const age = new Date().getFullYear() - birth.getFullYear()
+    return `${age}세`
+  }
 
   const handleLegendClick = (e: any) => {
     const { dataKey } = e
@@ -190,17 +274,53 @@ export default function MySituationPage() {
   })
 
   return (
-    <div className="min-h-screen bg-[#fffdfa] text-[#333] font-sans selection:bg-[#566e63]/20">
+    <div className="min-h-screen bg-[#fffdfa] text-[#333] selection:bg-[#566e63]/20">
       <Navbar />
 
       <main className="max-w-[1200px] mx-auto px-6 py-12 md:py-20">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 fade-in">
-          <div>
-            <h1 className="text-responsive-h1 tracking-tighter mb-4">안녕하세요.</h1>
-            <p className="text-gray-600 font-medium text-base md:text-xl">당신의 마음은 하나의 안식처입니다. 여기 그 청사진이 있습니다.</p>
-            
+
+        {/* ① 이전 명상 이어서 하기 배너 */}
+        {resumeMeditation && (
+          <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="bg-gradient-to-r from-[#566e63] to-[#4a5c53] rounded-2xl p-5 flex items-center justify-between gap-4 shadow-lg">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <Moon size={24} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">이전 명상 이어서 하기</p>
+                  <p className="text-white font-extrabold text-lg">{resumeMeditation.emotion} 명상 · {resumeMeditation.progress}% 완료</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Link
+                  href={`/meditation/${encodeURIComponent(resumeMeditation.emotion)}`}
+                  className="flex items-center gap-2 bg-white text-[#566e63] font-black px-5 py-2.5 rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm"
+                >
+                  <Play size={16} /> 이어서 하기
+                </Link>
+                <button
+                  onClick={() => { localStorage.removeItem('meditation_resume'); setResumeMeditation(null) }}
+                  className="text-white/60 hover:text-white text-xs font-bold transition-colors"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ② 인사 + 프로필 섹션 */}
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-12 fade-in">
+          <div className="flex-1">
+            <h1 className="text-responsive-h1 tracking-tighter mb-2">
+              안녕하세요, <span className="text-[#566e63]">{displayName || '닉네임'}</span>님.
+            </h1>
+            <p className="text-gray-600 font-medium text-base md:text-xl mb-6">당신의 마음은 하나의 안식처입니다. 여기 그 청사진이 있습니다.</p>
+
+            {/* 진단 결과 바로가기 */}
             {allCsei.length > 0 && (
-              <div className="mt-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 animate-in fade-in slide-in-from-left duration-700">
+              <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 animate-in fade-in slide-in-from-left duration-700">
                 <Link href="/result" className="flex items-center gap-3 bg-[#566e63] text-white px-6 py-4 rounded-2xl font-bold shadow-lg hover:bg-[#43574d] hover:-translate-y-1 transition-all active:scale-95 group">
                   <Activity size={20} className="group-hover:rotate-12 transition-transform" />
                   <span>✨ 가장 최근 진단 결과 요약 보기</span>
@@ -208,7 +328,8 @@ export default function MySituationPage() {
                 </Link>
               </div>
             )}
-            
+
+            {/* 진행 권장 훈련 섹션 */}
             {allCsei.length > 0 && (
               <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 w-full max-w-3xl">
                 {(() => {
@@ -274,8 +395,8 @@ export default function MySituationPage() {
                                 <h4 className="font-extrabold text-[#222] text-lg mb-1">{emotion.subject} 치유 명상</h4>
                                 <div className="flex items-center gap-2 mb-3">
                                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#fcfaf7] border border-[#e8efe9] rounded-md">
-                                      <span className="text-[10px] font-black text-gray-400">dB</span>
                                       <span className="text-sm font-black text-[#566e63]">{Math.round(emotion.A)}</span>
+                                      <span className="text-[10px] font-black text-gray-400">dB</span>
                                    </div>
                                    <p className="text-xs text-gray-500 font-bold">집중 관리가 필요합니다.</p>
                                 </div>
@@ -296,6 +417,8 @@ export default function MySituationPage() {
               </div>
             )}
           </div>
+
+          {/* 게스트 안내 */}
           {isGuest && (
             <div className="bg-[#fff9e6] border border-[#f5e1a4] p-5 rounded-[30px] flex items-center gap-4 shadow-sm animate-pulse">
                <AlertCircle className="text-[#b48d1a]" size={24} />
@@ -304,6 +427,112 @@ export default function MySituationPage() {
           )}
         </div>
 
+        {/* ③ 프로필 설정 카드 */}
+        {!isGuest && (
+          <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm mb-12 fade-in">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-[#f0f4f1] rounded-full flex items-center justify-center">
+                  <User size={22} className="text-[#566e63]" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-extrabold text-[#222]">프로필 설정</h2>
+                  <p className="text-sm text-gray-400 font-medium">기본 정보를 설정하면 설문 시 자동으로 입력됩니다.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => editingProfile ? handleSaveProfile() : setEditingProfile(true)}
+                disabled={savingProfile}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-all ${
+                  editingProfile
+                    ? 'bg-[#566e63] text-white hover:bg-[#4a5c53] shadow-md'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {editingProfile ? <><Save size={16} /> {savingProfile ? '저장 중...' : '저장'}</> : <><Edit2 size={16} /> 편집</>}
+              </button>
+            </div>
+
+            {editingProfile ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">닉네임</label>
+                  <input
+                    type="text"
+                    value={profile.nickname}
+                    onChange={e => setProfile(p => ({ ...p, nickname: e.target.value }))}
+                    placeholder="닉네임을 입력하세요"
+                    className="w-full bg-[#faf8f5] border border-[#e8e0d5] rounded-xl px-4 py-3 font-medium text-[#222] outline-none focus:ring-2 focus:ring-[#566e63]/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">이름</label>
+                  <input
+                    type="text"
+                    value={profile.full_name}
+                    onChange={e => setProfile(p => ({ ...p, full_name: e.target.value }))}
+                    placeholder="실명을 입력하세요"
+                    className="w-full bg-[#faf8f5] border border-[#e8e0d5] rounded-xl px-4 py-3 font-medium text-[#222] outline-none focus:ring-2 focus:ring-[#566e63]/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">성별</label>
+                  <div className="flex gap-2">
+                    {[['male', '남성'], ['female', '여성']].map(([val, label]) => (
+                      <button
+                        key={val}
+                        onClick={() => setProfile(p => ({ ...p, gender: val }))}
+                        className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${profile.gender === val ? 'bg-[#566e63] text-white shadow-md' : 'bg-[#faf8f5] border border-[#e8e0d5] text-gray-600 hover:bg-[#f5ebd9]'}`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">생년월일 (나이 자동계산)</label>
+                  <input
+                    type="date"
+                    value={profile.birthdate}
+                    onChange={e => setProfile(p => ({ ...p, birthdate: e.target.value }))}
+                    className="w-full bg-[#faf8f5] border border-[#e8e0d5] rounded-xl px-4 py-3 font-medium text-[#222] outline-none focus:ring-2 focus:ring-[#566e63]/20"
+                  />
+                  {profile.birthdate && (
+                    <p className="text-xs text-[#566e63] font-bold mt-1">→ {calcAge(profile.birthdate)} (자동 계산)</p>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">연락처</label>
+                  <input
+                    type="tel"
+                    value={profile.phone}
+                    onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))}
+                    placeholder="010-0000-0000"
+                    className="w-full bg-[#faf8f5] border border-[#e8e0d5] rounded-xl px-4 py-3 font-medium text-[#222] outline-none focus:ring-2 focus:ring-[#566e63]/20"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                {[
+                  { label: '닉네임', value: profile.nickname || '미설정' },
+                  { label: '이름', value: profile.full_name || '미설정' },
+                  { label: '성별', value: profile.gender === 'male' ? '남성' : profile.gender === 'female' ? '여성' : '미설정' },
+                  { label: '나이', value: profile.birthdate ? calcAge(profile.birthdate) : '미설정' },
+                  { label: '생년월일', value: profile.birthdate || '미설정' },
+                  { label: '연락처', value: profile.phone || '미설정' },
+                ].map((item, i) => (
+                  <div key={i} className="bg-[#faf8f5] rounded-xl p-4">
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{item.label}</div>
+                    <div className="font-bold text-[#222] text-sm">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ④ 7가지 감정 프로파일 차트 */}
         <div className="flex flex-col gap-6 mb-20 fade-in slide-in-bottom delay-100">
           <div className="bg-[#fcfaf7] rounded-[40px] p-8 md:p-12 shadow-sm border border-gray-100/50 relative">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
@@ -327,21 +556,27 @@ export default function MySituationPage() {
               </div>
             </div>
             
+            {/* 감정 점수 카드 - 폰트 크기 16-20pt, 색상 검정 */}
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 md:gap-4 mb-10">
               {radar.map((item: any, idx) => {
                 const group = item.group || 'normal'
                 const groupLabel = item.groupLabel || '정상군'
                 const bgColor = group === 'risk' ? 'bg-red-50' : group === 'caution' ? 'bg-yellow-50' : 'bg-[#f0ece5]'
-                const textColor = group === 'risk' ? 'text-red-600' : group === 'caution' ? 'text-amber-600' : 'text-[#4a5c53]'
+                const textColor = group === 'risk' ? 'text-red-600' : group === 'caution' ? 'text-amber-600' : 'text-[#222]'
                 const borderColor = group === 'risk' ? 'border-red-100' : group === 'caution' ? 'border-yellow-100' : 'border-white/50'
 
                 return (
-                  <div key={idx} className={`${bgColor} rounded-xl sm:rounded-3xl py-2 sm:py-4 px-1 sm:px-6 text-center border ${borderColor} shadow-sm transition-all hover:scale-105`}>
-                    <div className={`text-base sm:text-2xl font-extrabold ${textColor}`}>{item.A}</div>
-                    <div className="text-sm sm:text-base font-bold text-gray-600 tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 uppercase truncate font-black">
+                  <div key={idx} className={`${bgColor} rounded-xl sm:rounded-3xl py-3 sm:py-4 px-2 sm:px-4 text-center border ${borderColor} shadow-sm transition-all hover:scale-105`}>
+                    {/* 숫자: 20pt 검정 */}
+                    <div className={`text-[20px] sm:text-[24px] font-extrabold text-[#111] leading-tight`}>{item.A}</div>
+                    {/* dB */}
+                    <div className="text-[11px] font-black text-gray-500 mb-1">dB</div>
+                    {/* 감정 이름: 16pt, 검정 */}
+                    <div className="text-[16px] font-black text-[#111] tracking-tight mb-1 truncate">
                       {item.subject}
                     </div>
-                    <div className={`mt-1.5 px-3 py-1 rounded-full text-xs font-bold ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {/* 분류 표시: 12pt */}
+                    <div className={`mt-1.5 px-2 py-1 rounded-full text-[12px] font-black ${group === 'risk' ? 'bg-red-100 text-red-700' : group === 'caution' ? 'bg-yellow-100 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>
                        {groupLabel}
                     </div>
                   </div>
@@ -349,12 +584,13 @@ export default function MySituationPage() {
               })}
             </div>
 
+            {/* 차트: 고정 너비로 렌더링 버그 우회 */}
             <div className="w-full h-[400px] md:h-[500px]">
               <ResponsiveContainer width="100%" height="100%">
                 {viewMode === 'radar' ? (
                   <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radar}>
                     <PolarGrid stroke="#e5e7eb" strokeDasharray="3 3" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#4a5c53', fontSize: 14, fontWeight: 'bold' }} />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#333', fontSize: 13, fontWeight: 'bold' }} />
                     <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} axisLine={false} />
                     
                     <Radar
@@ -385,11 +621,9 @@ export default function MySituationPage() {
                                     {data.groupLabel || '정상'}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="px-1.5 py-0.5 bg-gray-100 rounded text-[8px] font-black text-gray-400">dB</span>
-                                  <div className="text-2xl font-black text-[#4a5c53]">
-                                    {data.A}
-                                  </div>
+                                <div className="flex items-baseline gap-1">
+                                  <div className="text-2xl font-black text-[#4a5c53]">{data.A}</div>
+                                  <span className="text-xs font-black text-gray-400">dB</span>
                                 </div>
                               </div>
                               <div className="pt-2 border-t border-gray-50 flex items-center justify-between">
@@ -413,8 +647,8 @@ export default function MySituationPage() {
                     <ReferenceArea y1={70} y2={100} fill="#ef4444" fillOpacity={0.07} label={{ position: 'insideRight', value: '위험', fill: '#dc2626', fontSize: 14, fontWeight: 'bold' }} />
                     <ReferenceArea y1={0} y2={30} fill="#ef4444" fillOpacity={0.07} />
                     
-                    <XAxis dataKey="name" tick={{ fontSize: 14, fill: '#999', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 14, fill: '#999' }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 14, fill: '#555', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 14, fill: '#555' }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.05)', fontSize: '14px' }} />
                     <Legend 
                       verticalAlign="bottom" 
@@ -428,7 +662,7 @@ export default function MySituationPage() {
                     <Line type="monotone" name="우 (憂)" dataKey="우 (憂)" hide={hiddenSeries.includes('우 (憂)')} stroke="#82ca9d" strokeWidth={3} dot={{ r: 4 }} />
                     <Line type="monotone" name="비 (悲)" dataKey="비 (悲)" hide={hiddenSeries.includes('비 (悲)')} stroke="#0088fe" strokeWidth={3} dot={{ r: 4 }} />
                     <Line type="monotone" name="공 (恐)" dataKey="공 (恐)" hide={hiddenSeries.includes('공 (恐)')} stroke="#bdc3c7" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" name="경 (驚)" dataKey="경 (驚)" hide={hiddenSeries.includes('경 (惊)')} stroke="#9b59b6" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" name="경 (驚)" dataKey="경 (驚)" hide={hiddenSeries.includes('경 (驚)')} stroke="#9b59b6" strokeWidth={3} dot={{ r: 4 }} />
                   </LineChart>
                 )}
               </ResponsiveContainer>
@@ -436,6 +670,7 @@ export default function MySituationPage() {
           </div>
         </div>
 
+        {/* 트래커 */}
         <div className="bg-[#f0ece5] rounded-[30px] p-8 md:p-10 border border-gray-100/50 shadow-sm mb-16 fade-in slide-in-bottom delay-150 relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
            <div>
                <h3 className="text-xl font-extrabold text-[#222] mb-2 tracking-tight">트래커: 다음 목표</h3>
@@ -452,8 +687,8 @@ export default function MySituationPage() {
                      </div>
                   </div>
                </div>
-              </div>
 
+        {/* ⑤ 히스토리 및 기록 */}
         <div className="mb-20 fade-in slide-in-bottom delay-200">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
             <div>
@@ -507,6 +742,7 @@ export default function MySituationPage() {
           <div className="flex justify-center">
             <button className="bg-white border border-gray-100 shadow-sm hover:bg-[#f0ece5] text-[#4a5c53] font-bold text-sm px-10 py-3.5 rounded-full transition-all active:scale-95">이전 기록 더 불러오기</button>
           </div>
+        </div>
         </div>
       </main>
 

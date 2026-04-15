@@ -81,19 +81,53 @@ function QuestionnaireContent() {
   const [gender, setGender] = useState<Gender | ''>('')
   const [ageGroup, setAgeGroup] = useState<AgeGroup | ''>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+  const [autoFilled, setAutoFilled] = useState(false)
+
+  // 로그인 유저라면 프로필에서 성별/생년월일 자동입력
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('gender, birthdate')
+            .eq('id', user.id)
+            .single()
+          if (profile) {
+            if (profile.gender) setGender(profile.gender as Gender)
+            if (profile.birthdate) {
+              const birth = new Date(profile.birthdate)
+              const age = new Date().getFullYear() - birth.getFullYear()
+              if (age < 30) setAgeGroup('20s')
+              else if (age < 40) setAgeGroup('30s')
+              else if (age < 50) setAgeGroup('40s')
+              else setAgeGroup('50s_plus')
+              setAutoFilled(true)
+            }
+          }
+        }
+      } catch (e) {}
+    }
+    loadProfile()
+  }, [])
+
   useEffect(() => {
     const saved = localStorage.getItem('moodb_draft')
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        if (parsed.gender) setGender(parsed.gender)
-        if (parsed.ageGroup) setAgeGroup(parsed.ageGroup)
+        // 자동입력된 경우 draft의 gender/ageGroup 덮어쓰지 않음
+        if (!autoFilled) {
+          if (parsed.gender) setGender(parsed.gender)
+          if (parsed.ageGroup) setAgeGroup(parsed.ageGroup)
+        }
         if (parsed.answers) setAnswers(parsed.answers)
         if (parsed.currentStep !== undefined) setCurrentStep(parsed.currentStep)
       } catch (e) {}
     }
-  }, [])
+  }, [autoFilled])
 
   useEffect(() => {
     localStorage.setItem('moodb_draft', JSON.stringify({ gender, ageGroup, answers, currentStep }))
@@ -227,8 +261,13 @@ function QuestionnaireContent() {
            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="mb-10 text-center">
                 <h2 className="text-3xl font-bold text-[#222] mb-4">진단 준비</h2>
-                <p className="text-gray-500 font-medium">정교한 분석을 위해 최소한의 정보를 입력해 주세요.</p>
-              </div>
+                 <p className="text-gray-500 font-medium">정교한 분석을 위해 최소한의 정보를 입력해 주세요.</p>
+                 {autoFilled && (
+                   <div className="mt-3 inline-flex items-center gap-2 bg-green-50 text-green-700 text-xs font-bold px-4 py-2 rounded-full border border-green-200">
+                     ✅ 프로필 기본정보가 자동으로 입력되었습니다. 확인 후 다음을 눌러주세요.
+                   </div>
+                 )}
+               </div>
               <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#e8e0d5]">
                 <div className="mb-8">
                   <label className="text-xs font-bold text-[#bfa588] uppercase tracking-widest mb-3 block">성별 선택</label>
@@ -299,23 +338,25 @@ function QuestionnaireContent() {
       </main>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#f3ede1] border-t border-[#e8e0d5] p-5 z-30 flex items-center justify-between shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
-         <button 
-           onClick={handlePrev}
-           disabled={currentStep === -2}
-           className={`flex items-center gap-2 font-bold px-6 py-3 rounded-xl transition-all ${currentStep === -2 ? 'opacity-30 cursor-not-allowed text-gray-500' : 'bg-white text-[#222] hover:bg-[#f5ebd9] shadow-sm'}`}
-         >
-           <ArrowLeft size={18} />
-           이전
-         </button>
+      <div className="fixed bottom-0 left-0 right-0 bg-[#f3ede1] border-t border-[#e8e0d5] p-5 z-30 flex items-center justify-center gap-4 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
+         {currentStep !== -2 && (
+           <button 
+             onClick={handlePrev}
+             disabled={currentStep === -2}
+             className="flex items-center gap-2 font-bold px-6 py-3 rounded-xl transition-all bg-white text-[#222] hover:bg-[#f5ebd9] shadow-sm"
+           >
+             <ArrowLeft size={18} />
+             이전
+           </button>
+         )}
          
          <button 
            onClick={() => handleNext()}
            disabled={isSubmitting}
-           className={`flex items-center gap-2 font-bold px-8 py-3 rounded-xl transition-all shadow-md ${isSubmitting ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-[#bfa588] hover:bg-[#ab8f70] text-white'}`}
+           className={`flex items-center gap-2 font-bold px-10 py-3 rounded-xl transition-all shadow-md text-lg ${isSubmitting ? 'bg-gray-400 text-white cursor-not-allowed' : 'bg-[#bfa588] hover:bg-[#ab8f70] text-white'}`}
          >
-           {isSubmitting ? '저장 중...' : currentStep === -2 ? '시작하기' : currentStep >= QUESTIONS.length - 1 ? '완료하기' : '다음'}
-           {!isSubmitting && currentStep < QUESTIONS.length - 1 && <ArrowRight size={18} />}
+           {isSubmitting ? '저장 중...' : currentStep === -2 ? '시작하기 →' : currentStep >= QUESTIONS.length - 1 ? '완료하기' : '다음'}
+           {!isSubmitting && currentStep >= 0 && currentStep < QUESTIONS.length - 1 && <ArrowRight size={18} />}
          </button>
       </div>
     </div>

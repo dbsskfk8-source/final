@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -14,13 +15,16 @@
   --color-alert: #e85d5d;
   --color-calm: #4db4b6;
   --color-gold: #d4a56a;
+  
+  /* 통일 폰트 */
+  --font-main: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-main);
+  --font-mono: var(--font-main);
 }
 
 @layer base {
@@ -53,5 +57,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-main);
 }

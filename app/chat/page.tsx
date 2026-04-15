@@ -126,7 +126,7 @@ export default function ChatPage() {
             </div>
           ))}
           <div ref={messagesEndRef} />
-          {messages.length >= 4 && (
+          {messages.length >= 8 && (
              <div className="mt-10 p-8 bg-[#f5ebd9]/30 border border-[#f5ebd9] rounded-[40px] text-center animate-in fade-in zoom-in-95 duration-700">
                <p className="text-sm font-bold text-[#bfa588] mb-6">충분히 말씀해 주셨군요. 이제 당신의 마음 상태를 객관적인 수치로 측정해 볼까요?</p>
                <Link href="/questionnaire" className="bg-[#bfa588] text-white px-10 py-4 rounded-full font-bold shadow-xl shadow-[#bfa588]/30 hover:bg-[#a68a6d] transition-all inline-flex items-center gap-2">

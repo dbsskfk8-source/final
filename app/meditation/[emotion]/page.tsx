@@ -276,7 +276,23 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
             <button onClick={togglePlay} className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-white shadow-xl transition-all hover:scale-105 active:scale-95 ${isPlaying ? 'bg-gray-800' : 'bg-gradient-to-br ' + data.color}`}>
               {isPlaying ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
             </button>
-            <button onClick={() => router.push('/')} className="w-12 h-12 md:w-14 md:h-14 bg-gray-50 rounded-full flex items-center justify-center text-red-300 hover:text-red-500 hover:bg-white shadow-sm transition-all active:scale-95 font-black text-[9px] tracking-widest uppercase">
+            <button
+              onClick={() => {
+                // 종료 시: 현재 진행 상태 localStorage에 저장 (이어서 하기용)
+                if (currentTimeSec > 10) {
+                  try {
+                    localStorage.setItem('meditation_resume', JSON.stringify({
+                      emotion: rawEmotion,
+                      emotionKey,
+                      progress: Math.round(progressPercent),
+                      savedAt: Date.now()
+                    }))
+                  } catch (e) {}
+                }
+                router.push('/my-situation')
+              }}
+              className="w-12 h-12 md:w-14 md:h-14 bg-gray-50 rounded-full flex items-center justify-center text-red-300 hover:text-red-500 hover:bg-white shadow-sm transition-all active:scale-95 font-black text-[9px] tracking-widest uppercase"
+            >
               종료
             </button>
           </div>
