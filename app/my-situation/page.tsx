@@ -74,19 +74,8 @@ export default function MySituationPage() {
   const [editingProfile, setEditingProfile] = useState(false)
   const [savingProfile, setSavingProfile] = useState(false)
   const [displayName, setDisplayName] = useState('')
-  const [resumeMeditation, setResumeMeditation] = useState<{ emotion: string; progress: number } | null>(null)
   const [chartWidth, setChartWidth] = useState(500)
   const router = useRouter()
-
-  useEffect(() => {
-    // 이전 명상 이어서 하기 정보 로드
-    try {
-      const saved = localStorage.getItem('meditation_resume')
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        if (parsed && parsed.emotion) setResumeMeditation(parsed)
-      }
-    } catch (e) {}
 
     // 창 크기에 따라 차트 너비 동적 설정 (ResponsiveContainer 버그 우회)
     const updateWidth = () => setChartWidth(Math.min(window.innerWidth - 80, 800))
@@ -278,37 +267,6 @@ export default function MySituationPage() {
       <Navbar />
 
       <main className="max-w-[1200px] mx-auto px-6 py-12 md:py-20">
-
-        {/* ① 이전 명상 이어서 하기 배너 */}
-        {resumeMeditation && (
-          <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-            <div className="bg-gradient-to-r from-[#566e63] to-[#4a5c53] rounded-2xl p-5 flex items-center justify-between gap-4 shadow-lg">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Moon size={24} className="text-white" />
-                </div>
-                <div>
-                  <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">이전 명상 이어서 하기</p>
-                  <p className="text-white font-extrabold text-lg">{resumeMeditation.emotion} 명상 · {resumeMeditation.progress}% 완료</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <Link
-                  href={`/meditation/${encodeURIComponent(resumeMeditation.emotion)}`}
-                  className="flex items-center gap-2 bg-white text-[#566e63] font-black px-5 py-2.5 rounded-full shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm"
-                >
-                  <Play size={16} /> 이어서 하기
-                </Link>
-                <button
-                  onClick={() => { localStorage.removeItem('meditation_resume'); setResumeMeditation(null) }}
-                  className="text-white/60 hover:text-white text-xs font-bold transition-colors"
-                >
-                  닫기
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ② 인사 + 프로필 섹션 */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-12 fade-in">

@@ -48,14 +48,14 @@ export default function NatureCanvas() {
     }
 
     // Grass blades
-    const grassBlades: { x: number, height: number, offset: number, bend: number }[] = []
-    const bladeCount = 150
+    const grassBlades: { x: number, height: number, offset: number, layer: number }[] = []
+    const bladeCount = 400 // 밀도 상향
     for (let i = 0; i < bladeCount; i++) {
       grassBlades.push({
         x: Math.random() * canvas.width,
-        height: Math.random() * 40 + 60,
+        height: Math.random() * 40 + 50,
         offset: Math.random() * Math.PI * 2,
-        bend: 0
+        layer: Math.floor(Math.random() * 3) // 3개 레이어로 원근감 표현
       })
     }
 
@@ -74,30 +74,37 @@ export default function NatureCanvas() {
       
       const wind = Math.sin(time / 1000) * 5
 
-      // Draw Grass
-      ctx.strokeStyle = '#566e63'
-      ctx.lineWidth = 2
-      ctx.lineCap = 'round'
-      
-      grassBlades.forEach(blade => {
-        const sway = Math.sin(time / 1000 + blade.offset) * 10
-        ctx.beginPath()
-        ctx.moveTo(blade.x, canvas.height)
-        
-        // Mouse distance for grass compression effect
-        const dx = blade.x - mouseX
-        const dy = canvas.height - 20 - mouseY
-        const dist = Math.sqrt(dx * dx + dy * dy)
-        const bend = dist < 60 ? (dx > 0 ? 40 : -40) * (1 - dist / 60) : 0
-        
-        ctx.quadraticCurveTo(
-          blade.x + wind + bend, 
-          canvas.height - blade.height / 2, 
-          blade.x + sway + wind + bend, 
-          canvas.height - blade.height
-        )
-        ctx.stroke()
-      })
+      // Draw Grass in 3 passes for depth
+      const layerColors = ['#4a5c53', '#566e63', '#a7c080'] // 뒤에서 앞으로 (어두운 색 -> 연두색)
+      const layerWidths = [3, 2, 1.5]
+
+      for (let l = 0; l < 3; l++) {
+        ctx.strokeStyle = layerColors[l]
+        ctx.lineWidth = layerWidths[l]
+        ctx.lineCap = 'round'
+
+        grassBlades.filter(b => b.layer === l).forEach(blade => {
+          const sway = Math.sin(time / 1000 + blade.offset) * 15
+          ctx.beginPath()
+          ctx.moveTo(blade.x, canvas.height)
+          
+          const dx = blade.x - mouseX
+          const dy = canvas.height - 20 - mouseY
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          const bend = dist < 100 ? (dx > 0 ? 50 : -50) * (1 - dist / 100) : 0
+          
+          // 더 유연한 곡선 (잔디처럼 보이게)
+          ctx.bezierCurveTo(
+            blade.x + wind * 0.5, 
+            canvas.height - blade.height * 0.4, 
+            blade.x + sway * 0.5 + bend, 
+            canvas.height - blade.height * 0.7, 
+            blade.x + sway + wind + bend, 
+            canvas.height - blade.height
+          )
+          ctx.stroke()
+        })
+      }
 
       // Draw Fireflies
       particles.forEach(p => {

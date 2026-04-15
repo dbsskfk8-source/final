@@ -444,21 +444,38 @@ function ResultContent() {
                <p className="text-[#555] font-medium leading-relaxed mb-6 text-[15px]">
                  {getOverallSummary()}
                </p>
-               <div className="space-y-3">
-                 {attentionRequired.map((score, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5">
-                      <AlertCircle size={16} className={`mt-0.5 ${GROUP_TEXT_COLOR[score.group]} shrink-0`} />
-                      <p className="text-xs text-gray-600 font-bold leading-normal">{getEmotionComment(score)}</p>
-                    </div>
-                 ))}
-                 {attentionRequired.length === 0 && (
+                <div className="space-y-3 mb-8">
+                  {attentionRequired.map((score, idx) => (
+                     <div key={idx} className="flex items-start gap-2.5">
+                       <AlertCircle size={16} className={`mt-0.5 ${GROUP_TEXT_COLOR[score.group]} shrink-0`} />
+                       <p className={`text-xs font-bold leading-normal ${GROUP_TEXT_COLOR[score.group]}`}>
+                         {score.subject} 감정에 대한 {score.groupLabel} 관리가 시급합니다.
+                       </p>
+                     </div>
+                  ))}
+                  {attentionRequired.length === 0 && (
                     <div className="flex items-start gap-2.5">
                       <CheckCircle2 size={16} className="mt-0.5 text-green-500 shrink-0" />
                       <p className="text-xs text-gray-600 font-bold leading-normal">모든 감정 영역이 통제 범위 내에 있습니다.</p>
                     </div>
                  )}
-               </div>
-            </div>
+                </div>
+
+                {/* 수익성 강화: 정밀 분석 신청 CTA */}
+                <div className="bg-white border border-[#566e63]/20 rounded-2xl p-5 shadow-sm">
+                   <div className="flex items-center gap-2 mb-2">
+                      <Sparkles size={16} className="text-[#566e63]" />
+                      <span className="text-[11px] font-black text-[#566e63] uppercase tracking-widest">Premium Insight</span>
+                   </div>
+                   <p className="text-[13px] font-bold text-[#444] mb-4 leading-relaxed">
+                      한방신경정신과 전문의 분석이 포함된 <br/>
+                      <span className="text-[#566e63]">정밀 진단 리포트</span>를 받아보시겠습니까?
+                   </p>
+                   <Link href="/pricing" className="block w-full py-3 bg-[#566e63] text-white text-center rounded-xl font-black text-xs hover:bg-[#4a5c53] transition-all shadow-md shadow-[#566e63]/20">
+                      상세 분석 신청하기
+                   </Link>
+                </div>
+              </div>
             
             <Link href={`/dashboard`} className="mt-8 bg-white border border-gray-200 text-[#4a5c53] font-bold py-3 px-8 rounded-full inline-flex items-center gap-2 hover:bg-gray-50 transition-colors shadow-sm self-start group">
               <BrainCircuit size={16} className="group-hover:text-[#566e63]" />

@@ -132,17 +132,6 @@ export default async function HomePage() {
            </div>
         </section>
 
-        {/* Step Indicators Section */}
-        <section className="mt-32 border-t border-gray-100 pt-20 px-6 flex flex-col items-center">
-            <div className="flex gap-6 mb-10">
-              <span className="w-14 h-14 rounded-3xl bg-[#566e63] text-white flex items-center justify-center font-black text-lg shadow-2xl shadow-[#566e63]/40 transition-all hover:scale-110">1</span>
-              <div className="w-16 h-[1px] bg-gray-100 self-center"></div>
-              <span className="w-14 h-14 rounded-3xl bg-white text-gray-200 border border-gray-100 flex items-center justify-center font-black text-lg">2</span>
-              <div className="w-16 h-[1px] bg-gray-100 self-center"></div>
-              <span className="w-14 h-14 rounded-3xl bg-white text-gray-200 border border-gray-100 flex items-center justify-center font-black text-lg">3</span>
-            </div>
-            <p className="text-[#566e63] font-black text-sm tracking-[0.4em] uppercase opacity-60">Journey Step: Awakening</p>
-        </section>
         {/* Nature Interactive Section */}
         <NatureCanvas />
       </main>

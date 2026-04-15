@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "./components/Navbar";
+import ResumeBanner from "./components/ResumeBanner";
 
 export const metadata: Metadata = {
   title: "MoodB | 스마트 7가지 감정 정서 진단 서비스",
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col pt-20">
         <Navbar />
         {children}
+        <ResumeBanner />
       </body>
     </html>
   );
