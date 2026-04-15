@@ -215,23 +215,40 @@ function ResultContent() {
 
         <div className="mb-12 animate-in fade-in slide-in-from-bottom-6 duration-500 delay-100">
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 md:gap-4">
-            {scores.map((score, idx) => (
-              <div 
-                key={idx} 
-                className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${GROUP_COLOR[score.group]} transition-all`}
-              >
-                <span className="text-sm font-bold tracking-widest text-[#566e63] mb-2 truncate max-w-full">
-                  {score.subject.replace(/[^가-힣]/g, '') || score.subject}
-                </span>
-                <div className="flex items-center gap-1.5 mb-2">
-                   <span className="px-1.5 py-0.5 bg-white/50 rounded text-[10px] font-black text-gray-400">dB</span>
-                   <span className="text-2xl font-extrabold">{score.A}</span>
+            {scores.map((score, idx) => {
+              const preScore = preResult?.scores.find(ps => ps.subject === score.subject)
+              const delta = preScore ? score.A - preScore.A : null
+              
+              return (
+                <div 
+                  key={idx} 
+                  className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${GROUP_COLOR[score.group]} transition-all relative overflow-hidden group`}
+                >
+                  <span className="text-[11px] font-bold tracking-widest text-[#566e63] mb-1.5 truncate max-w-full opacity-70 group-hover:opacity-100 transition-opacity">
+                    {score.subject.replace(/[^가-힣]/g, '') || score.subject}
+                  </span>
+                  
+                  <div className="flex flex-col items-center mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                       <span className="px-1.5 py-0.5 bg-white/50 rounded text-[9px] font-black text-gray-400">dB</span>
+                       <span className="text-2xl font-black">{score.A}</span>
+                    </div>
+                    {preScore && (
+                      <div className="flex items-center gap-1 mt-0.5 opacity-60">
+                        <span className="text-[9px] font-bold text-gray-400">전: {preScore.A}</span>
+                        <span className={`text-[10px] font-black ${delta && delta < 0 ? 'text-blue-500' : delta && delta > 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                          {delta && delta > 0 ? `+${delta}` : delta}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={`text-[9px] font-black px-2 py-0.5 rounded-full bg-white/60 ${GROUP_TEXT_COLOR[score.group]} whitespace-nowrap`}>
+                    {score.groupLabel}
+                  </div>
                 </div>
-                <div className={`text-[10px] font-black px-2 py-0.5 rounded-full bg-white/60 ${GROUP_TEXT_COLOR[score.group]} whitespace-nowrap`}>
-                  {score.groupLabel}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
@@ -317,7 +334,7 @@ function ResultContent() {
             </h3>
             <div className="w-full h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={scores} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <LineChart data={radarData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                   <ReferenceArea y1={40} y2={60} fill="#22c55e" fillOpacity={0.05} />
                   <ReferenceArea y1={60} y2={70} fill="#f59e0b" fillOpacity={0.08} />
@@ -327,24 +344,34 @@ function ResultContent() {
 
                   <XAxis 
                     dataKey="subject" 
-                    tick={{ fontSize: 14, fill: '#666', fontWeight: 'bold' }} 
+                    tick={{ fontSize: 13, fill: '#666', fontWeight: 'bold' }} 
                     axisLine={false} 
                     tickLine={false} 
                   />
                   <YAxis 
                     domain={[0, 100]} 
-                    tick={{ fontSize: 14, fill: '#999' }} 
+                    tick={{ fontSize: 12, fill: '#999' }} 
                     axisLine={false} 
                     tickLine={false} 
-                    label={{ value: 'dB', angle: -90, position: 'insideLeft', fill: '#999', fontSize: 12 }}
+                    label={{ value: 'dB', angle: -90, position: 'insideLeft', fill: '#999', fontSize: 10 }}
                   />
                   <RechartsTooltip
                     contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.08)' }}
-                    formatter={(val: any, name: any, props: any) => [
-                      val, 
-                      props.payload.groupLabel
-                    ]}
+                    content={<CustomRadarTooltip />}
                   />
+                  
+                  {preResult && (
+                    <Line 
+                      type="monotone" 
+                      dataKey="B" 
+                      stroke="#f87171" 
+                      strokeWidth={2} 
+                      strokeDasharray="5 5"
+                      strokeOpacity={0.5}
+                      dot={{ r: 3, fill: '#f87171', strokeWidth: 1, stroke: '#fff', opacity: 0.5 }} 
+                    />
+                  )}
+
                   <Line 
                     type="monotone" 
                     dataKey="A" 
