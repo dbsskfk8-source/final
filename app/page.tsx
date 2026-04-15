@@ -112,21 +112,13 @@ export default async function HomePage() {
                 <Link href="/questionnaire" className="bg-[#566e63] text-white px-8 md:px-10 py-4 md:py-5 rounded-full text-base md:text-lg font-black shadow-xl shadow-[#566e63]/20 hover:bg-[#4a5c53] active:scale-95 transition-all text-center">
                   ✨ 무료 감정 진단 시작하기
                 </Link>
+                <Link href="/about" className="bg-white text-gray-500 border border-gray-100 px-8 md:px-10 py-4 md:py-5 rounded-full text-base md:text-lg font-bold hover:bg-gray-50 transition-all text-center">
+                  MoodB 더 알아보기
+                </Link>
               </div>
            </div>
         </section>
 
-        <NatureCanvas />
-      </main>
-ext-lg font-bold shadow-2xl shadow-[#566e63]/30 hover:shadow-[#566e63]/50 hover:bg-[#4a5c53] hover:-translate-y-1 active:scale-95 transition-all text-center">
-                  ✨ 무료 감정 진단 시작하기
-                </Link>
-                <Link href="/about" className="bg-white text-gray-500 border border-gray-100 px-10 py-5 rounded-full text-lg font-bold hover:bg-gray-50 transition-all text-center">
-                   MoodB 더 알아보기
-                </Link>
-              </div>
-           </div>
-        </section>
         <NatureCanvas />
       </main>
 
