@@ -256,7 +256,35 @@ function QuestionnaireContent() {
                 본 진단은 28문항에 걸쳐 사용자의 '7가지 감정(기쁨, 분노, 우울, 생각, 슬픔, 두려움, 놀람)' 밸런스를 측정하여 다차원적인 심리/정서적 상태를 도출합니다.
               </p>
             </div>
-          </div>
+          {/* 시작 화면 */}
+      {currentStep === -2 && (
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-6 animate-in fade-in zoom-in duration-700">
+           <div className="w-24 h-24 bg-[#566e63] rounded-[32px] flex items-center justify-center mb-8 shadow-2xl shadow-[#566e63]/20">
+              <ClipboardList size={40} className="text-white" />
+           </div>
+           <h2 className="text-3xl md:text-4xl font-black text-[#222] mb-4 tracking-tight">마음 진단 시작하기</h2>
+           <p className="text-gray-500 font-medium mb-12 max-w-sm leading-relaxed">
+             당신의 현재 심리 상태를 정확히 분석하여<br />
+             개인 맞춤형 치유 솔루션을 제안해 드립니다.
+           </p>
+           <button 
+             onClick={() => handleNext()}
+             className="w-full max-w-[280px] bg-[#566e63] text-white py-5 rounded-3xl font-black text-lg shadow-xl shadow-[#566e63]/30 hover:bg-[#4a5c53] hover:scale-105 transition-all flex items-center justify-center gap-3 group"
+           >
+             검사 시작하기
+             <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+           </button>
+           <div className="mt-8 flex items-center gap-6 text-gray-400">
+              <div className="flex items-center gap-1.5 text-xs font-bold">
+                 <Clock size={14} /> 약 3분 소요
+              </div>
+              <div className="flex items-center gap-1.5 text-xs font-bold">
+                 <ShieldCheck size={14} /> 철저한 익명 보장
+              </div>
+           </div>
+        </div>
+      )}
+             </div>
         ) : currentStep === -1 ? (
            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="mb-10 text-center">

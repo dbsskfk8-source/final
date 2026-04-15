@@ -145,6 +145,55 @@ function ResultContent() {
           })}
         </div>
 
+        {allResults.length > 1 && (
+          <div className="mb-20 pt-10 border-t border-gray-200">
+            <h3 className="text-xl font-extrabold text-[#222] mb-6 flex items-center gap-2">
+              <Calendar size={20} className="text-[#566e63]" />
+              나의 진단 세션 히스토리
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {(() => {
+                const pairs: any[] = [];
+                const used = new Set();
+                
+                // 1. 사후 데이터를 기준으로 세션 생성
+                allResults.filter(r => r.isPostMeditation).forEach(post => {
+                   const pre = allResults.find(r => r.timestamp === post.relatedPreTimestamp);
+                   pairs.push({ pre, post });
+                   used.add(post.timestamp);
+                   if (pre) used.add(pre.timestamp);
+                });
+
+                // 2. 짝이 없는 데이터들 추가
+                allResults.filter(r => !used.has(r.timestamp)).forEach(single => {
+                   pairs.push({ pre: single });
+                });
+
+                return pairs.sort((a,b) => new Date(b.pre?.timestamp || 0).getTime() - new Date(a.pre?.timestamp || 0).getTime()).map((pair, idx) => {
+                  const main = pair.pre;
+                  const d = new Date(main.timestamp);
+                  return (
+                    <div key={idx} className="bg-white border border-gray-100 p-5 rounded-[24px] shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                      <div>
+                        <div className="flex justify-between items-center mb-3">
+                           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{d.toLocaleDateString()}</span>
+                           {pair.post && <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[9px] font-black rounded-full">상담 완료</span>}
+                        </div>
+                        <h4 className="font-extrabold text-[#222] mb-1">정서 상태: {main.overallGroup === 'risk' ? '집중 관리' : '안정'}</h4>
+                        <p className="text-xs text-gray-500 mb-4">{Math.round(main.overallTScore)} dB 지수 기록</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Link href={`/result?id=${main.id || main.timestamp}`} className="flex-1 py-2 text-center bg-gray-50 rounded-xl text-[10px] font-black hover:bg-gray-100">사전 결과</Link>
+                        {pair.post && <Link href={`/result?id=${pair.post.id || pair.post.timestamp}`} className="flex-1 py-2 text-center bg-[#566e63] text-white rounded-xl text-[10px] font-black hover:bg-[#4a5c53]">사후 결과</Link>}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-10 mb-16">
           <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm">
             <h2 className="text-xl font-black mb-6">감정 프로파일</h2>

@@ -68,6 +68,8 @@ export default function MySituationPage() {
   const [allCsei, setAllCsei] = useState<any[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [viewMode, setViewMode] = useState<'radar' | 'line'>('radar')
+  const [userNickname, setUserNickname] = useState('사용자')
+  const [resumeData, setResumeData] = useState<any>(null)
   const [isGuest, setIsGuest] = useState(true)
   const [hiddenSeries, setHiddenSeries] = useState<string[]>([])
   const [profile, setProfile] = useState<UserProfile>({ nickname: '', full_name: '', gender: '', birthdate: '', phone: '' })
@@ -263,10 +265,8 @@ export default function MySituationPage() {
   })
 
   return (
-    <div className="min-h-screen bg-[#fffdfa] text-[#333] selection:bg-[#566e63]/20">
+    <div className="min-h-screen bg-[#fcfdfc] pb-24">
       <Navbar />
-
-      <main className="max-w-[1200px] mx-auto px-6 py-12 md:py-20">
 
         {/* ② 인사 + 프로필 섹션 */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-12 fade-in">
