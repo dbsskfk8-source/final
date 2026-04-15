@@ -128,6 +128,9 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // 현재 명상에 맞는 스크립트 (useEffect들이 참조하므로 반드시 먼저 선언)
+  const activeScripts = getScriptForMeditation(data.name)
+
   // Youtube BGM 제어 (postMessage API)
   useEffect(() => {
     if (iframeRef.current && iframeRef.current.contentWindow) {
@@ -270,13 +273,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
       {/* 메인 스튜디오 구조 (가로 2분할) */}
       <main className={`flex-1 w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 p-6 lg:p-10 relative z-10 ${data.cbt ? 'pb-40' : 'pb-12'}`}>
         
-        {/* 숨김 오디오 / Iframe */}
-        <audio 
-          ref={voiceRef} 
-          src={`/audio/${VOICE_OPTIONS.find(v => v.id === selectedVoice)?.file}`} 
-          onLoadedMetadata={handleAudioLoaded}
-          className="hidden" 
-        />
+
         <iframe 
           ref={iframeRef}
           src="https://www.youtube.com/embed/EsL7TErAQKc?enablejsapi=1&autoplay=0&loop=1&playlist=EsL7TErAQKc" 
