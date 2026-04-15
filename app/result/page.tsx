@@ -145,6 +145,39 @@ function ResultContent() {
           })}
         </div>
 
+        <div className="grid md:grid-cols-2 gap-10 mb-16">
+          <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm">
+            <h2 className="text-xl font-black mb-6">감정 프로파일</h2>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={radarData}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="subject" tick={{fontSize: 12, fontWeight: 'bold'}} />
+                  <Radar name="현재" dataKey="A" stroke={isPost ? POST_COLOR : '#566e63'} fill={isPost ? POST_COLOR : '#566e63'} fillOpacity={0.2} />
+                  {preResult && <Radar name="이전" dataKey="B" stroke={PRE_COLOR} fill={PRE_COLOR} fillOpacity={0.1} />}
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-[#f9faf9] p-10 rounded-[40px] flex flex-col justify-between">
+            <div>
+              <h2 className="text-xl font-black mb-4">현 상태 요약</h2>
+              <p className="text-gray-500 font-medium mb-6 leading-relaxed">{getOverallSummary()}</p>
+              
+              <div className="bg-white p-6 rounded-3xl border border-[#566e63]/20 mb-8">
+                <div className="flex items-center gap-2 mb-2 text-[#566e63]">
+                  <Sparkles size={16} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Premium Benefit</span>
+                </div>
+                <p className="text-sm font-bold mb-4">전문의 정밀 분석 리포트를 구매하시겠습니까?</p>
+                <Link href="/pricing" className="block w-full py-3 bg-[#566e63] text-white text-center rounded-xl font-black text-xs">리포트 신청하기</Link>
+              </div>
+            </div>
+            <Link href="/dashboard" className="flex items-center gap-2 text-[#566e63] font-black">대시보드로 돌아가기 <ArrowRight size={16} /></Link>
+          </div>
+        </div>
+
         {allResults.length > 1 && (
           <div className="mb-20 pt-10 border-t border-gray-200">
             <h3 className="text-xl font-extrabold text-[#222] mb-6 flex items-center gap-2">
@@ -193,39 +226,6 @@ function ResultContent() {
             </div>
           </div>
         )}
-
-        <div className="grid md:grid-cols-2 gap-10 mb-16">
-          <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm">
-            <h2 className="text-xl font-black mb-6">감정 프로파일</h2>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={radarData}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="subject" tick={{fontSize: 12, fontWeight: 'bold'}} />
-                  <Radar name="현재" dataKey="A" stroke={isPost ? POST_COLOR : '#566e63'} fill={isPost ? POST_COLOR : '#566e63'} fillOpacity={0.2} />
-                  {preResult && <Radar name="이전" dataKey="B" stroke={PRE_COLOR} fill={PRE_COLOR} fillOpacity={0.1} />}
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="bg-[#f9faf9] p-10 rounded-[40px] flex flex-col justify-between">
-            <div>
-              <h2 className="text-xl font-black mb-4">현 상태 요약</h2>
-              <p className="text-gray-500 font-medium mb-6 leading-relaxed">{getOverallSummary()}</p>
-              
-              <div className="bg-white p-6 rounded-3xl border border-[#566e63]/20 mb-8">
-                <div className="flex items-center gap-2 mb-2 text-[#566e63]">
-                  <Sparkles size={16} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Premium Benefit</span>
-                </div>
-                <p className="text-sm font-bold mb-4">전문의 정밀 분석 리포트를 구매하시겠습니까?</p>
-                <Link href="/pricing" className="block w-full py-3 bg-[#566e63] text-white text-center rounded-xl font-black text-xs">리포트 신청하기</Link>
-              </div>
-            </div>
-            <Link href="/dashboard" className="flex items-center gap-2 text-[#566e63] font-black">대시보드로 돌아가기 <ArrowRight size={16} /></Link>
-          </div>
-        </div>
       </main>
       <Footer />
     </div>
