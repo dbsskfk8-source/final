@@ -701,7 +701,6 @@ export default function MySituationPage() {
             <button className="bg-white border border-gray-100 shadow-sm hover:bg-[#f0ece5] text-[#4a5c53] font-bold text-sm px-10 py-3.5 rounded-full transition-all active:scale-95">이전 기록 더 불러오기</button>
           </div>
         </div>
-        </div>
       </main>
 
       <Footer />
