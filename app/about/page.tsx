@@ -75,8 +75,8 @@ export default function AboutPage() {
 
       {/* Story & CTA */}
       <section className="py-24 px-6 text-center max-w-4xl mx-auto">
-        <h2 className="text-3xl md:text-5xl font-extrabold mb-8 text-[#222] leading-tight">
-          당신의 마음을 있는 그대로 안아주세요. <br />지금의 감정을 부드럽게 흘려보낼 시간입니다.
+        <h2 className="text-3xl md:text-5xl font-extrabold mb-8 text-[#222] leading-tight break-keep">
+          당신의 마음을 있는 그대로 안아주세요.<br /> 지금의 감정을 부드럽게 흘려보낼 시간입니다.
         </h2>
         <p className="text-xl text-gray-500 font-medium mb-12">
           지금 바로 나의 마음 상태를 측정하고 편안함을 되찾으세요.
