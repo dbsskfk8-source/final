@@ -5,17 +5,14 @@ import HeroCanvas from './components/HeroCanvas'
 import Footer from './components/Footer'
 import NatureCanvas from './components/NatureCanvas'
 
-export default async function HomePage() {
-  // Supabase integration: Fetch dynamic content for cards
-  const supabase = await createClient()
-  const { data: contents }: { data: any[] | null } = await supabase
-    .from('app_content')
-    .select('*')
-    .order('created_at', { ascending: true })
+/**
+ * DEPLOYMENT FORCE UPDATE - VERSION: 2026.04.15.22.48
+ * This timestamp forces Vercel to bypass build cache and refresh the UI elements.
+ */
 
-  // 현재 로그인 유저 및 역할 확인
+export default async function HomePage() {
+  const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const isDoctor = user?.user_metadata?.role === 'doctor'
 
   return (
     <div className="min-h-screen bg-[#fffdfa] text-[#333]">
@@ -24,7 +21,8 @@ export default async function HomePage() {
         <section className="px-6 md:px-10 lg:px-20 grid md:grid-cols-2 gap-8 md:gap-20 items-center mb-16 md:mb-32">
           <div className="max-w-xl animate-in fade-in slide-in-from-left-8 duration-1000">
             <h1 className="text-responsive-h1 mb-6 md:mb-8">
-              내 마음을 읽는 <br /><span className="text-[#566e63] italic font-serif">공간.</span>
+              내 마음을 읽는 <br />
+              <span className="text-[#566e63] italic font-serif">공간.</span>
             </h1>
             <p className="text-responsive-p mb-8 md:mb-10">
               당신을 가장 잘 이해하는 <span className="font-bold text-[#566e63]">MoodB</span>입니다. 객관적인 정서 진단부터 맞춤형 인지행동치료(CBT)와 명상까지, 온전한 나를 만나는 여정을 시작해 보세요.
@@ -39,7 +37,7 @@ export default async function HomePage() {
                 <span className="font-black text-[#222] text-sm md:text-base">오늘은 어떤 마음이신가요?</span>
               </div>
               <form action="/chat" className="flex items-center bg-gray-50/50 rounded-full px-2 py-1.5 ring-1 ring-gray-100 transition-all focus-within:ring-[#566e63] focus-within:bg-white shadow-inner">
-                 <input type="text" placeholder="고민을 편하게 남겨주세요." className="flex-1 bg-transparent border-none outline-none text-sm md:text-base py-2 px-4" />
+                 <input type="text" placeholder="고민을 편하게 남겨주세요." className="flex-1 bg-transparent border-none outline-none text-sm md:text-base py-2 px-4 focus:ring-0" />
                  <button type="submit" className="bg-[#566e63] w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full text-white shadow-lg hover:scale-105 transition-all"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg></button>
               </form>
             </div>
@@ -109,11 +107,8 @@ export default async function HomePage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="/questionnaire" className="bg-[#566e63] text-white px-8 md:px-10 py-4 md:py-5 rounded-full text-base md:text-lg font-black shadow-xl shadow-[#566e63]/20 hover:bg-[#4a5c53] active:scale-95 transition-all text-center">
+                <Link href="/questionnaire" className="w-full sm:w-auto bg-[#566e63] text-white px-8 md:px-10 py-4 md:py-5 rounded-full text-base md:text-lg font-black shadow-xl shadow-[#566e63]/20 hover:bg-[#4a5c53] active:scale-95 transition-all text-center">
                   ✨ 무료 감정 진단 시작하기
-                </Link>
-                <Link href="/about" className="bg-white text-gray-500 border border-gray-100 px-8 md:px-10 py-4 md:py-5 rounded-full text-base md:text-lg font-bold hover:bg-gray-50 transition-all text-center">
-                  MoodB 더 알아보기
                 </Link>
               </div>
            </div>
