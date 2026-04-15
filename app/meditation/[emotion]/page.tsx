@@ -325,7 +325,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
             <button
               onClick={() => {
                 // 종료 시: 현재 진행 상태 localStorage에 저장 (이어서 하기용)
-                if (currentTimeSec > 10) {
+                if (elapsedTime > 10) {
                   try {
                     localStorage.setItem('meditation_resume', JSON.stringify({
                       emotion: rawEmotion,
