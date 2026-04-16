@@ -3,7 +3,7 @@
 import { useEffect, useState, use, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Play, Pause, RotateCcw, Brain, MessageCircle, Heart, Fingerprint, Activity, Wind, Sparkles, Volume2, FileText, Settings, Type, Download, SkipForward } from 'lucide-react'
+import { ArrowLeft, Play, Pause, RotateCcw, Brain, MessageCircle, Heart, Fingerprint, Activity, Wind, Sparkles, Volume2, FileText, Settings, Type, Download } from 'lucide-react'
 import { getScriptForMeditation } from '@/utils/meditationScripts'
 
 const VOICE_OPTIONS = [
@@ -24,49 +24,72 @@ const MEDITATION_MAP: Record<string, any> = {
     name: '호흡명상',
     description: '과도하게 들뜬 기운을 가라앉히고 마음의 평온을 되찾는 명상입니다.',
     color: 'from-pink-400 to-rose-300',
-    icon: Wind
+    bgColor: 'bg-rose-50',
+    icon: Wind,
+    cbt: false
   },
   '분노': {
     target: '솟구치는 화(분노)',
     name: '리소스명상',
     description: '치밀어 오르는 화를 다스리고 흥분된 마음을 다독이는 명상입니다.',
     color: 'from-orange-500 to-amber-400',
-    icon: Sparkles
+    bgColor: 'bg-orange-50',
+    icon: Sparkles,
+    cbt: false
   },
   '고민': {
     target: '끊임없는 생각(고민)',
     name: '신체감각명상',
     description: '머릿속 잡념을 멈추고 현재 내 몸의 감각에 집중하는 훈련입니다.',
     color: 'from-blue-400 to-cyan-300',
-    icon: Fingerprint
+    bgColor: 'bg-blue-50',
+    icon: Fingerprint,
+    cbt: false
   },
   '근심': {
     target: '가라앉은 마음(근심)',
     name: '희희명상',
     description: '답답하게 막힌 기운을 긍정의 에너지를 통해 밝게 끌어올려 주는 훈련입니다.',
     color: 'from-gray-500 to-slate-400',
-    icon: Smile
+    bgColor: 'bg-slate-50',
+    icon: Smile,
+    cbt: false
   },
   '슬픔': {
     target: '위축된 마음(슬픔)',
     name: '중단전명상',
     description: '슬픔으로 무기력해진 마음을 따뜻한 호흡으로 위로하고 에너지를 채우는 훈련입니다.',
     color: 'from-stone-500 to-zinc-400',
-    icon: Heart
+    bgColor: 'bg-stone-50',
+    icon: Heart,
+    cbt: false
   },
   '두려움': {
     target: '불안한 마음(두려움)',
     name: '하단전명상',
     description: '막연한 두려움을 내려놓고 흔들리지 않는 안정감을 찾는 훈련입니다.',
     color: 'from-purple-600 to-indigo-500',
-    icon: Activity
+    bgColor: 'bg-indigo-50',
+    icon: Activity,
+    cbt: true
   },
   '놀람': {
     target: '당황한 마음(놀람)',
     name: '신체감각명상',
     description: '갑작스러운 충격으로 흩어진 마음을 가라앉히고 안정을 되찾는 훈련입니다.',
     color: 'from-violet-500 to-fuchsia-400',
-    icon: Fingerprint
+    bgColor: 'bg-fuchsia-50',
+    icon: Fingerprint,
+    cbt: true
+  },
+  '평온': {
+    target: '편안한 상태(평온)',
+    name: '리소스명상',
+    description: '현재의 평화로운 기운을 일정하게 유지하고 내면의 안정감을 깊게 다지는 훈련입니다.',
+    color: 'from-teal-400 to-emerald-300',
+    bgColor: 'bg-emerald-50',
+    icon: Sparkles,
+    cbt: false
   }
 }
 
@@ -75,7 +98,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   // Next 15+ 에서는 params를 비동기로 언래핑해야 함
   const resolvedParams = use(params)
   
-  // 다양한 포맷('경(놀람)', '경 (驚)', '놀람')에 방어적으로 대응하는 매칭 딕셔너리
+  // 다양한 포맷('경(놀람)', '경 (驚)', '놀람', 'peace')에 방어적으로 대응하는 매칭 딕셔너리
   const MATCH_KEYS: Record<string, string[]> = {
     '기쁨': ['기쁨', '희', '喜'],
     '분노': ['분노', '화', '노', '怒'],
@@ -83,7 +106,8 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
     '근심': ['근심', '걱정', '우', '憂'],
     '슬픔': ['슬픔', '비', '悲'],
     '두려움': ['두려움', '공포', '공', '恐'],
-    '놀람': ['놀람', '당황', '경', '驚']
+    '놀람': ['놀람', '당황', '경', '驚'],
+    '평온': ['평온', '평안', 'peace', '안정']
   }
 
   let rawEmotion = decodeURIComponent(resolvedParams.emotion)
@@ -95,27 +119,19 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
   const Icon = data.icon || Brain
 
   const [isPlaying, setIsPlaying] = useState(false)
-  const [elapsedTime, setElapsedTime] = useState(0)
-  const [isSpeaking, setIsSpeaking] = useState(false)
-  const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0)
-  const [currentDisplayScript, setCurrentDisplayScript] = useState("")
-  
+  const [currentTimeSec, setCurrentTimeSec] = useState(0)
+  const [durationSec, setDurationSec] = useState(300)
+
   // Studio States
-  const [activeTab, setActiveTab] = useState<'script' | 'audio' | 'subtitle'>('audio')
+  const [activeTab, setActiveTab] = useState<'script' | 'audio' | 'subtitle' | 'export'>('audio')
+  const [selectedVoice, setSelectedVoice] = useState('female1')
   const [voiceVolume, setVoiceVolume] = useState(100)
   const [bgmVolume, setBgmVolume] = useState(30)
   const [showSubtitle, setShowSubtitle] = useState(true)
   const [showResultModal, setShowResultModal] = useState(false)
   
-  // 브라우저 지원 음성 목록 상태
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([])
-  const [selectedVoiceURI, setSelectedVoiceURI] = useState<string>('')
-  
+  const voiceRef = useRef<HTMLAudioElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  // 현재 명상에 맞는 스크립트 (useEffect들이 참조하므로 반드시 먼저 선언)
-  const activeScripts = getScriptForMeditation(data.name)
 
   // Youtube BGM 제어 (postMessage API)
   useEffect(() => {
@@ -129,132 +145,69 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
     }
   }, [isPlaying, bgmVolume])
 
-  // 브라우저 보이스 로드
+  // 보이스 오디오 제어
   useEffect(() => {
-    const loadVoices = () => {
-      const availableVoices = window.speechSynthesis.getVoices().filter(v => v.lang.includes('ko'))
-      setVoices(availableVoices)
-      if (availableVoices.length > 0 && !selectedVoiceURI) {
-        setSelectedVoiceURI(availableVoices[0].voiceURI)
+    if (voiceRef.current) {
+      voiceRef.current.volume = voiceVolume / 100
+      if (isPlaying) {
+        voiceRef.current.play().catch(e => console.warn('Audio play restricted:', e))
+      } else {
+        voiceRef.current.pause()
       }
     }
-    loadVoices()
-    window.speechSynthesis.onvoiceschanged = loadVoices
-  }, [selectedVoiceURI])
+  }, [isPlaying, voiceVolume, selectedVoice])
 
-  // 즉시 설정 반영
-  const applySettingsNow = () => {
-    if (isPlaying && isSpeaking) {
-      window.speechSynthesis.cancel()
-      speakSegment(currentSegmentIndex)
+  // 오디오 메타데이터 로드 시 전체 길이 업데이트
+  const handleAudioLoaded = () => {
+    if (voiceRef.current && voiceRef.current.duration !== Infinity && !isNaN(voiceRef.current.duration)) {
+      setDurationSec(voiceRef.current.duration)
     }
   }
 
-  // 0.1초 단위 정밀 타이머 엔진
+  // 현재 명상 기호에 맞는 실제 스크립트 도출
+  const activeScripts = getScriptForMeditation(data.name)
+  const currentScript = activeScripts.slice().reverse().find(s => currentTimeSec >= s.time)?.text || ""
+
+  // 타이머 로직 (재생 동기화)
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isPlaying) {
       interval = setInterval(() => {
-        setElapsedTime(prev => {
-          const next = prev + 0.1
-          // 마지막 문장 종료 후 3초 뒤 자동 모달
-          const lastSeg = activeScripts[activeScripts.length - 1]
-          if (lastSeg && lastSeg.endTime && next >= lastSeg.endTime + 3) {
+        if (voiceRef.current) {
+          const current = voiceRef.current.currentTime
+          setCurrentTimeSec(current)
+          
+          if (current >= durationSec - 1 || voiceRef.current.ended) {
             setIsPlaying(false)
             setShowResultModal(true)
-            return next
           }
-          return next
-        })
-      }, 100)
+        }
+      }, 500) 
     }
     return () => clearInterval(interval)
-  }, [isPlaying, activeScripts.length])
+  }, [isPlaying, durationSec])
 
-  // 문장 트리거 감지 (발화 중 중복 호출 방지)
-  useEffect(() => {
-    if (!isPlaying) return
-    if (isSpeaking) return // 현재 발화 중이면 새 발화 시작 안 함
-    
-    const script = activeScripts[currentSegmentIndex]
-    if (script && elapsedTime >= script.time) {
-      speakSegment(currentSegmentIndex)
-      setCurrentSegmentIndex(prev => prev + 1)
-    }
-  }, [elapsedTime, isPlaying, currentSegmentIndex, activeScripts, isSpeaking])
-
-  const speakSegment = (index: number) => {
-    if (index >= activeScripts.length) return
-    const script = activeScripts[index]
-    const utterance = new SpeechSynthesisUtterance(script.text)
-    utterance.lang = 'ko-KR'
-    
-    let dynamicRate = 1.0
-    if (script.endTime) {
-       const durationSec = script.endTime - script.time
-       const charsPerSec = script.text.length / (durationSec || 1)
-       const targetRate = charsPerSec / 5.5
-       dynamicRate = Math.max(0.3, Math.min(2.0, targetRate))
-    }
-    
-    utterance.rate = dynamicRate
-    utterance.pitch = 1.0
-    utterance.volume = voiceVolume / 100
-    
-    if (voices.length > 0) {
-      const selectedVoice = voices.find(v => v.voiceURI === selectedVoiceURI)
-      if (selectedVoice) utterance.voice = selectedVoice
-    }
-
-    // 자막: onstart 이벤트를 기다리지 않고 즉시 표시 (브라우저 호환성)
-    setCurrentDisplayScript(script.text)
-    setIsSpeaking(true)
-
-    utterance.onend = () => {
-       setIsSpeaking(false)
-    }
-    utterance.onerror = () => {
-       setIsSpeaking(false)
-    }
-
-    window.speechSynthesis.cancel() // 이전 발화 확실히 종료 후 새 발화 시작
-    window.speechSynthesis.speak(utterance)
-  }
-
-  const togglePlay = () => {
-    if (isPlaying) {
-      setIsPlaying(false)
-      window.speechSynthesis.cancel()
-    } else {
-      setIsPlaying(true)
-    }
-  }
-
+  const togglePlay = () => setIsPlaying(!isPlaying)
   const resetPlay = () => {
-    window.speechSynthesis.cancel()
     setIsPlaying(false)
-    setElapsedTime(0)
-    setCurrentSegmentIndex(0)
-    setIsSpeaking(false)
-    setCurrentDisplayScript("")
+    setCurrentTimeSec(0)
+    if (voiceRef.current) voiceRef.current.currentTime = 0
     if (iframeRef.current && iframeRef.current.contentWindow) {
       iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'seekTo', args: [0, true] }), '*')
     }
   }
 
-  const lastSeg = activeScripts[activeScripts.length - 1]
-  const maxDuration = lastSeg ? ((lastSeg.endTime || lastSeg.time + 10) + 3) : 1
-  const progressPercent = (elapsedTime / maxDuration) * 100
+  const progressPercent = (currentTimeSec / durationSec) * 100
 
   return (
-    <div className={`min-h-screen ${data.bgColor} text-[#333] font-sans selection:bg-black/10 flex flex-col`}>
+    <div className={`min-h-screen ${data.bgColor} text-[#333] font-sans selection:bg-black/10 flex flex-col transition-colors duration-1000`}>
       {/* HEADER */}
       <header className="p-6 md:p-8 flex justify-between items-center relative z-20">
         <button onClick={() => router.back()} className="flex items-center gap-2 font-black text-xs uppercase tracking-widest text-[#566e63] hover:text-black transition-colors bg-white/50 px-4 py-2 rounded-full shadow-sm">
           <ArrowLeft size={16} /> 돌아가기
         </button>
         <div className="font-extrabold tracking-widest text-[#222] text-xl md:text-2xl hidden sm:block">
-          MoodB <span className="text-[10px] font-bold text-gray-400">7가지 감정 STUDIO</span>
+          MoodB <span className="text-[10px] font-bold text-gray-400">7가지 감정과 평온 STUDIO</span>
         </div>
         <div className="w-10 sm:w-24"></div> {/* 여백 밸런스 */}
       </header>
@@ -262,7 +215,13 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
       {/* 메인 스튜디오 구조 (가로 2분할) */}
       <main className={`flex-1 w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 p-6 lg:p-10 relative z-10 ${data.cbt ? 'pb-40' : 'pb-12'}`}>
         
-
+        {/* 숨김 오디오 / Iframe */}
+        <audio 
+          ref={voiceRef} 
+          src={`/audio/${VOICE_OPTIONS.find(v => v.id === selectedVoice)?.file}`} 
+          onLoadedMetadata={handleAudioLoaded}
+          className="hidden" 
+        />
         <iframe 
           ref={iframeRef}
           src="https://www.youtube.com/embed/EsL7TErAQKc?enablejsapi=1&autoplay=0&loop=1&playlist=EsL7TErAQKc" 
@@ -275,13 +234,13 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
           
           <div className="absolute top-6 left-6 md:top-8 md:left-8 inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full shadow-sm text-[10px] font-bold text-gray-600">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            스튜디오 믹싱 모드
+            스튜디오 리딩 모드
           </div>
 
-          <h1 className="text-responsive-h2 mt-12 mb-2 text-center">
+          <h1 className="text-responsive-h2 mt-12 mb-2 text-center break-keep">
             {data.name}
           </h1>
-          <p className="text-xs font-bold text-gray-400 mb-6 uppercase tracking-widest">{data.target}</p>
+          <p className="text-xs font-bold text-gray-500 mb-6 uppercase tracking-widest">{data.target}</p>
 
           {/* 인터랙티브 명상 서클 */}
           <div className="relative w-[210px] h-[210px] sm:w-[240px] sm:h-[240px] md:w-[300px] md:h-[300px] flex items-center justify-center my-6">
@@ -294,7 +253,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
                   {Math.min(100, progressPercent).toFixed(0)}<span className="text-sm md:text-lg opacity-50">%</span>
                </div>
                <div className="text-[10px] md:text-xs font-black tracking-widest text-[#566e63]">
-                  {isPlaying ? `${Math.floor(elapsedTime / 60)}:${String(Math.floor(elapsedTime % 60)).padStart(2, '0')}` : 'READY'}
+                  {isPlaying ? `${Math.floor(currentTimeSec / 60)}:${String(Math.floor(currentTimeSec % 60)).padStart(2, '0')}` : 'READY'}
                </div>
             </div>
             
@@ -307,9 +266,9 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
 
           {/* 자막 구역 */}
           {showSubtitle && (
-            <div className="h-20 flex items-center justify-center text-center w-full px-4 mb-6">
+            <div className="h-24 flex items-center justify-center text-center w-full px-4 mb-6">
               <p className="text-base md:text-xl font-bold bg-white/50 px-6 py-2 rounded-2xl text-[#444] break-keep transition-all duration-700 shadow-sm border border-white/50">
-                {currentDisplayScript || "..."}
+                {currentScript || "지친 마음을 잠시 내려놓습니다."}
               </p>
             </div>
           )}
@@ -322,23 +281,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
             <button onClick={togglePlay} className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center text-white shadow-xl transition-all hover:scale-105 active:scale-95 ${isPlaying ? 'bg-gray-800' : 'bg-gradient-to-br ' + data.color}`}>
               {isPlaying ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
             </button>
-            <button
-              onClick={() => {
-                // 종료 시: 현재 진행 상태 localStorage에 저장 (이어서 하기용)
-                if (elapsedTime > 10) {
-                  try {
-                    localStorage.setItem('meditation_resume', JSON.stringify({
-                      emotion: rawEmotion,
-                      emotionKey,
-                      progress: Math.round(progressPercent),
-                      savedAt: Date.now()
-                    }))
-                  } catch (e) {}
-                }
-                router.push('/my-situation')
-              }}
-              className="w-12 h-12 md:w-14 md:h-14 bg-gray-50 rounded-full flex items-center justify-center text-red-300 hover:text-red-500 hover:bg-white shadow-sm transition-all active:scale-95 font-black text-[9px] tracking-widest uppercase"
-            >
+            <button onClick={() => router.push('/')} className="w-12 h-12 md:w-14 md:h-14 bg-white/50 rounded-full flex items-center justify-center text-red-400 hover:text-red-500 hover:bg-white shadow-sm transition-all active:scale-95 font-black text-[9px] tracking-widest uppercase border border-gray-100">
               종료
             </button>
           </div>
@@ -357,6 +300,9 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
             <button onClick={() => setActiveTab('subtitle')} className={`flex-1 min-w-[80px] py-4 text-[10px] font-black uppercase tracking-widest transition-colors ${activeTab === 'subtitle' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
                <Type size={16} className="mx-auto mb-1.5" /> 자막
             </button>
+            <button onClick={() => setActiveTab('export')} className={`flex-1 min-w-[80px] py-4 text-[10px] font-black uppercase tracking-widest transition-colors ${activeTab === 'export' ? 'text-[#566e63] bg-white border-b-2 border-[#566e63]' : 'text-gray-400 hover:bg-white'}`}>
+               <Download size={16} className="mx-auto mb-1.5" /> 내보내기
+            </button>
           </div>
 
           {/* Tab Contents */}
@@ -365,23 +311,19 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
             {activeTab === 'audio' && (
               <div className="space-y-8 animate-in fade-in duration-300">
                 <div>
-                  <h3 className="font-extrabold text-[#222] mb-4 text-lg">리딩 설정 (내장 음성)</h3>
-                  <div className="space-y-6 bg-[#faf8f5] p-5 rounded-2xl border border-gray-100">
-                    <div>
-                      <div className="flex justify-between text-sm font-bold text-gray-600 mb-2">
-                        <span>목소리 종류</span>
-                      </div>
-                      <select 
-                        value={selectedVoiceURI} 
-                        onChange={(e) => { setSelectedVoiceURI(e.target.value); setTimeout(applySettingsNow, 50); }}
-                        className="w-full p-2 border border-gray-200 rounded-xl bg-white text-sm font-medium text-[#222]"
-                      >
-                        {voices.length === 0 && <option>목소리 로딩 중...</option>}
-                        {voices.map(v => (
-                          <option key={v.voiceURI} value={v.voiceURI}>{v.name}</option>
-                        ))}
-                      </select>
-                    </div>
+                  <h3 className="font-extrabold text-[#222] mb-4 text-lg">리딩 보이스 (전문가 리딩)</h3>
+                  <div className="flex flex-col gap-3">
+                    {VOICE_OPTIONS.map(voice => (
+                      <label key={voice.id} className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${selectedVoice === voice.id ? 'border-[#566e63] bg-[#566e63]/5' : 'border-gray-100 hover:border-gray-300'}`}>
+                        <div className="flex items-center gap-3">
+                          <input type="radio" name="voice" className="hidden" checked={selectedVoice === voice.id} onChange={() => setSelectedVoice(voice.id)} />
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedVoice === voice.id ? 'border-[#566e63]' : 'border-gray-300'}`}>
+                            {selectedVoice === voice.id && <div className="w-2.5 h-2.5 rounded-full bg-[#566e63]"></div>}
+                          </div>
+                          <span className="font-bold text-gray-700">{voice.name}</span>
+                        </div>
+                      </label>
+                    ))}
                   </div>
                 </div>
 
@@ -415,7 +357,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
                 <h3 className="font-extrabold text-[#222] mb-4 text-lg">심리학적 템플릿 스크립트</h3>
                 <div className="space-y-4">
                   {activeScripts.map((line, idx) => (
-                    <div key={idx} className={`p-4 rounded-xl text-sm leading-relaxed font-medium transition-colors ${currentSegmentIndex > idx ? 'bg-[#566e63]/10 text-[#222] font-bold border border-[#566e63]/20' : 'text-gray-400'}`}>
+                    <div key={idx} className={`p-4 rounded-xl text-sm leading-relaxed font-medium transition-colors ${currentTimeSec >= line.time ? 'bg-[#566e63]/10 text-[#222] font-bold border border-[#566e63]/20' : 'text-gray-400'}`}>
                       {line.text}
                     </div>
                   ))}
@@ -443,12 +385,29 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
               </div>
             )}
 
+            {activeTab === 'export' && (
+              <div className="animate-in fade-in duration-300 text-center py-6 space-y-6">
+                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                   <Download size={32} />
+                </div>
+                <h3 className="font-extrabold text-[#222] text-xl">멀티 플랫폼 인코딩</h3>
+                <p className="text-gray-500 font-medium text-sm">현재 생성한 믹싱 설정으로 커스텀 명상 영상을 생성합니다.</p>
+                <div className="grid grid-cols-2 gap-3 mt-6">
+                  <button className="p-4 border border-gray-200 rounded-2xl hover:border-[#566e63] hover:text-[#566e63] transition-colors font-bold flex flex-col items-center gap-2">
+                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">16:9</span> 유튜브용
+                  </button>
+                  <button className="p-4 border border-gray-200 rounded-2xl hover:border-[#566e63] hover:text-[#566e63] transition-colors font-bold flex flex-col items-center gap-2">
+                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">9:16</span> 숏츠 / 릴스
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
 
-      {/* CBT / 심층 처방 연계 버튼 (공, 경 감정일 때만 활성화) */}
-      {data.cbt && elapsedTime < maxDuration && (
+      {/* CBT / 심층 처방 연계 버튼 (공포, 놀람, 평온(peace) 감정일 때도 활성화 고려) */}
+      {data.cbt && currentTimeSec < durationSec && (
         <div className="fixed bottom-0 left-0 w-full p-4 md:p-8 animate-in fade-in slide-in-from-bottom-full duration-1000 delay-700 z-30">
           <div className="max-w-2xl mx-auto bg-white/90 backdrop-blur-md rounded-2xl border border-gray-200/50 p-5 md:p-6 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
             <div className="text-center md:text-left">
@@ -466,7 +425,7 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
         </div>
       )}
 
-      {/* 명상 완료 시 다시 검사 플로우 */}
+      {/* 명상 완료 시 결과 모달 */}
       {showResultModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#faf8f5]/95 backdrop-blur-sm animate-in fade-in duration-1000 p-4">
           <div className="max-w-md w-full bg-white rounded-[32px] border border-[#d7eadf] p-8 md:p-10 shadow-2xl flex flex-col items-center text-center">
@@ -478,7 +437,10 @@ export default function MeditationPage({ params }: { params: Promise<{ emotion: 
               짧은 휴식으로도 마음의 크기는 달라집니다.<br className="hidden md:block" />나의 감정 크기를 다시 측정하여 이전 진단 결과와 어떻게 달라졌는지 비교해 보세요.
             </p>
             
-            <Link href={`/questionnaire?mode=post&emotion=${encodeURIComponent(rawEmotion)}`} className="w-full bg-[#566e63] text-white font-bold py-4 rounded-xl hover:bg-[#4a5c53] shadow-lg transition-transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 mb-4">
+            <Link 
+              href={`/questionnaire?mode=post&emotion=${encodeURIComponent(rawEmotion)}`} 
+              className="w-full bg-[#566e63] text-white font-bold py-4 rounded-xl hover:bg-[#4a5c53] shadow-lg transition-transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 mb-4"
+            >
               <Activity size={20} />
               나의 감정 크기 다시 확인하기
             </Link>
