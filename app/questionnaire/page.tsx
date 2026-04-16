@@ -106,13 +106,20 @@ function QuestionnaireContent() {
       }])
     }
 
-    const resultData = {
-      timestamp: new Date().toISOString(), gender, ageGroup, scores: dbScores, overallTScore: overall.tScore, overallGroup: overall.group,
-      ...(mode === 'post' ? { isPostMeditation: true, relatedEmotion: emotionParam } : {})
-    }
-
     const stored = localStorage.getItem('final_csei_results')
     const existing = stored ? JSON.parse(stored) : []
+    
+    // 사후 진단일 경우, 현재 로컬스토리지의 가장 최근 데이터(사전 진단)를 연결
+    let relatedPreTimestamp = undefined
+    if (mode === 'post') {
+      const lastPre = existing.find((r: any) => !r.isPostMeditation)
+      if (lastPre) relatedPreTimestamp = lastPre.timestamp
+    }
+
+    const resultData = {
+      timestamp: new Date().toISOString(), gender, ageGroup, scores: dbScores, overallTScore: overall.tScore, overallGroup: overall.group,
+      ...(mode === 'post' ? { isPostMeditation: true, relatedEmotion: emotionParam, relatedPreTimestamp } : {})
+    }
     localStorage.setItem('final_csei_results', JSON.stringify([resultData, ...existing]))
     localStorage.removeItem('moodb_draft')
     router.push(mode === 'post' ? '/result?isPost=true' : '/result')

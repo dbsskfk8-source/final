@@ -124,6 +124,16 @@ function MySituationContent() {
   const userRole = (profile?.role || '').toLowerCase()
   const isAdmin = userRole === 'doctor' || userRole === 'admin'
 
+  const EMOTION_COLORS: Record<string, string> = {
+    '기쁨': '#facc15',
+    '분노': '#ef4444',
+    '고민': '#a855f7',
+    '근심': '#3b82f6',
+    '슬픔': '#64748b',
+    '두려움': '#10b981',
+    '놀람': '#f97316',
+  }
+
   return (
     <div className="min-h-screen bg-[#faf8f5] text-[#333]">
       <Navbar />
@@ -254,12 +264,31 @@ function MySituationContent() {
 
               <div className="h-[380px] w-full">
                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={lineData} margin={{ left: 30, right: 30, top: 20, bottom: 20 }}>
+                    <LineChart data={lineData} margin={{ left: 30, right: 30, top: 40, bottom: 20 }}>
                        <CartesianGrid strokeDasharray="5 5" vertical={false} stroke="#f1f5f9" />
                        <XAxis dataKey="name" axisLine={false} tickLine={false} interval={0} tick={{fontSize: 12, fontWeight: '900', fill: '#64748b'}} />
                        <YAxis hide domain={[0, 100]} />
                        <Tooltip contentStyle={{borderRadius: '20px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.05)', fontWeight: 'bold'}} />
-                       <Line type="monotone" dataKey="score" stroke="#566e63" strokeWidth={6} dot={{r: 8, fill: '#566e63', stroke: 'white', strokeWidth: 4}} activeDot={{r: 10, shadow: '0 0 10px rgba(0,0,0,0.2)'}} animationDuration={1500} />
+                       <Line 
+                          type="monotone" 
+                          dataKey="score" 
+                          stroke="#e2e8f0" 
+                          strokeWidth={4}
+                          dot={(props: any) => {
+                             const { cx, cy, payload } = props;
+                             // 데이터의 이름에서 공백을 제거하여 매핑 (ex: '기쁨 ' -> '기쁨')
+                             const cleanName = payload.name.trim();
+                             const color = EMOTION_COLORS[cleanName] || '#566e63';
+                             return (
+                                <g key={`dot-${cleanName}`}>
+                                   <circle cx={cx} cy={cy} r={8} fill={color} stroke="white" strokeWidth={3} />
+                                   <text x={cx} y={cy - 18} textAnchor="middle" fontSize="10" fontWeight="900" fill={color}>{payload.score}</text>
+                                </g>
+                             );
+                          }}
+                          activeDot={{r: 10}} 
+                          animationDuration={1500} 
+                       />
                     </LineChart>
                  </ResponsiveContainer>
               </div>
