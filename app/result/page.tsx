@@ -174,7 +174,14 @@ function ResultContent() {
                 <Link href="/pricing" className="block w-full py-3 bg-[#566e63] text-white text-center rounded-xl font-black text-xs">리포트 신청하기</Link>
               </div>
             </div>
-            <Link href="/dashboard" className="flex items-center gap-2 text-[#566e63] font-black">대시보드로 돌아가기 <ArrowRight size={16} /></Link>
+            <div className="flex flex-col gap-3">
+              <Link href={`/report?id=${resultId}`} className="mt-2 bg-white border border-gray-200 text-[#4a5c53] font-bold py-3 px-8 rounded-full inline-flex items-center gap-2 hover:bg-gray-50 transition-colors shadow-sm self-start group">
+                <BrainCircuit size={16} className="group-hover:text-[#566e63]" />
+                의학적 심층 리포트 보기
+                <ArrowRight size={16} className="text-gray-400 group-hover:translate-x-1 transition-transform" />
+              </Link>
+              <Link href="/dashboard" className="flex items-center gap-2 text-[#566e63] font-black">대시보드로 돌아가기 <ArrowRight size={16} /></Link>
+            </div>
           </div>
         </div>
 
