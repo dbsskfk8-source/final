@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
 import { BrainCircuit, ChevronRight, Download, Activity, HeartPulse, ChevronLeft, Calendar as CalendarIcon, User, Info } from 'lucide-react'
-import { FactorResult } from '@/utils/diagnostics'
 
 function ReportContent() {
   const router = useRouter()
@@ -13,54 +12,69 @@ function ReportContent() {
   const idQuery = searchParams.get('id')
 
   const [isLoading, setIsLoading] = useState(true)
-  const [reportData, setReportData] = useState<any | null>(null)
+  const [allResults, setAllResults] = useState<any[]>([])
+  const [selectedResult, setSelectedResult] = useState<any | null>(null)
   
   useEffect(() => {
-    const loadReportData = async () => {
+    const loadData = async () => {
       try {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
-        let foundRecord = null
+        let dbResults: any[] = []
+        let localResults: any[] = []
 
+        // 1. DB에서 결과 조회 (회원일 경우)
         if (user) {
-          // 회원: DB에서 조회
-          let query = supabase.from('csei_results').select('*')
+          const { data, error } = await supabase
+            .from('csei_results')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
           
+          if (!error && data) {
+            dbResults = data
+          }
+        }
+
+        // 2. 로컬 스토리지에서 결과 조회 (로그인 여부 관계없이 항상 확인)
+        const localCseiStr = localStorage.getItem('final_csei_results')
+        if (localCseiStr) {
+          try {
+            const parsed = JSON.parse(localCseiStr)
+            localResults = Array.isArray(parsed) ? parsed : (parsed.scores ? [parsed] : [])
+          } catch (e) {
+            console.error('Local storage parse error:', e)
+          }
+        }
+
+        // 3. 두 데이터 소스 통합 및 정렬 (최신순)
+        let combined = [...dbResults, ...localResults]
+        
+        // 중복 제거 (timestamp나 id가 같은 경우)
+        const seen = new Set()
+        const results = combined.filter(item => {
+          const key = item.id || item.timestamp
+          if (!key || seen.has(key)) return false
+          seen.add(key)
+          return true
+        }).sort((a, b) => {
+          const dateA = new Date(a.created_at || a.timestamp || 0).getTime()
+          const dateB = new Date(b.created_at || b.timestamp || 0).getTime()
+          return dateB - dateA
+        })
+
+        setAllResults(results)
+
+        if (results.length > 0) {
+          let found = null
           if (idQuery) {
             const rawId = idQuery.replace('csei-', '')
-            query = query.eq('id', rawId)
-          } else {
-            query = query.order('created_at', { ascending: false }).limit(1)
+            found = results.find(r => (r.id?.toString() === rawId) || (r.timestamp === idQuery))
           }
-          
-          const { data, error } = await query
-          if (!error && data && data.length > 0) {
-            foundRecord = data[0]
-          }
-        } else {
-          // 비회원: 로컬 스토리지에서 조회
-          const localCseiStr = localStorage.getItem('final_csei_results')
-          if (localCseiStr) {
-            const localCsei = JSON.parse(localCseiStr)
-            const resultsArray = Array.isArray(localCsei) ? localCsei : (localCsei.scores ? [localCsei] : [])
-            
-            if (resultsArray.length > 0) {
-              if (idQuery) {
-                // local에서는 id가 명확하지 않을 수 있으나 최선을 다해 매칭
-                foundRecord = resultsArray.find(r => r.id === idQuery || `csei-${r.id}` === idQuery) || resultsArray[0]
-              } else {
-                foundRecord = resultsArray[0]
-              }
-            }
-          }
+          setSelectedResult(found || results[0])
         }
-
-        if (foundRecord) {
-          setReportData(foundRecord)
-        } else {
-          // 데이터 없음
-        }
+        // 데이터가 없으면 selectedResult는 null로 유지 → 검사 안내 화면 표시
       } catch (error) {
         console.error('Failed to load report:', error)
       } finally {
@@ -68,7 +82,7 @@ function ReportContent() {
       }
     }
 
-    loadReportData()
+    loadData()
   }, [idQuery])
 
   if (isLoading) {
@@ -79,49 +93,49 @@ function ReportContent() {
     )
   }
 
-  if (!reportData) {
+  if (!selectedResult) {
     return (
       <div className="min-h-screen bg-[#fcfdfc] flex flex-col items-center justify-center p-6 text-center">
-        <Activity size={48} className="text-gray-300 mb-6" />
-        <h2 className="text-2xl font-extrabold text-[#222] mb-2">진단 기록을 찾을 수 없습니다</h2>
-        <p className="text-gray-500 mb-8 max-w-sm">검사가 정상적으로 완료되지 않았거나 데이터가 존재하지 않습니다.</p>
-        <button onClick={() => router.push('/my-situation')} className="bg-[#566e63] text-white px-8 py-3.5 rounded-full font-bold shadow hover:bg-[#43574d] transition-colors">
-          마이페이지로 돌아가기
-        </button>
+        <Activity size={56} className="text-gray-200 mb-6" />
+        <h2 className="text-2xl font-extrabold text-[#222] mb-3">아직 감정 진단 기록이 없습니다</h2>
+        <p className="text-gray-400 font-medium mb-2 max-w-sm leading-relaxed">
+          심층 리포트를 보려면 먼저 7가지 감정 진단을 완료해 주세요.
+        </p>
+        <p className="text-gray-300 text-sm font-medium mb-10 max-w-sm">
+          검사는 약 5~10분 소요되며, 결과 즉시 리포트를 확인할 수 있습니다.
+        </p>
+        <Link href="/questionnaire" className="bg-[#566e63] text-white px-10 py-4 rounded-full font-bold shadow-lg hover:bg-[#43574d] transition-colors flex items-center gap-2">
+          <HeartPulse size={18} /> 감정 진단 시작하기
+        </Link>
+        <Link href="/" className="mt-4 text-sm text-gray-400 font-bold hover:text-[#566e63] transition-colors">
+          홈으로 돌아가기
+        </Link>
       </div>
     )
   }
 
-  // 데이터 파싱 (버전 호환성을 위해 A/subject 와 tScore/name 속성을 모두 지원)
-  const scores: any[] = reportData.scores || []
+  // 데이터 파싱
+  const scores: any[] = selectedResult.scores || []
   const detailScores = scores.filter(s => s.factor !== 'TOTAL' && s.subject !== '총합')
   const riskItems = detailScores.filter(s => s.group === 'risk')
   const cautionItems = detailScores.filter(s => s.group === 'caution')
   
-  const totalTScore = reportData.overallTScore || reportData.overall_t_score || 0
+  const totalTScore = selectedResult.overallTScore || selectedResult.overall_t_score || 0
   
-  const createdDate = new Date(reportData.created_at || reportData.timestamp || Date.now())
+  const createdDate = new Date(selectedResult.created_at || selectedResult.timestamp || Date.now())
   const dateString = createdDate.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
 
   // 의학적 가이드라인 렌더링 헬퍼
   const getMedicalInsight = (factor: string, group: string) => {
     switch (factor) {
-      case 'JOY':
-        return group === 'risk' ? "과도한 희(喜) 감정은 기(氣)를 느슨하게 하여 심장에 무리를 주고 산만함을 유발할 수 있습니다." : "적절한 희(喜) 감정은 심신의 이완을 돕지만, 과도해지지 않도록 주의가 필요합니다.";
-      case 'ANGER':
-        return group === 'risk' ? "심한 노(怒)는 기를 위로 치밀어 오르게 하여 간을 상하게 하고 두통이나 소화불량을 야기할 수 있습니다." : "스트레스에 대한 분노 반응이 관찰됩니다. 심호흡과 명상으로 화기를 아래로 내려주는 것이 좋습니다.";
-      case 'THOUGHT':
-        return group === 'risk' ? "지나친 사(思)는 기를 뭉치게 하여 비장을 상하게 하며, 수면 장애와 식욕 부진을 유발합니다." : "생각이 많은 상태입니다. 신체 활동을 늘려 머리쪽으로 집중된 기운을 분산시키세요.";
-      case 'DEPRESSION':
-        return group === 'risk' ? "깊은 우(憂) 감정은 기를 막히게 하여 폐 기능을 저하시키고 호흡을 얕게 만듭니다." : "우울감이 관찰됩니다. 가벼운 유산소 운동으로 폐활량을 늘리고 기운을 순환시키세요.";
-      case 'SORROW':
-        return group === 'risk' ? "극심한 비(悲)는 기를 소모시켜 폐를 상하게 하며 전신의 무기력증을 초래합니다." : "슬픔으로 인해 에너지가 소진되고 있습니다. 충분한 휴식과 따뜻한 차로 몸을 달래주세요.";
-      case 'FRIGHT':
-        return group === 'risk' ? "만성적인 공(恐)은 기를 아래로 가라앉혀 신장을 상하게 하고 만성 피로를 유발합니다." : "공포와 불안이 내재되어 있습니다. 작은 목표를 달성하며 자신감을 회복하는 과정이 필요합니다.";
-      case 'FEAR':
-        return group === 'risk' ? "갑작스러운 경(驚)은 기를 흐트러뜨려 심장과 담력을 상하게 하며 불안장애로 이어질 수 있습니다." : "자율신경계가 다소 예민해져 있습니다. 안정적인 환경에서 규칙적인 생활을 권장합니다.";
-      default:
-        return "";
+      case 'JOY': return group === 'risk' ? "과도한 희(喜) 감정은 기(氣)를 느슨하게 하여 심장에 무리를 주고 산만함을 유발할 수 있습니다." : "적절한 희(喜) 감정은 심신의 이완을 돕지만, 과도해지지 않도록 주의가 필요합니다.";
+      case 'ANGER': return group === 'risk' ? "심한 노(怒)는 기를 위로 치밀어 오르게 하여 간을 상하게 하고 두통이나 소화불량을 야기할 수 있습니다." : "스트레스에 대한 분노 반응이 관찰됩니다. 심호흡과 명상으로 화기를 아래로 내려주는 것이 좋습니다.";
+      case 'THOUGHT': return group === 'risk' ? "지나친 사(思)는 기를 뭉치게 하여 비장을 상하게 하며, 수면 장애와 식욕 부진을 유발합니다." : "생각이 많은 상태입니다. 신체 활동을 늘려 머리쪽으로 집중된 기운을 분산시키세요.";
+      case 'DEPRESSION': return group === 'risk' ? "깊은 우(憂) 감정은 기를 막히게 하여 폐 기능을 저하시키고 호흡을 얕게 만듭니다." : "우울감이 관찰됩니다. 가벼운 유산소 운동으로 폐활량을 늘리고 기운을 순환시키세요.";
+      case 'SORROW': return group === 'risk' ? "극심한 비(悲)는 기를 소모시켜 폐를 상하게 하며 전신의 무기력증을 초래합니다." : "슬픔으로 인해 에너지가 소진되고 있습니다. 충분한 휴식과 따뜻한 차로 몸을 달래주세요.";
+      case 'FRIGHT': return group === 'risk' ? "만성적인 공(恐)은 기를 아래로 가라앉혀 신장을 상하게 하고 만성 피로를 유발합니다." : "공포와 불안이 내재되어 있습니다. 작은 목표를 달성하며 자신감을 회복하는 과정이 필요합니다.";
+      case 'FEAR': return group === 'risk' ? "갑작스러운 경(驚)은 기를 흐트러뜨려 심장과 담력을 상하게 하며 불안장애로 이어질 수 있습니다." : "자율신경계가 다소 예민해져 있습니다. 안정적인 환경에서 규칙적인 생활을 권장합니다.";
+      default: return "";
     }
   }
 
@@ -156,10 +170,33 @@ function ReportContent() {
         </div>
       </header>
 
+      {/* 📊 데이터 선택 바 (report-demo에서 가져온 기능) */}
+      <div className="bg-white border-b border-gray-200 sticky top-[73px] z-40 px-6 md:px-10 py-4 shadow-sm">
+        <div className="max-w-[900px] mx-auto">
+          <label className="text-sm font-bold text-gray-600 mb-2 block">📊 심층 리포트 조회</label>
+          <select
+            value={allResults.indexOf(selectedResult)}
+            onChange={(e) => setSelectedResult(allResults[parseInt(e.target.value)])}
+            className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg bg-white font-medium text-sm text-[#222] focus:border-[#566e63] focus:ring-2 focus:ring-[#566e63]/20 outline-none transition"
+          >
+            {allResults.map((res, idx) => {
+              const resDate = new Date(res.created_at || res.timestamp || Date.now())
+              const dateStr = resDate.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+              const tScore = res.overallTScore || res.overall_t_score || 0
+              return (
+                <option key={idx} value={idx}>
+                  {dateStr} — dB {Number(tScore).toFixed(1)}
+                </option>
+              )
+            })}
+          </select>
+        </div>
+      </div>
+
       <main className="max-w-[900px] mx-auto px-4 sm:px-6 py-12 md:py-20">
         <div className="bg-white rounded-none sm:rounded-[40px] p-6 sm:p-12 md:p-16 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-gray-100/50 print:shadow-none print:border-none print:p-0">
           
-          {/* HEADER SECTION (Paper/Chart style) */}
+          {/* HEADER SECTION */}
           <div className="border-b-4 border-[#222] pb-8 mb-10 text-center relative mt-10 sm:mt-0">
             <div className="absolute top-[-10px] left-0 bg-[#f0ece5] text-[#566e63] px-3 py-1 font-bold text-[10px] tracking-widest uppercase mb-4 sm:mb-0">
               CONFIDENTIAL
@@ -177,12 +214,12 @@ function ReportContent() {
              </div>
              <div>
                 <div className="flex items-center gap-1.5 text-gray-500 mb-1 text-xs font-bold uppercase"><User size={12} /> 진단 구분</div>
-                <div className="font-extrabold text-sm text-[#222]">{reportData.gender === 'male' ? '남성' : '여성'} / {reportData.ageGroup}대</div>
+                <div className="font-extrabold text-sm text-[#222]">{selectedResult.gender === 'male' ? '남성' : '여성'} / {selectedResult.ageGroup}대</div>
              </div>
              <div>
                 <div className="flex items-center gap-1.5 text-gray-500 mb-1 text-xs font-bold uppercase"><Activity size={12} /> 종합 dB (전체)</div>
                 <div className="flex items-center gap-2">
-                   <span className="px-1.5 py-0.5 bg-gray-200 rounded text-[10px] font-black text-gray-500">dB</span>
+                   <span className="px-1.5 py-0.5 bg-gray-200 rounded text-[10px] font-black text-gray-400">dB</span>
                    <div className="font-extrabold text-sm text-[#222]">{(Number(totalTScore) || 0).toFixed(1)}</div>
                 </div>
              </div>
@@ -221,8 +258,6 @@ function ReportContent() {
               {detailScores.map((score, idx) => {
                 const isRisk = score.group === 'risk'
                 const isCaution = score.group === 'caution'
-                
-                // 데이터 하위 호환 매핑
                 const scoreValue = score.tScore ?? score.A ?? 0
                 const scoreName = score.name ?? score.subject ?? '알 수 없음'
                 
