@@ -8,6 +8,7 @@ export interface ScriptSegment {
 function generateTimeline(texts: string[], step: number = 15): ScriptSegment[] {
   return texts.map((text, idx) => ({
     time: idx * step,
+    endTime: (idx + 1) * step,
     text
   }));
 }
