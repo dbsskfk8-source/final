@@ -1,105 +1,162 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useRef, useEffect } from 'react'
+
+interface Particle {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  size: number
+  color: string
+  opacity: number
+}
 
 export default function NatureCanvas() {
-  const [isMounted, setIsMounted] = useState(false)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    setIsMounted(true)
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    let animationFrameId: number
+
+    const resize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = 300
+    }
+    resize()
+    window.addEventListener('resize', resize)
+
+    const particles: Particle[] = []
+    const particleCount = 20
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 1,
+        vy: (Math.random() - 0.5) * 1,
+        size: Math.random() * 2 + 1,
+        color: '#fdfd96',
+        opacity: Math.random()
+      })
+    }
+
+    const grassBlades: { x: number, height: number, offset: number }[] = []
+    const bladeCount = 150
+    for (let i = 0; i < bladeCount; i++) {
+      grassBlades.push({
+        x: Math.random() * canvas.width,
+        height: Math.random() * 40 + 60,
+        offset: Math.random() * Math.PI * 2
+      })
+    }
+
+    let mouseX = -1000
+    let mouseY = -1000
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      mouseX = e.clientX - rect.left
+      mouseY = e.clientY - rect.top
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+
+    const draw = (time: number) => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      const wind = Math.sin(time / 1000) * 5
+
+      ctx.strokeStyle = '#566e63'
+      ctx.lineWidth = 2
+      ctx.lineCap = 'round'
+
+      grassBlades.forEach(blade => {
+        const sway = Math.sin(time / 1000 + blade.offset) * 10
+        ctx.beginPath()
+        ctx.moveTo(blade.x, canvas.height)
+
+        const dx = blade.x - mouseX
+        const dy = canvas.height - 20 - mouseY
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        const bend = dist < 60 ? (dx > 0 ? 40 : -40) * (1 - dist / 60) : 0
+
+        ctx.quadraticCurveTo(
+          blade.x + wind + bend,
+          canvas.height - blade.height / 2,
+          blade.x + sway + wind + bend,
+          canvas.height - blade.height
+        )
+        ctx.stroke()
+      })
+
+      particles.forEach(p => {
+        p.x += p.vx
+        p.y += p.vy
+
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1
+
+        const dx = p.x - mouseX
+        const dy = p.y - mouseY
+        const dist = Math.sqrt(dx * dx + dy * dy)
+
+        if (dist < 80) {
+          const angle = Math.atan2(dy, dx)
+          p.vx += Math.cos(angle) * 1
+          p.vy += Math.sin(angle) * 1
+        } else {
+          p.vx *= 0.99
+          p.vy *= 0.99
+          p.vx += (Math.random() - 0.5) * 0.1
+          p.vy += (Math.random() - 0.5) * 0.1
+        }
+
+        const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy)
+        if (speed > 2) {
+          p.vx = (p.vx / speed) * 2
+          p.vy = (p.vy / speed) * 2
+        }
+
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 4)
+        const alpha = (Math.sin(time / 500 + p.opacity * 10) + 1) / 2
+        gradient.addColorStop(0, `rgba(253, 253, 150, ${alpha * 0.8})`)
+        gradient.addColorStop(1, 'rgba(253, 253, 150, 0)')
+
+        ctx.fillStyle = gradient
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.size * 4, 0, Math.PI * 2)
+        ctx.fill()
+
+        ctx.fillStyle = `rgba(253, 253, 150, ${alpha})`
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+        ctx.fill()
+      })
+
+      animationFrameId = requestAnimationFrame(draw)
+    }
+
+    animationFrameId = requestAnimationFrame(draw)
+
+    return () => {
+      cancelAnimationFrame(animationFrameId)
+      window.removeEventListener('resize', resize)
+      window.removeEventListener('mousemove', handleMouseMove)
+    }
   }, [])
 
-  // 서버 사이드와 클라이언트 사이드의 첫 렌더링 결과를 동일하게 유지하기 위해
-  // 마운트 전에는 정적인 껍데기만 렌더링합니다.
   return (
-    <div 
-      className="relative w-full h-[180px] bg-white overflow-hidden select-none pointer-events-none"
-      suppressHydrationWarning
-    >
-      <div className="absolute top-4 left-0 w-full text-center z-20">
-         <p className="text-[10px] font-black text-[#566e63] opacity-20 tracking-[0.8em] uppercase">Breath of Nature</p>
+    <div className="w-full overflow-hidden bg-gradient-to-b from-transparent to-[#fdfbf7]/50 mt-20 relative h-[300px]">
+      <canvas
+        ref={canvasRef}
+        className="block w-full h-full cursor-none"
+      />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-20 text-[#566e63] font-serif italic text-xl select-none">
+        안식처의 숨결을 느껴보세요
       </div>
-      
-      <div className="absolute bottom-0 left-0 w-full h-full flex items-end">
-        <svg 
-          viewBox="0 0 1440 200" 
-          preserveAspectRatio="none" 
-          className="w-full h-full animate-soft-sway"
-          suppressHydrationWarning
-        >
-          <defs>
-            <linearGradient id="grassGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#22c55e" />
-              <stop offset="100%" stopColor="#86efac" />
-            </linearGradient>
-            
-            <symbol id="grass-blade">
-              <path d="M0,0 Q2,-15 5,-30 Q8,-15 10,0 Z" fill="url(#grassGrad)" opacity="0.8" />
-            </symbol>
-            
-            <symbol id="grass-tall">
-               <path d="M0,0 Q-2,-40 0,-80 T5,-120" stroke="#4ade80" fill="none" strokeWidth="1" opacity="0.6" />
-               <circle cx="5" cy="-120" r="1.5" fill="#fde047" opacity="0.4" />
-            </symbol>
-          </defs>
-
-          {/* 클라이언트 마운트 이후에만 랜덤 요소 렌더링 (Hydration Mismatch 방지) */}
-          {isMounted && (
-            <>
-              {[...Array(120)].map((_, i) => (
-                <use 
-                  key={`bg-${i}`} 
-                  href="#grass-blade" 
-                  x={i * 12 + (Math.random() * 5)} 
-                  y={200} 
-                  scale={0.5 + Math.random()} 
-                />
-              ))}
-
-              {[...Array(40)].map((_, i) => (
-                <use 
-                  key={`tall-${i}`} 
-                  href="#grass-tall" 
-                  x={i * 40 + (Math.random() * 20)} 
-                  y={200}
-                  className="animate-sway"
-                  style={{ animationDelay: `${Math.random() * 4}s` }}
-                />
-              ))}
-            </>
-          )}
-        </svg>
-      </div>
-
-      <style jsx>{`
-        @keyframes soft-sway {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-3px); }
-        }
-        .animate-sway {
-          animation: sway 5s ease-in-out infinite alternate;
-          transform-origin: bottom;
-        }
-        @keyframes sway {
-          from { transform: skewX(-2deg); }
-          to { transform: skewX(2deg); }
-        }
-      `}</style>
-
-      {/* 마운트 후 반딧불이 렌더링 */}
-      {isMounted && [...Array(8)].map((_, i) => (
-        <div 
-          key={i}
-          className="absolute w-1 h-1 bg-yellow-200 rounded-full blur-[2.5px] animate-pulse"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${40 + Math.random() * 40}%`,
-            animationDelay: `${Math.random() * 3}s`,
-            animationDuration: `${2 + Math.random() * 2}s`,
-            opacity: 0.3
-          }}
-        />
-      ))}
     </div>
   )
 }
