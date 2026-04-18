@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Local Storage 확인</title>
+</head>
+<body>
+  <h2>브라우저 Local Storage 데이터</h2>
+  <pre id="output"></pre>
+  <script>
+    const cseiData = localStorage.getItem('final_csei_results');
+    const output = document.getElementById('output');
+    
+    if (cseiData) {
+      try {
+        const parsed = JSON.parse(cseiData);
+        output.textContent = JSON.stringify(parsed, null, 2);
+      } catch (e) {
+        output.textContent = '파싱 오류: ' + e.message;
+      }
+    } else {
+      output.textContent = '❌ final_csei_results 데이터가 없습니다';
+    }
+  </script>
+</body>
+</html>
