@@ -273,7 +273,7 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-[#fcfaf5] border-b border-[#e8e0d5] text-gray-500 uppercase tracking-widest text-[16pt] font-black">
+                <tr className="bg-[#fcfaf5] border-b border-[#e8e0d5] text-gray-500 uppercase tracking-widest text-xs md:text-sm font-black">
                   <th className="p-8 whitespace-nowrap">환자 ID</th>
                   <th className="p-8 whitespace-nowrap">이름 / 인적</th>
                   <th className="p-8 whitespace-nowrap text-center">진단일</th>
@@ -287,21 +287,21 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {filteredPatients.length > 0 ? filteredPatients.map((patient, idx) => (
-                  <tr key={idx} className={`border-b border-gray-100 transition-colors group cursor-pointer text-[16pt] ${
+                  <tr key={idx} className={`border-b border-gray-100 transition-colors group cursor-pointer text-sm md:text-base ${
                     patient.nonResponseCount >= 3
                       ? 'bg-red-50/60 hover:bg-red-50 border-l-4 border-l-red-400'
                       : 'hover:bg-[#faf8f5]'
                   }`}>
                     <td className="p-8 text-gray-500 font-bold">{patient.id}</td>
                     <td className="p-8">
-                      <div className="font-black text-[#222] text-[18pt]">{patient.name}</div>
+                      <div className="font-black text-[#222] text-base md:text-lg">{patient.name}</div>
                       <div className="text-sm text-gray-400 mt-1">{patient.age}세 · {patient.gender}</div>
                     </td>
                     <td className="p-8 text-gray-600 text-center">{patient.lastTest}</td>
                     <td className="p-8 text-[#222] font-black bg-[#fcfaf5]">{patient.riskEmotion}</td>
                     <td className="p-8 font-black text-[#bfa588]">{patient.tScore}점</td>
-                    <td className="p-8">
-                      <span className={`px-5 py-2 rounded-full text-[14pt] font-black ${
+                    <td className="p-8 whitespace-nowrap">
+                      <span className={`px-4 py-1.5 rounded-full text-sm md:text-base font-black inline-flex items-center justify-center min-w-[60px] ${
                         patient.status === '위험' ? 'bg-red-100 text-red-600' :
                         patient.status === '주의' ? 'bg-orange-100 text-orange-600' :
                         'bg-green-100 text-green-600'
