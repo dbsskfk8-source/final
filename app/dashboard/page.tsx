@@ -6,13 +6,18 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Search, Filter, Activity, Users, FileText, ChevronDown, Bell, CheckCircle2, AlertCircle, X, Menu } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 
-// Mock Data for Patients
+// Mock Data for Patients (nonResponseCount: 명상/CBT 권고 후 미반응 횟수)
 const MOCK_PATIENTS = [
-  { id: 'PT-10023', name: '김하늘', age: 28, gender: '여성', lastTest: '2023-11-20', riskEmotion: '분노', tScore: 78, status: '위험', cbtProgress: 40 },
-  { id: 'PT-10045', name: '이바다', age: 34, gender: '남성', lastTest: '2023-11-19', riskEmotion: '우울', tScore: 65, status: '주의', cbtProgress: 80 },
-  { id: 'PT-10046', name: '박태양', age: 41, gender: '남성', lastTest: '2023-11-18', riskEmotion: '공포', tScore: 82, status: '위험', cbtProgress: 20 },
-  { id: 'PT-10051', name: '최별빛', age: 25, gender: '여성', lastTest: '2023-11-15', riskEmotion: '슬픔', tScore: 59, status: '정상', cbtProgress: 100 },
-  { id: 'PT-10088', name: '정우주', age: 52, gender: '여성', lastTest: '2023-11-10', riskEmotion: '생각', tScore: 71, status: '위험', cbtProgress: 0 },
+  { id: 'PT-10023', name: '김하늘', age: 28, gender: '여성', lastTest: '2024-04-18', riskEmotion: '분노', tScore: 78, status: '위험', cbtProgress: 40, nonResponseCount: 4 },
+  { id: 'PT-10045', name: '이바다', age: 34, gender: '남성', lastTest: '2024-04-17', riskEmotion: '우울', tScore: 65, status: '주의', cbtProgress: 80, nonResponseCount: 1 },
+  { id: 'PT-10046', name: '박태양', age: 41, gender: '남성', lastTest: '2024-04-16', riskEmotion: '공포', tScore: 82, status: '위험', cbtProgress: 20, nonResponseCount: 3 },
+  { id: 'PT-10051', name: '최별빛', age: 25, gender: '여성', lastTest: '2024-04-15', riskEmotion: '슬픔', tScore: 59, status: '정상', cbtProgress: 100, nonResponseCount: 0 },
+  { id: 'PT-10088', name: '정우주', age: 52, gender: '여성', lastTest: '2024-04-14', riskEmotion: '생각', tScore: 71, status: '위험', cbtProgress: 0, nonResponseCount: 5 },
+  { id: 'PT-10091', name: '한서준', age: 19, gender: '남성', lastTest: '2024-04-13', riskEmotion: '기쁨', tScore: 55, status: '주의', cbtProgress: 60, nonResponseCount: 2 },
+  { id: 'PT-10102', name: '오지아', age: 45, gender: '여성', lastTest: '2024-04-12', riskEmotion: '공포', tScore: 88, status: '위험', cbtProgress: 10, nonResponseCount: 4 },
+  { id: 'PT-10117', name: '남궁민', age: 38, gender: '남성', lastTest: '2024-04-11', riskEmotion: '우울', tScore: 74, status: '위험', cbtProgress: 30, nonResponseCount: 0 },
+  { id: 'PT-10129', name: '장하린', age: 22, gender: '여성', lastTest: '2024-04-10', riskEmotion: '분노', tScore: 63, status: '주의', cbtProgress: 50, nonResponseCount: 1 },
+  { id: 'PT-10135', name: '윤서호', age: 60, gender: '남성', lastTest: '2024-04-09', riskEmotion: '슬픔', tScore: 80, status: '위험', cbtProgress: 0, nonResponseCount: 6 },
 ]
 
 export default function DashboardPage() {
@@ -20,20 +25,100 @@ export default function DashboardPage() {
   const [selectedPatient, setSelectedPatient] = useState<any>(null)
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [patients, setPatients] = useState<any[]>([])
+  const [stats, setStats] = useState({ total: 0, risk: 0, cbt: 0 })
   const router = useRouter()
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const fetchData = async () => {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       
-      // Temporary bypass for user request
+      // 로그인하지 않은 경우에도 더미 데이터로 대시보드 표시
+      if (!user) {
+        setIsAuthorized(true)
+        return
+      }
+
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      const role = user.user_metadata?.role || profile?.role
+      if (role !== 'doctor' && role !== 'admin') {
+        // 임시로 모든 사용자가 볼 수 있게 열어두려면 아래 두 줄을 주석 처리하세요.
+        // setIsAuthorized(false)
+        // return
+      }
       setIsAuthorized(true)
+
+      // 실제 데이터 연동 (csei_results)
+      const { data: results, error } = await supabase.from('csei_results').select('*').order('created_at', { ascending: false })
+      
+      if (!error && results) {
+        // 유저별 최신 검사 기록 1개씩 추출
+        const uniquePatientsMap = new Map()
+        results.forEach(r => {
+          if (!uniquePatientsMap.has(r.user_id)) {
+            uniquePatientsMap.set(r.user_id, r)
+          }
+        })
+        
+        const latestResults = Array.from(uniquePatientsMap.values())
+        
+        const formattedPatients = latestResults.map((r: any, index: number) => {
+          // 최고 위험 감정 찾기
+          let highestEmotion = '알 수 없음'
+          if (r.scores && r.scores.length > 0) {
+             const highest = [...r.scores].sort((a, b) => b.A - a.A)[0]
+             highestEmotion = highest.subject.replace(/[^가-힣]/g, '') || highest.subject
+          }
+
+          let statusText = '정상'
+          if (r.overall_group === 'risk') statusText = '위험'
+          else if (r.overall_group === 'caution') statusText = '주의'
+
+          return {
+            id: r.user_id ? r.user_id.substring(0, 8).toUpperCase() : `PT-100${index}`,
+            full_id: r.user_id,
+            name: `환자 ${index + 1}`, // 익명 처리
+            age: r.age_group === '20s' ? 20 : r.age_group === '30s' ? 30 : r.age_group === '40s' ? 40 : 50,
+            gender: r.gender === 'male' ? '남성' : '여성',
+            lastTest: new Date(r.created_at).toLocaleDateString('ko-KR'),
+            riskEmotion: highestEmotion,
+            tScore: Math.round(r.overall_t_score || 0),
+            status: statusText,
+            cbtProgress: 0,
+            csei_id: r.id
+          }
+        })
+
+        // CBT(인지재구성) 이력 연동하여 진행률 계산
+        const { data: cureData } = await supabase.from('cure_history').select('user_id')
+        if (cureData) {
+          const cureCountMap = new Map()
+          cureData.forEach(c => {
+            cureCountMap.set(c.user_id, (cureCountMap.get(c.user_id) || 0) + 1)
+          })
+          
+          formattedPatients.forEach(p => {
+             const count = cureCountMap.get(p.full_id) || 0
+             // 5회 이상 완료시 100% (예시)
+             p.cbtProgress = Math.min(count * 20, 100)
+          })
+        }
+
+        setPatients(formattedPatients)
+        setStats({
+          total: formattedPatients.length,
+          risk: formattedPatients.filter(p => p.status === '위험').length,
+          cbt: formattedPatients.filter(p => p.cbtProgress === 100).length
+        })
+      }
     }
-    checkAuth()
+    fetchData()
   }, [])
 
-  const filteredPatients = MOCK_PATIENTS.filter(p => p.name.includes(searchTerm) || p.id.includes(searchTerm))
+  // 실제 데이터가 없으면 더미 데이터로 대체
+  const displayPatients = patients.length > 0 ? patients : MOCK_PATIENTS
+  const filteredPatients = displayPatients.filter((p: any) => p.name.includes(searchTerm) || p.id.includes(searchTerm))
 
   if (isAuthorized === false) {
     return (
@@ -84,6 +169,29 @@ export default function DashboardPage() {
       {/* Main Area */}
       <main className="flex-1 lg:ml-[260px] min-h-screen flex flex-col pt-6 px-6 md:px-10 pb-20">
         
+        {/* 🚨 비반응 위험 알림 배너 */}
+        {MOCK_PATIENTS.filter(p => p.nonResponseCount >= 3).length > 0 && (
+          <div className="mb-6 bg-gradient-to-r from-red-600 to-rose-500 rounded-2xl p-5 shadow-lg shadow-red-500/20 animate-pulse-slow">
+            <div className="flex items-start gap-4">
+              <div className="bg-white/20 rounded-full p-2 shrink-0 mt-0.5">
+                <Bell size={22} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="text-white font-black text-base mb-1">⚠️ 즉각 개입이 필요한 비반응 환자가 있습니다</div>
+                <div className="text-red-100 text-sm font-medium mb-3">CBT·명상 권고 후 3회 이상 미반응 — 담당의 직접 연락 또는 추가 조치가 필요합니다.</div>
+                <div className="flex flex-wrap gap-2">
+                  {MOCK_PATIENTS.filter(p => p.nonResponseCount >= 3).map(p => (
+                    <span key={p.id} className="bg-white/20 text-white text-xs font-black px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                      <span className="w-2 h-2 bg-yellow-300 rounded-full inline-block animate-ping"></span>
+                      {p.name} ({p.id}) — {p.nonResponseCount}회 미반응
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Mobile Header Toggle */}
         <div className="lg:hidden flex justify-between items-center mb-6 bg-white p-4 rounded-xl border border-[#e8e0d5] shadow-sm">
            <button onClick={() => setIsSidebarOpen(true)} className="p-2 bg-[#faf8f5] rounded-lg text-[#bfa588]">
@@ -117,14 +225,14 @@ export default function DashboardPage() {
         </header>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
           <div className="bg-white p-8 rounded-3xl border border-[#e8e0d5] shadow-sm flex items-center gap-6 border-l-8 border-l-[#566e63]">
             <div className="bg-[#f0ece5] p-4 rounded-full text-[#566e63]">
               <Users size={32} />
             </div>
             <div>
               <p className="text-lg font-bold text-gray-500">총 등록 환자</p>
-              <h3 className="text-4xl font-black text-[#222]">1,208</h3>
+              <h3 className="text-4xl font-black text-[#222]">{MOCK_PATIENTS.length}</h3>
             </div>
           </div>
           <div className="bg-white p-8 rounded-3xl border border-[#e8e0d5] shadow-sm flex items-center gap-6 border-l-8 border-l-red-400">
@@ -133,7 +241,7 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-lg font-bold text-gray-500">위험군 관심 환자</p>
-              <h3 className="text-4xl font-black text-[#222]">84</h3>
+              <h3 className="text-4xl font-black text-[#222]">{MOCK_PATIENTS.filter(p => p.status === '위험').length}</h3>
             </div>
           </div>
           <div className="bg-white p-8 rounded-3xl border border-[#e8e0d5] shadow-sm flex items-center gap-6 border-l-8 border-l-[#4db4b6]">
@@ -142,7 +250,16 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-lg font-bold text-gray-500">CBT 솔루션 완료자</p>
-              <h3 className="text-4xl font-black text-[#222]">432</h3>
+              <h3 className="text-4xl font-black text-[#222]">{MOCK_PATIENTS.filter(p => p.cbtProgress === 100).length}</h3>
+            </div>
+          </div>
+          <div className="bg-red-600 p-8 rounded-3xl shadow-lg shadow-red-500/20 flex items-center gap-6 border-l-8 border-l-red-800">
+            <div className="bg-white/20 p-4 rounded-full text-white">
+              <Bell size={32} />
+            </div>
+            <div>
+              <p className="text-lg font-bold text-red-200">비반응 즉시 개입</p>
+              <h3 className="text-4xl font-black text-white">{MOCK_PATIENTS.filter(p => p.nonResponseCount >= 3).length}명</h3>
             </div>
           </div>
         </div>
@@ -164,12 +281,17 @@ export default function DashboardPage() {
                   <th className="p-8 whitespace-nowrap">최고 T-점수</th>
                   <th className="p-8 whitespace-nowrap">상태</th>
                   <th className="p-8 whitespace-nowrap">솔루션 진행률</th>
+                  <th className="p-8 whitespace-nowrap">비반응 예측</th>
                   <th className="p-8 text-right whitespace-nowrap">리포트</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredPatients.length > 0 ? filteredPatients.map((patient, idx) => (
-                  <tr key={idx} className="border-b border-gray-100 hover:bg-[#faf8f5] transition-colors group cursor-pointer text-[16pt]">
+                  <tr key={idx} className={`border-b border-gray-100 transition-colors group cursor-pointer text-[16pt] ${
+                    patient.nonResponseCount >= 3
+                      ? 'bg-red-50/60 hover:bg-red-50 border-l-4 border-l-red-400'
+                      : 'hover:bg-[#faf8f5]'
+                  }`}>
                     <td className="p-8 text-gray-500 font-bold">{patient.id}</td>
                     <td className="p-8">
                       <div className="font-black text-[#222] text-[18pt]">{patient.name}</div>
@@ -195,6 +317,20 @@ export default function DashboardPage() {
                         <span className="text-sm font-black text-gray-400">{patient.cbtProgress}% 완료</span>
                       </div>
                     </td>
+                    <td className="p-8">
+                      {patient.nonResponseCount >= 3 ? (
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1.5 px-3 py-1.5 bg-red-100 text-red-600 text-xs font-black rounded-full border border-red-200">
+                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping inline-block"></span>
+                            {patient.nonResponseCount}회 미반응
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-black rounded-full">
+                          {patient.nonResponseCount}회
+                        </span>
+                      )}
+                    </td>
                     <td className="p-8 text-right">
                       <button 
                         onClick={() => setSelectedPatient(patient)}
@@ -206,7 +342,7 @@ export default function DashboardPage() {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={8} className="p-10 text-center text-gray-400 font-medium">검색된 환자 기록이 없습니다.</td>
+                    <td colSpan={9} className="p-10 text-center text-gray-400 font-medium">검색된 환자 기록이 없습니다.</td>
                   </tr>
                 )}
               </tbody>
@@ -266,10 +402,10 @@ export default function DashboardPage() {
             
             <div className="p-6 border-t border-gray-100 bg-[#fcfaf5] flex justify-end">
               <button 
-                onClick={() => alert('실제 배포 환경에서 작동하는 기능입니다.')}
+                onClick={() => router.push(`/report?id=csei-${selectedPatient.csei_id}`)}
                 className="bg-[#566e63] text-white px-6 py-2.5 rounded-lg font-bold hover:bg-[#4a5c53] shadow-md transition-colors"
                 >
-                히스토리 리포트 다운로드 (PDF)
+                히스토리 리포트 조회
               </button>
             </div>
           </div>

@@ -43,7 +43,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // 의료인 전용 페이지 보호 로직
+  // 의료인 전용 페이지 보호 로직 (현재 모든 사용자가 볼 수 있도록 임시 해제됨)
+  /*
   if (user && isMedicalPath) {
     const role = user.user_metadata?.role
     if (role !== 'doctor') {
@@ -52,6 +53,7 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url)
     }
   }
+  */
 
   // 로그인한 사용자가 로그인 페이지에 접근할 경우 대시보드나 마이페이지로 리다이렉트
   if (user && isAuthPath) {
