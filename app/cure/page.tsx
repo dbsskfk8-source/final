@@ -39,6 +39,48 @@ const REFINE_BUTTONS: { mode: RefineMode; label: string; icon: React.ReactNode }
   { mode: 'specificity', label: '🔍 더 구체적으로', icon: <Target size={16} /> },
 ]
 
+// --- Text Formatting Helpers ---
+const parseBold = (text: string) => {
+  const boldRegex = /\*\*(.*?)\*\*/g;
+  const parts = text.split(boldRegex);
+  return parts.map((part, index) => {
+    // 홀수 인덱스는 **로 감싸여 있던 부분
+    if (index % 2 === 1) {
+      return <strong key={index} className="font-black text-[#222]">{part}</strong>;
+    }
+    return part;
+  });
+};
+
+const formatReframeText = (text: string) => {
+  // 숫자로 시작하는 리스트 항목 분리 (예: "1. ", "2. ")
+  const regex = /(\d+\.\s+)/g;
+  const parts = text.split(regex);
+  
+  if (parts.length <= 1) {
+    // 리스트 형태가 아니면 기본 파싱해서 반환
+    return <p className="text-[15px] leading-loose text-gray-900 font-medium whitespace-pre-wrap">{parseBold(text)}</p>;
+  }
+
+  const elements: React.ReactNode[] = [];
+  let introText = parts[0];
+  if (introText.trim()) {
+    elements.push(<p key="intro" className="text-[15px] leading-loose text-gray-900 font-medium mb-4">{parseBold(introText)}</p>);
+  }
+
+  for (let i = 1; i < parts.length; i += 2) {
+    const numberStr = parts[i];
+    const contentStr = parts[i + 1] || '';
+    elements.push(
+      <div key={i} className="flex gap-3 mt-3 mb-2">
+        <span className="font-bold text-[#566e63] shrink-0 mt-0.5">{numberStr.trim()}</span>
+        <span className="text-[15px] leading-loose text-gray-900 font-medium">{parseBold(contentStr)}</span>
+      </div>
+    );
+  }
+  return <div className="flex flex-col">{elements}</div>;
+};
+
 export default function CurePage() {
   const [stage, setStage] = useState<Stage>('input')
   const [situation, setSituation] = useState('')
@@ -271,7 +313,7 @@ export default function CurePage() {
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${selectedIndex === i ? 'bg-[#566e63] text-white' : 'bg-gray-100 text-gray-500'}`}>{ICON_MAP[card.icon] || <Sparkles size={22} />}</div>
                       <div className="md:text-center"><p className="text-xs font-bold text-gray-600 uppercase">{card.title}</p></div>
                     </div>
-                    <div className="flex-1 md:border-l md:border-gray-100 md:pl-6"><p className="text-[15px] leading-loose text-gray-700 italic">"{card.text}"</p></div>
+                    <div className="flex-1 md:border-l md:border-gray-100 md:pl-6">{formatReframeText(card.text)}</div>
                   </div>
                 </div>
               ))}
