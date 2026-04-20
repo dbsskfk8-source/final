@@ -21,42 +21,40 @@ function ReportContent() {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
 
-        let allResultsArray: any[] = []
         let foundRecord = null
 
-        // 1. 항상 로컬 스토리지 먼저 확인 (방금 완료한 설문)
-        const localCseiStr = localStorage.getItem('final_csei_results')
-        if (localCseiStr) {
-          const localCsei = JSON.parse(localCseiStr)
-          if (localCsei) {
-            allResultsArray = Array.isArray(localCsei) ? localCsei : (localCsei.scores ? [localCsei] : [])
-          }
-        }
-
-        // 2. 로그인된 경우 서버(Supabase) 데이터도 불러와서 병합
         if (user) {
-          const { data, error } = await supabase.from('csei_results').select('*').order('created_at', { ascending: false })
-          if (!error && data && data.length > 0) {
-            data.forEach(dbItem => {
-              if (!allResultsArray.find(r => (r.id && r.id == dbItem.id) || (r.timestamp && r.timestamp == dbItem.timestamp))) {
-                allResultsArray.push(dbItem)
-              }
-            })
-          }
-        }
-
-        // 최신순 정렬
-        allResultsArray.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-
-        if (allResultsArray.length > 0) {
+          // 회원: DB에서 조회
+          let query = supabase.from('csei_results').select('*')
+          
           if (idQuery) {
             const rawId = idQuery.replace('csei-', '')
-            foundRecord = allResultsArray.find((r: any) => r.id == rawId || r.timestamp == idQuery) || allResultsArray[0]
+            query = query.eq('id', rawId)
           } else {
-            foundRecord = allResultsArray[0]
+            query = query.order('created_at', { ascending: false }).limit(1)
+          }
+          
+          const { data, error } = await query
+          if (!error && data && data.length > 0) {
+            foundRecord = data[0]
+          }
+        } else {
+          // 비회원: 로컬 스토리지에서 조회
+          const localCseiStr = localStorage.getItem('final_csei_results')
+          if (localCseiStr) {
+            const localCsei = JSON.parse(localCseiStr)
+            const resultsArray = Array.isArray(localCsei) ? localCsei : (localCsei.scores ? [localCsei] : [])
+            
+            if (resultsArray.length > 0) {
+              if (idQuery) {
+                // local에서는 id가 명확하지 않을 수 있으나 최선을 다해 매칭
+                foundRecord = resultsArray.find(r => r.id === idQuery || `csei-${r.id}` === idQuery) || resultsArray[0]
+              } else {
+                foundRecord = resultsArray[0]
+              }
+            }
           }
         }
-
 
         if (foundRecord) {
           setReportData(foundRecord)

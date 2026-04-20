@@ -34,7 +34,7 @@ export async function updateSession(request: NextRequest) {
 
   // 1. 보호된 경로 및 역할 권한 로직
   const url = request.nextUrl.clone()
-  const isMedicalPath = (url.pathname.startsWith('/dashboard') || url.pathname.startsWith('/report')) && !url.pathname.startsWith('/report-demo')
+  const isMedicalPath = url.pathname.startsWith('/dashboard') && !url.pathname.startsWith('/report-demo')
   const isAuthPath = url.pathname.startsWith('/login')
 
   // 로그인하지 않은 사용자가 보호된 경로(의료인 페이지 등)에 접근할 경우 로그인 페이지로 리다이렉트

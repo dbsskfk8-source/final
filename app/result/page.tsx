@@ -9,6 +9,7 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis
 } from 'recharts'
 import { Sparkles, Moon, Smile, Meh, Frown, Search, Filter, ArrowRight, AlertCircle, LogOut, TrendingUp, LayoutGrid, Calendar, User, Bell, Settings, Activity, BrainCircuit, HeartPulse, ChevronRight, CheckCircle2 } from 'lucide-react'
+import { createClient } from '@/utils/supabase/client'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
@@ -57,42 +58,69 @@ function ResultContent() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const stored = localStorage.getItem('final_csei_results')
-    if (stored) {
+    const loadData = async () => {
       try {
-        const parsed = JSON.parse(stored)
-        if (parsed && parsed.length > 0) {
-          let foundRecord: ResultData | undefined;
-          const resultsArray: ResultData[] = Array.isArray(parsed) ? parsed : [parsed];
-          
-          if (resultsArray.length > 0) {
-            if (idQuery) {
-              foundRecord = resultsArray.find((r: any) => 
-                (r.id === idQuery || `csei-${r.id}` === idQuery || r.timestamp === idQuery)
-              )
-            }
-            if (!foundRecord) {
-              foundRecord = resultsArray[0]
-            }
-          }
-          
-          setAllResults(resultsArray)
-          
-          if (foundRecord) {
-            setResultId(foundRecord.id ? `csei-${foundRecord.id}` : foundRecord.timestamp)
-            setResult(foundRecord)
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
 
-            if ((foundRecord as any).isPostMeditation && (foundRecord as any).relatedPreTimestamp) {
-               const pre = resultsArray.find((r: any) => r.timestamp === (foundRecord as any).relatedPreTimestamp)
-               if (pre) setPreResult(pre)
-            }
+        let resultsArray: ResultData[] = []
+        let foundRecord: ResultData | undefined
+
+        // 1. 항상 로컬 스토리지 먼저 확인 (방금 완료한 설문)
+        const stored = localStorage.getItem('final_csei_results')
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          if (parsed) {
+            resultsArray = Array.isArray(parsed) ? parsed : (parsed.scores ? [parsed] : [])
+          }
+        }
+
+        // 2. 로그인된 경우 서버(Supabase) 데이터도 불러와서 병합 (과거 기록 표시용)
+        if (user) {
+          const { data, error } = await supabase.from('csei_results').select('*').order('created_at', { ascending: false })
+          if (!error && data && data.length > 0) {
+            const dbData = data as any[]
+            dbData.forEach(dbItem => {
+              // 중복 방지: 이미 로컬에 있는 timestamp나 id면 추가하지 않음
+              if (!resultsArray.find(r => (r.id && r.id == dbItem.id) || (r.timestamp && r.timestamp == dbItem.timestamp))) {
+                resultsArray.push(dbItem)
+              }
+            })
+          }
+        }
+
+        // 최신순 정렬
+        resultsArray.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+
+        if (resultsArray.length > 0) {
+          if (idQuery) {
+            foundRecord = resultsArray.find((r: any) => 
+              (r.id == idQuery || `csei-${r.id}` == idQuery || r.timestamp == idQuery)
+            )
+          }
+          if (!foundRecord) {
+            foundRecord = resultsArray[0]
+          }
+        }
+
+        setAllResults(resultsArray)
+        
+        if (foundRecord) {
+          setResultId(foundRecord.id ? `csei-${foundRecord.id}` : foundRecord.timestamp)
+          setResult(foundRecord)
+
+          if ((foundRecord as any).isPostMeditation && (foundRecord as any).relatedPreTimestamp) {
+             const pre = resultsArray.find((r: any) => r.timestamp === (foundRecord as any).relatedPreTimestamp)
+             if (pre) setPreResult(pre)
           }
         }
       } catch (e) {
         console.error('결과 데이터를 파싱하는 중 오류가 발생했습니다.', e)
+      } finally {
+        setLoading(false)
       }
     }
-    setLoading(false)
+    loadData()
   }, [idQuery])
 
   if (loading) {
@@ -384,7 +412,7 @@ function ResultContent() {
                </div>
             </div>
             
-            <Link href={`/dashboard`} className="mt-8 bg-white border border-gray-200 text-[#4a5c53] font-bold py-3 px-8 rounded-full inline-flex items-center gap-2 hover:bg-gray-50 transition-colors shadow-sm self-start group">
+            <Link href={`/report?id=${resultId}`} className="mt-8 bg-white border border-gray-200 text-[#4a5c53] font-bold py-3 px-8 rounded-full inline-flex items-center gap-2 hover:bg-gray-50 transition-colors shadow-sm self-start group">
               <BrainCircuit size={16} className="group-hover:text-[#566e63]" />
               의학적 심층 리포트 보기
               <ArrowRight size={16} className="text-gray-400 group-hover:translate-x-1 transition-transform" />
